@@ -1,53 +1,845 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#e11d48"><link rel="manifest" href="./manifest.json"><title>PGM Fitness Owner App</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#09090b;color:#fafafa;font:15px system-ui,sans-serif}header{padding:22px 16px;background:linear-gradient(130deg,#3b0717,#111);border-bottom:1px solid #333}main{max-width:900px;margin:auto;padding:16px}.brand{display:flex;gap:12px;align-items:center}.logo{background:#e11d48;border-radius:13px;padding:12px;font-weight:900;font-size:20px}h1{font-size:21px;margin:0}header p,.muted{color:#a1a1aa;font-size:13px;margin:4px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0 22px}.stat,.card,.member{background:#18181b;border:1px solid #333;border-radius:15px;padding:14px}.stat.tap{display:block;width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:border-color .15s,transform .15s}.stat.tap:active,.stat.tap:focus{border-color:#e11d48;outline:2px solid #e11d48;outline-offset:1px}.tap-hint{display:block;color:#71717a;font-size:10px;margin-top:5px}.stat span{color:#a1a1aa;font-size:12px}.stat strong{display:block;font-size:25px;margin-top:5px}.heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:18px 0 12px}h2{font-size:17px;margin:0}.btn{background:#e11d48;color:white;border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.secondary{background:#27272a;border:1px solid #444}.search,input,textarea{width:100%;background:#09090b;color:white;border:1px solid #3f3f46;border-radius:10px;padding:12px;font:inherit}.search{margin-bottom:12px}.list{display:grid;gap:10px}.membertop{display:flex;justify-content:space-between;gap:10px;align-items:center}.member h3{margin:0;font-size:16px}.pill{background:#12351f;color:#86efac;padding:5px 8px;border-radius:30px;font-size:11px;height:max-content}.expired{background:#43151d;color:#fda4af}.details{border-top:1px solid #333;margin-top:12px;padding-top:10px;font-size:13px;overflow-wrap:anywhere}.details p{white-space:pre-wrap}.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.empty{text-align:center;color:#a1a1aa;padding:24px}.field{display:grid;gap:6px;margin-bottom:12px}.field label{color:#d4d4d8;font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.full{grid-column:1/-1}dialog{width:min(94vw,650px);max-height:90vh;overflow:auto;background:#18181b;color:white;border:1px solid #444;border-radius:16px;padding:18px}dialog::backdrop{background:#000b}.note{color:#a1a1aa;font-size:12px;line-height:1.5;margin-top:18px}.photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #3f3f46}.avatar{width:54px;height:54px;flex-shrink:0;object-fit:cover;border-radius:50%;background:#27272a;border:1px solid #555}.photo-label{font-size:12px;color:#d4d4d8;margin:12px 0 6px}.upload{font-size:12px}.gallery-item{position:relative}.gallery-item button{position:absolute;right:4px;top:4px;padding:4px 7px;border-radius:7px;background:#000c;border:0;color:#fff}.feature-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.feature-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid #3f3f46}.feature-gallery .caption{font-size:12px;color:#d4d4d8;margin-top:5px}.feature-card{min-width:0}.feature-card button{margin-top:6px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tabs button{background:#27272a;color:#fff;border:1px solid #444;border-radius:10px;padding:9px 12px}.tabs button.selected{background:#e11d48;border-color:#e11d48}.finance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:8px 0 18px}.finance-grid .stat strong{font-size:22px}.money{color:#86efac}.loss{color:#fda4af}.table-wrap{overflow:auto}.report-table{width:100%;border-collapse:collapse;font-size:13px}.report-table th,.report-table td{text-align:left;padding:10px;border-bottom:1px solid #333;white-space:nowrap}.report-table th{color:#a1a1aa;font-weight:600}.month-picker{max-width:220px}.finance-actions{display:flex;gap:8px;flex-wrap:wrap}.finance-list{display:grid;gap:8px}.finance-item{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#18181b;border:1px solid #333;border-radius:12px;padding:12px}.finance-item small{display:block;color:#a1a1aa;margin-top:4px}.danger{background:#7f1d1d}@media(max-width:500px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.stat{padding:10px}.stat strong{font-size:22px}.photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style></head><body><header><div class="brand"><div class="logo">PGM</div><div><h1>PGM FITNESS</h1><p>Owner dashboard · Member management</p></div></div></header><main>
-<div class="stats"><button type="button" class="stat tap" data-jump="all"><span>Total members</span><strong id="total">0</strong><small class="tap-hint">Tap to open member list</small></button><button type="button" class="stat tap" data-jump="active"><span>Active</span><strong id="active">0</strong><small class="tap-hint">Tap to view active members</small></button><button type="button" class="stat tap" data-jump="expired"><span>Expired</span><strong id="expired">0</strong><small class="tap-hint">Tap to view expired members</small></button></div>
-<div class="finance-grid"><button type="button" class="stat tap" data-jump="live"><span>Live members</span><strong id="liveCount">0</strong><small class="tap-hint">Tap to view current active members</small></button><button type="button" class="stat tap" data-jump="today"><span>Today collection</span><strong id="todayCollection">₹0</strong><small class="tap-hint">Tap to view today's payments</small></button><button type="button" class="stat tap" data-jump="collection"><span>Total collection</span><strong id="allCollection">₹0</strong><small class="tap-hint">Tap to open collections</small></button><button type="button" class="stat tap" data-jump="collection"><span>Collection this month</span><strong id="monthCollection">₹0</strong><small class="tap-hint">Tap to open collections</small></button><button type="button" class="stat tap" data-jump="expense"><span>Total expense</span><strong id="allExpense">₹0</strong><small class="tap-hint">Tap to view/add expenses</small></button><button type="button" class="stat tap" data-jump="pnl"><span>This month P&amp;L</span><strong id="monthPL">₹0</strong><small class="tap-hint">Tap to open P&amp;L</small></button><button type="button" class="stat tap" data-jump="pnl"><span>Net P&amp;L (all time)</span><strong id="allPL">₹0</strong><small class="tap-hint">Tap to open P&amp;L</small></button></div>
-<div class="tabs"><button class="selected" data-tab="membersView">Members</button><button data-tab="financeView">Collection &amp; P&amp;L</button><button data-tab="gymView">Gym workout photos</button></div>
-<section id="membersView"><div class="heading"><h2>Members</h2><button class="btn" id="add">+ Add member</button></div><input id="search" class="search" placeholder="Search by name or phone"><div id="list" class="list"></div></section>
-<section id="financeView" hidden>
-<div class="heading"><h2>Finance management</h2><div class="finance-actions"><button class="btn" id="addCollection">+ Collection</button><button class="btn secondary" id="addExpense">+ Expense</button></div></div>
-<div class="card"><div class="heading"><h2>Monthly P&amp;L report</h2><input class="month-picker" id="reportMonth" type="month" aria-label="Select report month"></div><div class="finance-grid"><div class="stat"><span>Collection</span><strong id="reportIncome">₹0</strong></div><div class="stat"><span>Expenses</span><strong id="reportExpense">₹0</strong></div><div class="stat"><span>Profit / Loss</span><strong id="reportPL">₹0</strong></div></div><div class="table-wrap"><table class="report-table"><thead><tr><th>Month</th><th>Collection</th><th>Expenses</th><th>Profit / Loss</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
-<div class="heading"><h2>Recent collections</h2></div><div id="collectionList" class="finance-list"></div>
-<div class="heading"><h2>Recent expenses</h2></div><div id="expenseList" class="finance-list"></div>
-<p class="note">For accurate accounting, record every payment in Collection and every business cost in Expense. Member fee fields are member details only and are not automatically added to collection totals. Data stays on this device until cloud sync is configured.</p>
-</section>
-<section id="gymView" hidden><div class="heading"><h2>Gym & workout gallery</h2><label class="btn upload" for="gymUpload">+ Add gym photos</label><input id="gymUpload" type="file" accept="image/*" multiple hidden></div><p class="muted">Add equipment, workout, gym interior, or event photos to this gallery.</p><div id="gymGallery" class="feature-gallery"></div></section>
-<p class="note">Member records, photos, collections, and expenses are saved only in this browser on this device in this version. They are not synced to other phones. Use consent before storing member/body progress photos. Cloud sync and secure owner login still need to be connected.</p></main>
-<dialog id="collectionDlg"><form id="collectionForm"><div class="heading"><h2 id="collectionFormTitle">Add collection</h2><button type="button" class="btn secondary" data-close="collectionDlg">Close</button></div><input type="hidden" id="collectionId"><div class="grid"><div class="field"><label>Amount (₹) *</label><input id="collectionAmount" type="number" min="1" step="0.01" required></div><div class="field"><label>Date *</label><input id="collectionDate" type="date" required></div><div class="field"><label>Member / source</label><input id="collectionSource" maxlength="100" placeholder="Member name or source"></div><div class="field"><label>Payment method</label><select id="collectionMethod"><option>Cash</option><option>UPI</option><option>Bank transfer</option><option>Card</option><option>Other</option></select></div><div class="field full"><label>Note</label><input id="collectionNote" maxlength="200" placeholder="Monthly fee, PT fee, joining fee…"></div></div><div class="actions"><button class="btn" type="submit">Save collection</button></div></form></dialog>
-<dialog id="expenseDlg"><form id="expenseForm"><div class="heading"><h2 id="expenseFormTitle">Add expense</h2><button type="button" class="btn secondary" data-close="expenseDlg">Close</button></div><input type="hidden" id="expenseId"><div class="grid"><div class="field"><label>Amount (₹) *</label><input id="expenseAmount" type="number" min="1" step="0.01" required></div><div class="field"><label>Date *</label><input id="expenseDate" type="date" required></div><div class="field"><label>Category *</label><select id="expenseCategory"><option>Rent</option><option>Salary</option><option>Electricity</option><option>Equipment</option><option>Maintenance</option><option>Marketing</option><option>Cleaning</option><option>Other</option></select></div><div class="field"><label>Paid to / vendor</label><input id="expenseVendor" maxlength="100" placeholder="Name or vendor"></div><div class="field full"><label>Note</label><input id="expenseNote" maxlength="200" placeholder="Expense details"></div></div><div class="actions"><button class="btn" type="submit">Save expense</button></div></form></dialog>
-<dialog id="dlg"><form id="form"><div class="heading"><h2 id="formTitle">Add member</h2><button type="button" class="btn secondary" id="close">Close</button></div><input type="hidden" id="id"><div class="grid"><div class="field"><label>Full name *</label><input id="name" required maxlength="100"></div><div class="field"><label>Phone number</label><input id="phone" inputmode="tel" maxlength="20"></div><div class="field"><label>Joining date</label><input id="join" type="date"></div><div class="field"><label>Fee paid (₹)</label><input id="fee" type="number" min="0" value="0"></div><div class="field"><label>Payment date</label><input id="paid" type="date"></div><div class="field"><label>Expiry date</label><input id="expiry" type="date"></div>
-<div class="field full"><label>Member profile photo</label><input id="profileUpload" class="upload" type="file" accept="image/*"><div id="profilePreview"></div><button type="button" class="btn secondary" id="removeProfile">Remove profile photo</button></div>
-<div class="field full"><label>Body progress photos (choose up to 3)</label><input id="progressUpload" class="upload" type="file" accept="image/*" multiple><div id="progressPreview" class="photo-grid"></div><button type="button" class="btn secondary" id="clearProgress">Clear progress photos</button></div>
-<div class="field full"><label>Workout plan</label><textarea id="workout" rows="3"></textarea></div><div class="field full"><label>Diet plan</label><textarea id="diet" rows="3"></textarea></div></div><div class="actions"><button class="btn" type="submit">Save member</button><button type="button" class="btn secondary" id="cancel">Cancel</button></div></form></dialog>
-<script>
-const KEY='pgm-fitness-members-v1',GYMKEY='pgm-fitness-gym-photos-v1',COLKEY='pgm-fitness-collections-v1',EXPKEY='pgm-fitness-expenses-v1';let data=[],gymPhotos=[],collections=[],expenses=[],currentProfile='',currentProgress=[],memberFilter='all';try{data=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(data))data=[]}catch(e){data=[]}try{gymPhotos=JSON.parse(localStorage.getItem(GYMKEY)||'[]');if(!Array.isArray(gymPhotos))gymPhotos=[]}catch(e){gymPhotos=[]}try{collections=JSON.parse(localStorage.getItem(COLKEY)||'[]');if(!Array.isArray(collections))collections=[]}catch(e){collections=[]}try{expenses=JSON.parse(localStorage.getItem(EXPKEY)||'[]');if(!Array.isArray(expenses))expenses=[]}catch(e){expenses=[]}const $=x=>document.getElementById(x),today=()=>new Date().toISOString().slice(0,10),active=m=>!m.expiry||m.expiry>=today();function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function save(){try{localStorage.setItem(KEY,JSON.stringify(data));render()}catch(e){alert('Storage is full. Please remove some photos and try again.')}}function saveGym(){try{localStorage.setItem(GYMKEY,JSON.stringify(gymPhotos));renderGym()}catch(e){alert('Photo storage is full. Please remove some gym photos and try again.')}}function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}function persistFinance(){try{localStorage.setItem(COLKEY,JSON.stringify(collections));localStorage.setItem(EXPKEY,JSON.stringify(expenses));renderFinance()}catch(e){alert('Storage is full. Remove some photos or records and try again.')}}function sum(arr,month){return arr.filter(x=>!month||String(x.date||'').slice(0,7)===month).reduce((a,x)=>a+Number(x.amount||0),0)}
-function render(){let n=data.filter(active).length;$('total').textContent=data.length;$('active').textContent=n;$('expired').textContent=data.length-n;$('liveCount').textContent=n;let q=$('search').value.toLowerCase().trim(),arr=data.filter(m=>(memberFilter==='all'||(memberFilter==='active'&&active(m))||(memberFilter==='expired'&&!active(m)))&&(m.name+' '+m.phone).toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));$('list').innerHTML=arr.length?arr.map(m=>`<article class="member"><div class="membertop"><div style="display:flex;gap:10px;align-items:center;min-width:0">${m.profile?`<img class="avatar" src="${m.profile}" alt="Member photo">`:'<div class="avatar" style="display:grid;place-items:center;color:#aaa">PGM</div>'}<div><h3>${esc(m.name)}</h3><div class="muted">${esc(m.phone||'No phone number')}</div></div></div><span class="pill ${active(m)?'':'expired'}">${active(m)?'ACTIVE':'EXPIRED'}</span></div><div class="details"><div><b>Fee:</b> ₹${esc(m.fee||0)} · <b>Paid:</b> ${esc(m.paid||'—')}</div><div><b>Joined:</b> ${esc(m.join||'—')} · <b>Expires:</b> ${esc(m.expiry||'Not set')}</div>${m.workout?`<p><b>Workout plan</b><br>${esc(m.workout)}</p>`:''}${m.diet?`<p><b>Diet plan</b><br>${esc(m.diet)}</p>`:''}${m.progress?.length?`<div class="photo-label">Body progress photos (${m.progress.length})</div><div class="photo-grid">${m.progress.map((p,i)=>`<div class="gallery-item"><img src="${p}" alt="Progress photo ${i+1}"></div>`).join('')}</div>`:''}<div class="actions"><button class="btn secondary" data-edit="${esc(m.id)}">Edit</button><button class="btn secondary" data-del="${esc(m.id)}">Delete</button></div></div></article>`).join(''):'<div class="card empty">No members added yet.<br>Tap “Add member” to start.</div>'}
-function renderFinance(){const month=$('reportMonth')?.value||today().slice(0,7),ci=sum(collections),mi=sum(collections,month),ti=sum(collections,today()),ei=sum(expenses),me=sum(expenses,month),pl=mi-me,allpl=ci-ei;$('todayCollection').textContent=money(ti);$('allCollection').textContent=money(ci);$('monthCollection').textContent=money(mi);$('allExpense').textContent=money(ei);$('monthPL').textContent=money(pl);$('monthPL').className=pl<0?'loss':'';$('allPL').textContent=money(allpl);$('allPL').className=allpl<0?'loss':'';$('reportIncome').textContent=money(mi);$('reportExpense').textContent=money(me);$('reportPL').textContent=money(pl);$('reportPL').className=pl<0?'loss':'money';const months=[...new Set([...collections,...expenses].map(x=>String(x.date||'').slice(0,7)).filter(Boolean))].sort().reverse();if(!months.includes(month))months.unshift(month);$('reportRows').innerHTML=months.length?months.map(m=>{const inc=sum(collections,m),out=sum(expenses,m),net=inc-out;return `<tr><td>${esc(m)}</td><td>${money(inc)}</td><td>${money(out)}</td><td class="${net<0?'loss':'money'}">${money(net)}</td></tr>`}).join(''):'<tr><td colspan="4">No financial records yet</td></tr>';$('collectionList').innerHTML=collections.length?[...collections].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50).map(x=>`<div class="finance-item"><div><b>${esc(x.source||'Collection')}</b><small>${esc(x.date)} · ${esc(x.method||'')} ${x.note?'· '+esc(x.note):''}</small></div><div style="text-align:right"><b class="money">+${money(x.amount)}</b><br><div class="actions"><button class="btn secondary" data-col-edit="${esc(x.id)}">Edit</button><button class="btn secondary" data-col-del="${esc(x.id)}">Delete</button></div></div></div>`).join(''):'<div class="card empty">No collections recorded yet.</div>';$('expenseList').innerHTML=expenses.length?[...expenses].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50).map(x=>`<div class="finance-item"><div><b>${esc(x.category)}</b><small>${esc(x.date)} · ${esc(x.vendor||'')} ${x.note?'· '+esc(x.note):''}</small></div><div style="text-align:right"><b class="loss">-${money(x.amount)}</b><br><div class="actions"><button class="btn secondary" data-exp-edit="${esc(x.id)}">Edit</button><button class="btn secondary" data-exp-del="${esc(x.id)}">Delete</button></div></div></div>`).join(''):'<div class="card empty">No expenses recorded yet.</div>'}
-function renderGym(){$('gymGallery').innerHTML=gymPhotos.length?gymPhotos.map((p,i)=>`<div class="feature-card"><img src="${p.src}" alt="Gym workout photo"><div class="caption">${esc(p.caption||'PGM Fitness')}</div><button class="btn secondary" data-gymdel="${i}">Remove</button></div>`).join(''):'<div class="card empty" style="grid-column:1/-1">No gym photos yet. Tap “Add gym photos”.</div>'}
-function compress(file,max=900){return new Promise((resolve,reject)=>{if(!file.type.startsWith('image/'))return reject(Error('Please select image files only.'));const reader=new FileReader();reader.onerror=()=>reject(Error('Could not read photo'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(Error('Could not open photo'));img.onload=()=>{const scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.68))};img.src=reader.result};reader.readAsDataURL(file)})}
-function previews(){$('profilePreview').innerHTML=currentProfile?`<img class="avatar" style="width:90px;height:90px;border-radius:12px" src="${currentProfile}" alt="Profile preview">`:'<div class="muted">No profile photo selected</div>';$('progressPreview').innerHTML=currentProgress.map((p,i)=>`<div class="gallery-item"><img src="${p}" alt="Progress preview"><button type="button" data-progressdel="${i}">×</button></div>`).join('')}
-function openForm(m){$('form').reset();$('id').value=m?.id||'';$('formTitle').textContent=m?'Edit member':'Add member';['name','phone','join','fee','paid','expiry','workout','diet'].forEach(k=>$(k).value=m?.[k]??(k==='fee'?'0':''));currentProfile=m?.profile||'';currentProgress=[...(m?.progress||[])];previews();$('dlg').showModal()}
-$('add').onclick=()=>openForm(null);document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{const kind=b.dataset.jump;if(['all','active','expired','live'].includes(kind)){memberFilter=kind==='all'?'all':(kind==='live'?'active':kind);document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('selected',x.dataset.tab==='membersView'));$('membersView').hidden=false;$('financeView').hidden=true;$('gymView').hidden=true;$('search').value='';render();$('membersView').scrollIntoView({behavior:'smooth',block:'start'});}else{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('selected',x.dataset.tab==='financeView'));$('membersView').hidden=true;$('financeView').hidden=false;$('gymView').hidden=true;renderFinance();if(kind==='expense')openExpenseForm(null);else if(kind==='collection')openCollectionForm(null);else if(kind==='today'){$('reportMonth').value=today().slice(0,7);renderFinance();$('collectionList').scrollIntoView({behavior:'smooth',block:'start'});}else if(kind==='pnl')$('reportRows').scrollIntoView({behavior:'smooth',block:'start'});else $('financeView').scrollIntoView({behavior:'smooth',block:'start'});}}));$('search').addEventListener('input',()=>{if(!$('search').value)memberFilter='all';render()});$('close').onclick=$('cancel').onclick=()=>$('dlg').close();$('search').oninput=render;$('form').onsubmit=e=>{e.preventDefault();let id=$('id').value||String(Date.now()),m={id};['name','phone','join','fee','paid','expiry','workout','diet'].forEach(k=>m[k]=$(k).value.trim());m.fee=Number(m.fee)||0;m.profile=currentProfile;m.progress=currentProgress;let i=data.findIndex(x=>x.id===id);if(i<0)data.push(m);else data[i]=m;save();memberFilter='all';$('search').value='';render();$('dlg').close()};
-$('profileUpload').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{currentProfile=await compress(f,700);previews()}catch(err){alert(err.message)}e.target.value=''};$('removeProfile').onclick=()=>{currentProfile='';previews()};$('progressUpload').onchange=async e=>{try{for(const f of [...e.target.files]){if(currentProgress.length>=3){alert('Maximum 3 progress photos per member.');break}currentProgress.push(await compress(f,700))}previews()}catch(err){alert(err.message)}e.target.value=''};$('clearProgress').onclick=()=>{currentProgress=[];previews()};$('progressPreview').onclick=e=>{const b=e.target.closest('[data-progressdel]');if(b){currentProgress.splice(Number(b.dataset.progressdel),1);previews()}};
-$('list').onclick=e=>{let a=e.target.closest('[data-edit]'),d=e.target.closest('[data-del]');if(a){let m=data.find(x=>x.id===a.dataset.edit);if(m)openForm(m)}if(d&&confirm('Delete this member from this device?')){data=data.filter(x=>x.id!==d.dataset.del);save()}};
-$('gymUpload').onchange=async e=>{try{for(const f of [...e.target.files]){if(gymPhotos.length>=8){alert('Maximum 8 gym photos in this version.');break}const src=await compress(f,1000);gymPhotos.push({src,caption:f.name.replace(/\.[^.]+$/,'').slice(0,70)})}saveGym()}catch(err){alert(err.message)}e.target.value=''};$('gymGallery').onclick=e=>{const b=e.target.closest('[data-gymdel]');if(b&&confirm('Remove this gym photo?')){gymPhotos.splice(Number(b.dataset.gymdel),1);saveGym()}};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('selected',x===b));$('membersView').hidden=b.dataset.tab!=='membersView';$('financeView').hidden=b.dataset.tab!=='financeView';$('gymView').hidden=b.dataset.tab!=='gymView';if(b.dataset.tab==='financeView')renderFinance()});
-$('reportMonth').value=today().slice(0,7);$('reportMonth').onchange=renderFinance;
-function openCollectionForm(record){$('collectionForm').reset();$('collectionId').value=record?.id||'';$('collectionFormTitle').textContent=record?'Edit collection':'Add collection';$('collectionAmount').value=record?.amount??'';$('collectionDate').value=record?.date||today();$('collectionSource').value=record?.source||'';$('collectionMethod').value=record?.method||'Cash';$('collectionNote').value=record?.note||'';$('collectionDlg').showModal()}
-function openExpenseForm(record){$('expenseForm').reset();$('expenseId').value=record?.id||'';$('expenseFormTitle').textContent=record?'Edit expense':'Add expense';$('expenseAmount').value=record?.amount??'';$('expenseDate').value=record?.date||today();$('expenseCategory').value=record?.category||'Rent';$('expenseVendor').value=record?.vendor||'';$('expenseNote').value=record?.note||'';$('expenseDlg').showModal()}
-$('addCollection').onclick=()=>openCollectionForm(null);$('addExpense').onclick=()=>openExpenseForm(null);document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
-$('collectionForm').onsubmit=e=>{e.preventDefault();const id=$('collectionId').value||String(Date.now())+'c',record={id,amount:Number($('collectionAmount').value),date:$('collectionDate').value,source:$('collectionSource').value.trim(),method:$('collectionMethod').value,note:$('collectionNote').value.trim()},i=collections.findIndex(x=>x.id===id);if(i>=0)collections[i]=record;else collections.push(record);persistFinance();$('collectionDlg').close()};
-$('expenseForm').onsubmit=e=>{e.preventDefault();const id=$('expenseId').value||String(Date.now())+'e',record={id,amount:Number($('expenseAmount').value),date:$('expenseDate').value,category:$('expenseCategory').value,vendor:$('expenseVendor').value.trim(),note:$('expenseNote').value.trim()},i=expenses.findIndex(x=>x.id===id);if(i>=0)expenses[i]=record;else expenses.push(record);persistFinance();$('expenseDlg').close()};
-document.getElementById('financeView').onclick=e=>{const ce=e.target.closest('[data-col-edit]'),c=e.target.closest('[data-col-del]'),xe=e.target.closest('[data-exp-edit]'),x=e.target.closest('[data-exp-del]');if(ce){const r=collections.find(r=>r.id===ce.dataset.colEdit);if(r)openCollectionForm(r)}if(c&&confirm('Delete this collection entry?')){collections=collections.filter(r=>r.id!==c.dataset.colDel);persistFinance()}if(xe){const r=expenses.find(r=>r.id===xe.dataset.expEdit);if(r)openExpenseForm(r)}if(x&&confirm('Delete this expense entry?')){expenses=expenses.filter(r=>r.id!==x.dataset.expDel);persistFinance()}};render();renderGym();renderFinance();
-</script><script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js")
-      .catch(function (error) {
-        console.error("Service Worker error:", error);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGM FITNESS PANTHEERANKAVU</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #1a1a1a;
+      --card-bg: #ffffff;
+      --text-main: #333333;
+      --header-bg: #2b2b2b;
+      --accent-yellow: #f1b814;
+      --accent-purple: #8e24aa;
+      --accent-black: #212121;
+      --accent-green: #2e7d32;
+      --accent-red: #c62828;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f5f7;
+      color: var(--text-main);
+      padding-bottom: 30px;
+    }
+
+    /* Top Navigation Header */
+    .top-bar {
+      background-color: var(--header-bg);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title input {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      width: 180px;
+      outline: none;
+    }
+
+    .nav-icons {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-icons i {
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Main Container & Screens */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Section Title */
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    /* Dashboard Cards Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .dash-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+      min-height: 110px;
+    }
+
+    .dash-card:active {
+      transform: scale(0.97);
+    }
+
+    .dash-card img, .dash-card i {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #444;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      border-radius: 20px;
+      padding: 2px 10px;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+      min-width: 45px;
+    }
+
+    .bg-yellow { background-color: var(--accent-yellow); color: #000; }
+    .bg-purple { background-color: var(--accent-purple); }
+    .bg-black { background-color: var(--accent-black); }
+
+    /* Horizontal Filter Pills for Members Page */
+    .pills-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      scrollbar-width: none;
+    }
+    .pills-bar::-webkit-scrollbar { display: none; }
+
+    .pill {
+      background: white;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      white-space: nowrap;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      cursor: pointer;
+      border: 1px solid #eee;
+    }
+
+    .pill.active {
+      background: #2b2b2b;
+      color: white;
+    }
+
+    /* Member Card Design */
+    .member-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .member-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .member-avatar {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #0284c7;
+    }
+
+    .member-info h4 {
+      font-size: 1.05rem;
+      color: #222;
+    }
+
+    .member-info p {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .member-info .phone {
+      color: #0284c7;
+      font-weight: 500;
+    }
+
+    .member-details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 0.8rem;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .member-details-grid div span {
+      color: #666;
+      display: block;
+      font-size: 0.7rem;
+    }
+
+    .member-actions {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #555;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .action-btn i {
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    /* Form Design */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #2b2b2b;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Table Design for P&L */
+    .report-summary {
+      background: #2b2b2b;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .report-summary h3 {
+      font-size: 1.2rem;
+      color: #4ade80;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .data-table th, .data-table td {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table th {
+      background: #f1f5f9;
+      font-weight: bold;
+    }
+
+    .amount-green { color: #16a34a; font-weight: bold; }
+    .amount-red { color: #dc2626; font-weight: bold; }
+
+    /* Floating Add Button */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2b2b2b;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    /* ID Card Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 350px;
+      text-align: center;
+    }
+
+    .id-card {
+      border: 2px solid #2b2b2b;
+      border-radius: 10px;
+      padding: 15px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="brand-title">
+      <i class="fa-solid fa-bars" onclick="showScreen('dashboard')"></i>
+      <input type="text" id="gymName" value="PGM FITNESS" onchange="saveGymName()">
+      <i class="fa-solid fa-pen-to-square" style="font-size:0.8rem; opacity:0.7;"></i>
+    </div>
+    <div class="nav-icons">
+      <i class="fa-solid fa-user-plus" onclick="showScreen('add-member')"></i>
+      <i class="fa-solid fa-clipboard-check" onclick="showScreen('checkin')"></i>
+      <i class="fa-solid fa-arrow-right-from-bracket" onclick="alert('Logged Out')"></i>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- 1. DASHBOARD SCREEN -->
+    <div id="dashboard" class="screen active">
+      <div class="dashboard-grid">
+        <div class="dash-card" onclick="openMembersWithFilter('live')">
+          <i class="fa-solid fa-users" style="color:#eab308;"></i>
+          <div class="card-label">Live Memberships</div>
+          <div class="badge bg-yellow" id="cnt-live">0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('all')">
+          <i class="fa-solid fa-users-viewfinder" style="color:#a855f7;"></i>
+          <div class="card-label">Total Memberships</div>
+          <div class="badge bg-purple" id="cnt-total">0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('expired')">
+          <i class="fa-solid fa-user-xmark" style="color:#333;"></i>
+          <div class="card-label">Expired Memberships</div>
+          <div class="badge bg-black" id="cnt-expired">0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('exp-1-3')">
+          <i class="fa-solid fa-clock" style="color:#a855f7;"></i>
+          <div class="card-label">Expiring (1-3 Days)</div>
+          <div class="badge bg-purple" id="cnt-exp-1-3">0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('exp-4-7')">
+          <i class="fa-solid fa-clock" style="color:#333;"></i>
+          <div class="card-label">Expiring (4-7 Days)</div>
+          <div class="badge bg-black" id="cnt-exp-4-7">0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('exp-8-15')">
+          <i class="fa-solid fa-clock" style="color:#eab308;"></i>
+          <div class="card-label">Expiring (8-15 Days)</div>
+          <div class="badge bg-yellow" id="cnt-exp-8-15">0</div>
+        </div>
+
+        <div class="dash-card" onclick="showScreen('reports')">
+          <i class="fa-solid fa-sack-dollar" style="color:#16a34a;"></i>
+          <div class="card-label">Today Collection</div>
+          <div class="badge bg-black" id="val-today-coll">₹0</div>
+        </div>
+
+        <div class="dash-card" onclick="showScreen('reports')">
+          <i class="fa-solid fa-money-bill-trend-up" style="color:#16a34a;"></i>
+          <div class="card-label">Collection (7 Days)</div>
+          <div class="badge bg-purple" id="val-7day-coll">₹0</div>
+        </div>
+
+        <div class="dash-card" onclick="showScreen('reports')">
+          <i class="fa-solid fa-vault" style="color:#16a34a;"></i>
+          <div class="card-label">Total Collection</div>
+          <div class="badge bg-black" id="val-total-coll">₹0</div>
+        </div>
+
+        <div class="dash-card" onclick="openMembersWithFilter('due')">
+          <i class="fa-solid fa-wallet" style="color:#ca8a04;"></i>
+          <div class="card-label">Due Amount</div>
+          <div class="badge bg-yellow" id="val-due">₹0</div>
+        </div>
+
+        <div class="dash-card" onclick="showScreen('expense')">
+          <i class="fa-solid fa-hand-holding-dollar" style="color:#dc2626;"></i>
+          <div class="card-label">Total Expense</div>
+          <div class="badge bg-purple" id="val-expense">₹0</div>
+        </div>
+
+        <div class="dash-card" onclick="showScreen('reports')">
+          <i class="fa-solid fa-chart-line" style="color:#2563eb;"></i>
+          <div class="card-label">P&L Report</div>
+          <div class="badge bg-black"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MANAGE MEMBERS SCREEN -->
+    <div id="members" class="screen">
+      <div class="page-title">
+        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
+        Manage Members
+      </div>
+
+      <div class="pills-bar">
+        <div class="pill active" onclick="filterMembers('live', this)">Live (<span id="pill-live">0</span>)</div>
+        <div class="pill" onclick="filterMembers('expired', this)">Expired (<span id="pill-exp">0</span>)</div>
+        <div class="pill" onclick="filterMembers('exp-1-3', this)">1-3 Days (<span id="pill-1-3">0</span>)</div>
+        <div class="pill" onclick="filterMembers('due', this)">Due Pending</div>
+        <div class="pill" onclick="filterMembers('all', this)">All</div>
+      </div>
+
+      <div id="members-list-container">
+        <!-- Dynamic Cards -->
+      </div>
+    </div>
+
+    <!-- 3. ADD MEMBER SCREEN -->
+    <div id="add-member" class="screen">
+      <div class="page-title">
+        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
+        Add New Member
+      </div>
+
+      <form id="memberForm" onsubmit="saveMember(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="mName" required placeholder="e.g. Rahul V">
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="tel" id="mPhone" required placeholder="10 Digit Mobile Number">
+        </div>
+        <div class="form-group">
+          <label>Join Date</label>
+          <input type="date" id="mJoinDate" required>
+        </div>
+        <div class="form-group">
+          <label>Plan Validity (Months)</label>
+          <select id="mPlanMonths" onchange="calcTotalAmount()">
+            <option value="1">1 Month</option>
+            <option value="3">3 Months</option>
+            <option value="6">6 Months</option>
+            <option value="12">1 Year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Total Plan Fee (₹)</label>
+          <input type="number" id="mTotalFee" required placeholder="1500">
+        </div>
+        <div class="form-group">
+          <label>Paid Amount (₹)</label>
+          <input type="number" id="mPaidFee" required placeholder="1500">
+        </div>
+        <button type="submit" class="btn-submit">Save Member</button>
+      </form>
+    </div>
+
+    <!-- 4. P&L REPORT SCREEN -->
+    <div id="reports" class="screen">
+      <div class="page-title">
+        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
+        P&L Report
+      </div>
+
+      <div class="report-summary">
+        <div>Net Profit: <span id="report-net">₹0</span></div>
+        <small>Total Collection: <span id="report-coll">₹0</span> | Total Expense: <span id="report-exp">₹0</span></small>
+      </div>
+
+      <h4 style="margin-bottom:10px;">Recent Collections</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="collection-table-body">
+          <!-- Dynamic -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. ADD EXPENSE SCREEN -->
+    <div id="expense" class="screen">
+      <div class="page-title">
+        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
+        Add Gym Expense
+      </div>
+
+      <form onsubmit="saveExpense(event)">
+        <div class="form-group">
+          <label>Expense Category / Details</label>
+          <input type="text" id="expTitle" required placeholder="e.g. Rent, Electricity, Equipment repair">
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="expAmount" required placeholder="5000">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="expDate" required>
+        </div>
+        <button type="submit" class="btn-submit">Save Expense</button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- ID Card Modal -->
+  <div id="idModal" class="modal">
+    <div class="modal-content">
+      <div class="id-card">
+        <h3 id="idCardGym">PGM FITNESS</h3>
+        <p style="font-size:0.7rem; color:#666; margin-bottom:10px;">MEMBERSHIP CARD</p>
+        <i class="fa-solid fa-circle-user" style="font-size:3rem; color:#0284c7;"></i>
+        <h4 id="idCardName" style="margin-top:5px;">Name</h4>
+        <p id="idCardPhone" style="font-size:0.8rem; color:#555;">Phone</p>
+        <hr style="margin:10px 0;">
+        <div style="font-size:0.75rem; text-align:left;">
+          <div><b>Valid Till:</b> <span id="idCardExp"></span></div>
+          <div><b>Status:</b> <span id="idCardStatus" style="color:green; font-weight:bold;">Active</span></div>
+        </div>
+      </div>
+      <br>
+      <button onclick="closeModal()" class="btn-submit" style="padding:8px;">Close</button>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab" onclick="showScreen('add-member')">+</div>
+
+  <script>
+    // Initial Data Handling with LocalStorage
+    let members = JSON.parse(localStorage.getItem('gym_members')) || [
+      { id: 101, name: "Shyamjith", phone: "9496342522", joinDate: "2026-01-01", endDate: "2026-12-31", plan: "12 Months", total: 10000, paid: 10000, due: 0 },
+      { id: 102, name: "Fathima Hannath", phone: "6282944060", joinDate: "2026-02-01", endDate: "2026-03-01", plan: "1 Month", total: 2000, paid: 1500, due: 500 }
+    ];
+
+    let expenses = JSON.parse(localStorage.getItem('gym_expenses')) || [];
+
+    // Set Default Dates
+    document.getElementById('mJoinDate').valueAsDate = new Date();
+    document.getElementById('expDate').valueAsDate = new Date();
+
+    // Init App
+    window.onload = function() {
+      if(localStorage.getItem('gym_name')) {
+        document.getElementById('gymName').value = localStorage.getItem('gym_name');
+      }
+      updateDashboardData();
+    };
+
+    function saveGymName() {
+      const val = document.getElementById('gymName').value;
+      localStorage.setItem('gym_name', val);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if(id === 'members') renderMembers('live');
+      if(id === 'reports') renderReports();
+      updateDashboardData();
+    }
+
+    function openMembersWithFilter(filterType) {
+      showScreen('members');
+      renderMembers(filterType);
+    }
+
+    function updateDashboardData() {
+      const today = new Date();
+      let live = 0, expired = 0, exp1_3 = 0, exp4_7 = 0, exp8_15 = 0, totalDue = 0, totalColl = 0;
+
+      members.forEach(m => {
+        const expDate = new Date(m.endDate);
+        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+
+        totalColl += m.paid;
+        totalDue += (m.total - m.paid);
+
+        if (diffDays >= 0) {
+          live++;
+          if (diffDays <= 3) exp1_3++;
+          else if (diffDays <= 7) exp4_7++;
+          else if (diffDays <= 15) exp8_15++;
+        } else {
+          expired++;
+        }
       });
-  });
-}
-</script></body></html>
+
+      let totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+
+      document.getElementById('cnt-live').innerText = live;
+      document.getElementById('cnt-total').innerText = members.length;
+      document.getElementById('cnt-expired').innerText = expired;
+      document.getElementById('cnt-exp-1-3').innerText = exp1_3;
+      document.getElementById('cnt-exp-4-7').innerText = exp4_7;
+      document.getElementById('cnt-exp-8-15').innerText = exp8_15;
+
+      document.getElementById('pill-live').innerText = live;
+      document.getElementById('pill-exp').innerText = expired;
+      document.getElementById('pill-1-3').innerText = exp1_3;
+
+      document.getElementById('val-today-coll').innerText = '₹' + totalColl;
+      document.getElementById('val-7day-coll').innerText = '₹' + totalColl;
+      document.getElementById('val-total-coll').innerText = '₹' + totalColl;
+      document.getElementById('val-due').innerText = '₹' + totalDue;
+      document.getElementById('val-expense').innerText = '₹' + totalExp;
+    }
+
+    function renderMembers(filter) {
+      const container = document.getElementById('members-list-container');
+      container.innerHTML = '';
+      const today = new Date();
+
+      let filtered = members.filter(m => {
+        const expDate = new Date(m.endDate);
+        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+
+        if (filter === 'live') return diffDays >= 0;
+        if (filter === 'expired') return diffDays < 0;
+        if (filter === 'exp-1-3') return diffDays >= 0 && diffDays <= 3;
+        if (filter === 'due') return (m.total - m.paid) > 0;
+        return true;
+      });
+
+      filtered.forEach(m => {
+        const due = m.total - m.paid;
+        const html = `
+          <div class="member-card">
+            <div class="member-header">
+              <div class="member-avatar"><i class="fa-solid fa-user"></i></div>
+              <div class="member-info">
+                <h4>${m.name}</h4>
+                <p class="phone">${m.phone}</p>
+              </div>
+            </div>
+            <div class="member-details-grid">
+              <div><span>Join Date</span>${m.joinDate}</div>
+              <div><span>End Date</span>${m.endDate}</div>
+              <div><span>Plan</span>${m.plan}</div>
+              <div><span>Due Amount</span><b style="color:${due > 0 ? 'red':'green'}">₹${due}</b></div>
+            </div>
+            <div class="member-actions">
+              <button class="action-btn" onclick="openIDCard('${m.name}', '${m.phone}', '${m.endDate}')"><i class="fa-solid fa-id-card"></i>ID Card</button>
+              <button class="action-btn" onclick="addPayment(${m.id})"><i class="fa-solid fa-plus-circle"></i>Add Pay</button>
+              <button class="action-btn" onclick="deleteMember(${m.id})" style="color:red;"><i class="fa-solid fa-trash"></i>Delete</button>
+            </div>
+          </div>
+        `;
+        container.innerHTML += html;
+      });
+    }
+
+    function filterMembers(type, el) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      renderMembers(type);
+    }
+
+    function saveMember(e) {
+      e.preventDefault();
+      const name = document.getElementById('mName').value;
+      const phone = document.getElementById('mPhone').value;
+      const joinDate = document.getElementById('mJoinDate').value;
+      const months = parseInt(document.getElementById('mPlanMonths').value);
+      const total = parseFloat(document.getElementById('mTotalFee').value);
+      const paid = parseFloat(document.getElementById('mPaidFee').value);
+
+      let endDateObj = new Date(joinDate);
+      endDateObj.setMonth(endDateObj.getMonth() + months);
+      const endDate = endDateObj.toISOString().split('T')[0];
+
+      const newMember = {
+        id: Date.now(),
+        name, phone, joinDate, endDate,
+        plan: months + ' Month(s)',
+        total, paid, due: total - paid
+      };
+
+      members.push(newMember);
+      localStorage.setItem('gym_members', JSON.stringify(members));
+      alert('Member Added Successfully!');
+      document.getElementById('memberForm').reset();
+      showScreen('dashboard');
+    }
+
+    function addPayment(id) {
+      const amt = prompt('Enter payment amount received (₹):');
+      if (amt) {
+        const m = members.find(x => x.id === id);
+        if (m) {
+          m.paid += parseFloat(amt);
+          localStorage.setItem('gym_members', JSON.stringify(members));
+          renderMembers('live');
+          updateDashboardData();
+        }
+      }
+    }
+
+    function deleteMember(id) {
+      if(confirm('Are you sure you want to delete this member?')) {
+        members = members.filter(x => x.id !== id);
+        localStorage.setItem('gym_members', JSON.stringify(members));
+        renderMembers('live');
+        updateDashboardData();
+      }
+    }
+
+    function saveExpense(e) {
+      e.preventDefault();
+      const title = document.getElementById('expTitle').value;
+      const amount = parseFloat(document.getElementById('expAmount').value);
+      const date = document.getElementById('expDate').value;
+
+      expenses.push({ id: Date.now(), title, amount, date });
+      localStorage.setItem('gym_expenses', JSON.stringify(expenses));
+      alert('Expense Added!');
+      showScreen('dashboard');
+    }
+
+    function renderReports() {
+      let totalColl = members.reduce((acc, curr) => acc + curr.paid, 0);
+      let totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+      let net = totalColl - totalExp;
+
+      document.getElementById('report-net').innerText = '₹' + net;
+      document.getElementById('report-coll').innerText = '₹' + totalColl;
+      document.getElementById('report-exp').innerText = '₹' + totalExp;
+
+      const tbody = document.getElementById('collection-table-body');
+      tbody.innerHTML = '';
+      members.forEach(m => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${m.joinDate}</td>
+            <td>${m.name}</td>
+            <td class="amount-green">+₹${m.paid}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function openIDCard(name, phone, exp) {
+      document.getElementById('idCardGym').innerText = document.getElementById('gymName').value;
+      document.getElementById('idCardName').innerText = name;
+      document.getElementById('idCardPhone').innerText = phone;
+      document.getElementById('idCardExp').innerText = exp;
+      document.getElementById('idModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('idModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
