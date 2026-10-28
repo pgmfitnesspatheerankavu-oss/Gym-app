@@ -41,4 +41,13 @@ $('addCollection').onclick=()=>openCollectionForm(null);$('addExpense').onclick=
 $('collectionForm').onsubmit=e=>{e.preventDefault();const id=$('collectionId').value||String(Date.now())+'c',record={id,amount:Number($('collectionAmount').value),date:$('collectionDate').value,source:$('collectionSource').value.trim(),method:$('collectionMethod').value,note:$('collectionNote').value.trim()},i=collections.findIndex(x=>x.id===id);if(i>=0)collections[i]=record;else collections.push(record);persistFinance();$('collectionDlg').close()};
 $('expenseForm').onsubmit=e=>{e.preventDefault();const id=$('expenseId').value||String(Date.now())+'e',record={id,amount:Number($('expenseAmount').value),date:$('expenseDate').value,category:$('expenseCategory').value,vendor:$('expenseVendor').value.trim(),note:$('expenseNote').value.trim()},i=expenses.findIndex(x=>x.id===id);if(i>=0)expenses[i]=record;else expenses.push(record);persistFinance();$('expenseDlg').close()};
 document.getElementById('financeView').onclick=e=>{const ce=e.target.closest('[data-col-edit]'),c=e.target.closest('[data-col-del]'),xe=e.target.closest('[data-exp-edit]'),x=e.target.closest('[data-exp-del]');if(ce){const r=collections.find(r=>r.id===ce.dataset.colEdit);if(r)openCollectionForm(r)}if(c&&confirm('Delete this collection entry?')){collections=collections.filter(r=>r.id!==c.dataset.colDel);persistFinance()}if(xe){const r=expenses.find(r=>r.id===xe.dataset.expEdit);if(r)openExpenseForm(r)}if(x&&confirm('Delete this expense entry?')){expenses=expenses.filter(r=>r.id!==x.dataset.expDel);persistFinance()}};render();renderGym();renderFinance();
+</script><script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(function (error) {
+        console.error("Service Worker error:", error);
+      });
+  });
+}
 </script></body></html>
