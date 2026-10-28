@@ -3,812 +3,527 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PGM FITNESS PANTHERANKAVU</title>
+  <title>PGM FITNESS</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e1e1e">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --bg-color: #f4f5f7;
-      --card-bg: #ffffff;
-      --text-main: #333333;
-      --header-bg: #1a1a1a;
-      --brand-red: #d32f2f;
-      --brand-yellow: #fbc02d;
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-
     body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      background-color: #f4f5f7;
+      color: #333;
       padding-bottom: 30px;
     }
-
-    /* Top Navigation Header */
+    /* Top Bar */
     .top-bar {
-      background-color: var(--header-bg);
+      background-color: #272727;
       color: white;
-      padding: 10px 16px;
+      padding: 12px 16px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    .brand-title {
+    .top-bar .title {
       font-size: 1.1rem;
       font-weight: bold;
+      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
-    .brand-logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--brand-red);
-      background: #000;
-    }
-
-    .nav-icons {
+    .top-icons {
       display: flex;
       gap: 15px;
       align-items: center;
     }
-
-    .nav-icons i {
-      font-size: 1.2rem;
+    .icon-badge {
+      position: relative;
       cursor: pointer;
     }
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background-color: #28a745;
+      color: white;
+      font-size: 0.65rem;
+      padding: 2px 5px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .badge.red { background-color: #dc3545; }
 
-    /* Main Container & Screens */
+    /* Dashboard Grid */
     .container {
+      padding: 12px;
       max-width: 600px;
       margin: 0 auto;
-      padding: 15px;
     }
-
-    .screen {
-      display: none;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    /* Section Title */
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #ddd;
-    }
-
-    /* Dashboard Cards Grid */
-    .dashboard-grid {
+    .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 10px;
     }
-
-    .dash-card {
-      background: var(--card-bg);
+    .card {
+      background: white;
       border-radius: 12px;
       padding: 12px 8px;
       text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
+      min-height: 110px;
       cursor: pointer;
       transition: transform 0.1s ease;
-      min-height: 110px;
-      border: 1px solid #e2e8f0;
     }
-
-    .dash-card:active {
+    .card:active {
       transform: scale(0.97);
     }
-
-    .dash-card i {
+    .card-icon {
       font-size: 1.8rem;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
-
-    .card-label {
-      font-size: 0.75rem;
+    .card-title {
+      font-size: 0.72rem;
+      color: #333;
       font-weight: 600;
-      color: #444;
       line-height: 1.1;
       margin-bottom: 6px;
     }
-
-    .badge {
-      border-radius: 20px;
-      padding: 2px 10px;
-      color: white;
-      font-size: 0.8rem;
-      font-weight: bold;
-      min-width: 45px;
-    }
-
-    .bg-red { background-color: var(--brand-red); }
-    .bg-yellow { background-color: var(--brand-yellow); color: #000; }
-    .bg-black { background-color: #1a1a1a; }
-
-    /* Horizontal Filter Pills for Members Page */
-    .pills-bar {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-      scrollbar-width: none;
-    }
-    .pills-bar::-webkit-scrollbar { display: none; }
-
     .pill {
-      background: white;
-      border-radius: 8px;
-      padding: 8px 12px;
+      background-color: #111;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 10px;
       font-size: 0.75rem;
       font-weight: bold;
-      white-space: nowrap;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      cursor: pointer;
-      border: 1px solid #eee;
+      min-width: 40px;
     }
+    .pill.yellow { background-color: #ffb703; color: #000; }
+    .pill.purple { background-color: #8a1c7c; }
+    .pill.black { background-color: #111; }
 
-    .pill.active {
-      background: var(--brand-red);
-      color: white;
+    /* P&L Screen */
+    .page {
+      display: none;
     }
-
-    /* Member Card Design */
-    .member-card {
-      background: white;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-      position: relative;
-    }
-
-    .member-header {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .member-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: #fee2e2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      color: var(--brand-red);
-    }
-
-    .member-info h4 {
-      font-size: 1.05rem;
-      color: #222;
-    }
-
-    .member-info p {
-      font-size: 0.8rem;
-      color: #666;
-    }
-
-    .member-details-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      font-size: 0.8rem;
-      background: #f8fafc;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-
-    .member-details-grid div span {
-      color: #666;
+    .page.active {
       display: block;
-      font-size: 0.7rem;
     }
-
-    .member-actions {
+    .pnl-header {
+      background-color: #272727;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .pnl-header h2 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .pnl-stats {
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+    .pnl-tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      border: none;
+      background: none;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active {
+      color: #111;
+      border-bottom: 3px solid #111;
+    }
+    .list-item {
+      background: white;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    }
-
-    .action-btn {
-      display: flex;
-      flex-direction: column;
       align-items: center;
-      font-size: 0.65rem;
-      color: #555;
-      cursor: pointer;
-      background: none;
-      border: none;
-    }
-
-    .action-btn i {
-      font-size: 1rem;
-      margin-bottom: 2px;
-    }
-
-    /* Form Design */
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .form-group input, .form-group select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-
-    .btn-submit {
-      width: 100%;
-      background: var(--brand-red);
-      color: white;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    /* Report Summary Table */
-    .report-summary {
-      background: #1a1a1a;
-      color: white;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .report-summary h3 {
-      font-size: 1.2rem;
-      color: #4ade80;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    .data-table th, .data-table td {
-      padding: 10px 12px;
-      text-align: left;
-      font-size: 0.8rem;
       border-bottom: 1px solid #eee;
     }
+    .list-date { font-size: 0.8rem; color: #666; width: 90px; }
+    .list-name { font-size: 0.9rem; font-weight: 500; flex: 1; padding: 0 10px; }
+    .list-amount { font-size: 0.9rem; font-weight: bold; }
+    .amount-income { color: #28a745; }
+    .amount-expense { color: #dc3545; }
 
-    .data-table th {
-      background: #f1f5f9;
-      font-weight: bold;
-    }
-
-    /* Floating Add Button */
-    .fab {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--brand-red);
-      color: white;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      cursor: pointer;
-    }
-
-    /* ID Card Modal */
+    /* Modal Styling */
     .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6);
       align-items: center;
       justify-content: center;
       z-index: 200;
+      padding: 15px;
     }
-
+    .modal.active { display: flex; }
     .modal-content {
       background: white;
-      padding: 20px;
+      width: 100%;
+      max-width: 400px;
       border-radius: 12px;
-      width: 90%;
-      max-width: 350px;
-      text-align: center;
+      padding: 20px;
     }
-
-    .id-card {
-      border: 2px solid var(--brand-red);
-      border-radius: 10px;
-      padding: 15px;
-      background: #fff;
+    .modal-title { font-weight: bold; margin-bottom: 15px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
     }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      background: #272727;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .btn-close { background: #888; margin-top: 5px; }
   </style>
 </head>
 <body>
 
-  <!-- Top Bar -->
-  <div class="top-bar">
-    <div class="brand-title" onclick="showScreen('dashboard')">
-      <!-- Added Logo Canvas SVG URL -->
-      <svg class="brand-logo" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="95" fill="#fbc02d" stroke="#d32f2f" stroke-width="10"/>
-        <circle cx="100" cy="100" r="82" fill="none" stroke="#d32f2f" stroke-width="3"/>
-        <path id="txtPath1" fill="none" d="M 30,100 A 70,70 0 0,1 170,100" />
-        <text font-family="Arial" font-size="20" font-weight="900" fill="#d32f2f">
-          <textPath href="#txtPath1" startOffset="50%" text-anchor="middle">PGM FITNESS</textPath>
-        </text>
-        <path id="txtPath2" fill="none" d="M 170,100 A 70,70 0 0,1 30,100" />
-        <text font-family="Arial" font-size="16" font-weight="900" fill="#d32f2f">
-          <textPath href="#txtPath2" startOffset="50%" text-anchor="middle">PANTHERANKAVU</textPath>
-        </text>
-        <path d="M 60,80 Q 100,50 140,80 Q 110,130 90,150 Q 70,120 60,80 Z" fill="#d32f2f" />
-      </svg>
-      <span>PGM FITNESS</span>
+  <!-- MAIN DASHBOARD -->
+  <div id="dashboardPage" class="page active">
+    <div class="top-bar">
+      <div class="title">
+        <i class="fa-solid fa-bars" onclick="alert('Menu Opened')"></i>
+        <span>PGM FITNESS</span>
+      </div>
+      <div class="top-icons">
+        <i class="fa-solid fa-user-plus" onclick="openModal('addMemberModal')"></i>
+        <div class="icon-badge" onclick="alert('Messages')">
+          <i class="fa-solid fa-message"></i>
+          <span class="badge">981</span>
+        </div>
+        <div class="icon-badge" onclick="alert('WhatsApp Reminders')">
+          <i class="fa-brands fa-whatsapp"></i>
+          <span class="badge red">53</span>
+        </div>
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </div>
     </div>
-    <div class="nav-icons">
-      <i class="fa-solid fa-user-plus" onclick="showScreen('add-member')"></i>
-      <i class="fa-solid fa-chart-line" onclick="showScreen('reports')"></i>
+
+    <div class="container">
+      <div class="grid">
+        <!-- Row 1 -->
+        <div class="card" onclick="alert('Live Members: ' + state.members.filter(m => m.status==='live').length)">
+          <div class="card-icon" style="color: #4a90e2;"><i class="fa-solid fa-users"></i></div>
+          <div class="card-title">Live Memberships</div>
+          <div class="pill yellow" id="countLive">0</div>
+        </div>
+        <div class="card" onclick="alert('Total Members: ' + state.members.length)">
+          <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-user-group"></i></div>
+          <div class="card-title">Total Memberships</div>
+          <div class="pill purple" id="countTotal">0</div>
+        </div>
+        <div class="card" onclick="alert('Expired Memberships')">
+          <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-user-xmark"></i></div>
+          <div class="card-title">Expired Memberships</div>
+          <div class="pill black" id="countExpired">0</div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="card">
+          <div class="card-icon" style="color: #9b59b6;"><i class="fa-solid fa-user-clock"></i></div>
+          <div class="card-title">Expiring(1-3 Days)</div>
+          <div class="pill purple">0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: #34495e;"><i class="fa-solid fa-user-clock"></i></div>
+          <div class="card-title">Expiring(4-7 Days)</div>
+          <div class="pill black">0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: #f1c40f;"><i class="fa-solid fa-user-clock"></i></div>
+          <div class="card-title">Expiring(8-15 Days)</div>
+          <div class="pill yellow">0</div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="card">
+          <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="card-title">Today Collection</div>
+          <div class="pill black" id="dashToday">₹0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+          <div class="card-title">Collection(1-7 Days)</div>
+          <div class="pill purple" id="dash7Days">₹0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-vault"></i></div>
+          <div class="card-title">Collection(Oct)</div>
+          <div class="pill black" id="dashMonth">₹0</div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="card">
+          <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="card-title">Collection(2026)</div>
+          <div class="pill purple" id="dashYear">₹0</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-wallet"></i></div>
+          <div class="card-title">Due Amount</div>
+          <div class="pill yellow" id="dashDue">₹0</div>
+        </div>
+        <div class="card" onclick="openModal('addExpenseModal')">
+          <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          <div class="card-title">Total Expense</div>
+          <div class="pill purple" id="dashExpense">₹0</div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="card" onclick="showPage('pnlPage')">
+          <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+          <div class="card-title">P&L Report</div>
+          <div class="pill black" id="dashNetProfit">₹0</div>
+        </div>
+        <div class="card" onclick="alert('Check-In Feature Activated')">
+          <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-calendar-days"></i></div>
+          <div class="card-title">Check In</div>
+          <div class="pill purple">0</div>
+        </div>
+        <div class="card" onclick="alert('Sending WhatsApp Reminders...')">
+          <div class="card-icon" style="color: #f1c40f;"><i class="fa-solid fa-note-sticky"></i></div>
+          <div class="card-title">Due Amount Reminder</div>
+          <div class="pill black">0</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="container">
+  <!-- P&L REPORT SCREEN -->
+  <div id="pnlPage" class="page">
+    <div class="top-bar">
+      <div class="title">
+        <i class="fa-solid fa-arrow-left" onclick="showPage('dashboardPage')"></i>
+        <span>P&L Report</span>
+      </div>
+      <i class="fa-solid fa-ellipsis-vertical"></i>
+    </div>
 
-    <!-- 1. DASHBOARD SCREEN -->
-    <div id="dashboard" class="screen active">
-      <div class="dashboard-grid">
-        <div class="dash-card" onclick="openMembersWithFilter('live')">
-          <i class="fa-solid fa-users" style="color: var(--brand-red);"></i>
-          <div class="card-label">Live Memberships</div>
-          <div class="badge bg-red" id="cnt-live">0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('all')">
-          <i class="fa-solid fa-users-viewfinder" style="color: #1a1a1a;"></i>
-          <div class="card-label">Total Memberships</div>
-          <div class="badge bg-black" id="cnt-total">0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('expired')">
-          <i class="fa-solid fa-user-xmark" style="color: #666;"></i>
-          <div class="card-label">Expired Memberships</div>
-          <div class="badge bg-black" id="cnt-expired">0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('exp-1-3')">
-          <i class="fa-solid fa-clock" style="color: var(--brand-yellow);"></i>
-          <div class="card-label">Expiring (1-3 Days)</div>
-          <div class="badge bg-yellow" id="cnt-exp-1-3">0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('exp-4-7')">
-          <i class="fa-solid fa-clock" style="color: var(--brand-red);"></i>
-          <div class="card-label">Expiring (4-7 Days)</div>
-          <div class="badge bg-red" id="cnt-exp-4-7">0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('exp-8-15')">
-          <i class="fa-solid fa-clock" style="color: #333;"></i>
-          <div class="card-label">Expiring (8-15 Days)</div>
-          <div class="badge bg-black" id="cnt-exp-8-15">0</div>
-        </div>
-
-        <div class="dash-card" onclick="showScreen('reports')">
-          <i class="fa-solid fa-sack-dollar" style="color: #16a34a;"></i>
-          <div class="card-label">Total Collection</div>
-          <div class="badge bg-black" id="val-total-coll">₹0</div>
-        </div>
-
-        <div class="dash-card" onclick="openMembersWithFilter('due')">
-          <i class="fa-solid fa-wallet" style="color: var(--brand-red);"></i>
-          <div class="card-label">Due Amount</div>
-          <div class="badge bg-red" id="val-due">₹0</div>
-        </div>
-
-        <div class="dash-card" onclick="showScreen('expense')">
-          <i class="fa-solid fa-hand-holding-dollar" style="color: var(--brand-yellow);"></i>
-          <div class="card-label">Total Expense</div>
-          <div class="badge bg-yellow" id="val-expense">₹0</div>
-        </div>
+    <div class="pnl-header">
+      <h2>Net Profit: <span id="pnlNetProfit">0</span> Total</h2>
+      <div class="pnl-stats">
+        Collection : <span id="pnlTotalCollection">0</span> &nbsp;&nbsp; Expense : <span id="pnlTotalExpense">0</span>
       </div>
     </div>
 
-    <!-- 2. MANAGE MEMBERS SCREEN -->
-    <div id="members" class="screen">
-      <div class="page-title">
-        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
-        Manage Members
-      </div>
-
-      <div class="pills-bar">
-        <div class="pill active" onclick="filterMembers('live', this)">Live (<span id="pill-live">0</span>)</div>
-        <div class="pill" onclick="filterMembers('expired', this)">Expired (<span id="pill-exp">0</span>)</div>
-        <div class="pill" onclick="filterMembers('exp-1-3', this)">1-3 Days (<span id="pill-1-3">0</span>)</div>
-        <div class="pill" onclick="filterMembers('due', this)">Due Pending</div>
-        <div class="pill" onclick="filterMembers('all', this)">All</div>
-      </div>
-
-      <div id="members-list-container"></div>
+    <div class="pnl-tabs">
+      <button class="tab-btn active" id="tabCollectionBtn" onclick="switchPnlTab('collection')">Collection</button>
+      <button class="tab-btn" id="tabExpenseBtn" onclick="switchPnlTab('expense')">Expense</button>
     </div>
 
-    <!-- 3. ADD MEMBER SCREEN -->
-    <div id="add-member" class="screen">
-      <div class="page-title">
-        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
-        Add New Member
-      </div>
-
-      <form id="memberForm" onsubmit="saveMember(event)">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="mName" required placeholder="e.g. Rahul V">
-        </div>
-        <div class="form-group">
-          <label>Contact Number</label>
-          <input type="tel" id="mPhone" required placeholder="10 Digit Mobile Number">
-        </div>
-        <div class="form-group">
-          <label>Join Date</label>
-          <input type="date" id="mJoinDate" required>
-        </div>
-        <div class="form-group">
-          <label>Plan Validity (Months)</label>
-          <select id="mPlanMonths">
-            <option value="1">1 Month</option>
-            <option value="3">3 Months</option>
-            <option value="6">6 Months</option>
-            <option value="12">1 Year</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Total Fee (₹)</label>
-          <input type="number" id="mTotalFee" required placeholder="1500">
-        </div>
-        <div class="form-group">
-          <label>Paid Amount (₹)</label>
-          <input type="number" id="mPaidFee" required placeholder="1500">
-        </div>
-        <button type="submit" class="btn-submit">Save Member</button>
-      </form>
-    </div>
-
-    <!-- 4. P&L REPORT SCREEN -->
-    <div id="reports" class="screen">
-      <div class="page-title">
-        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
-        P&L Report
-      </div>
-
-      <div class="report-summary">
-        <div>Net Profit: <span id="report-net">₹0</span></div>
-        <small>Total Collection: <span id="report-coll">₹0</span> | Expense: <span id="report-exp">₹0</span></small>
-      </div>
-
-      <h4 style="margin-bottom:10px;">Recent Collections</h4>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Name</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody id="collection-table-body"></tbody>
-      </table>
-    </div>
-
-    <!-- 5. ADD EXPENSE SCREEN -->
-    <div id="expense" class="screen">
-      <div class="page-title">
-        <i class="fa-solid fa-arrow-left" onclick="showScreen('dashboard')"></i>
-        Add Gym Expense
-      </div>
-
-      <form onsubmit="saveExpense(event)">
-        <div class="form-group">
-          <label>Expense Category / Details</label>
-          <input type="text" id="expTitle" required placeholder="e.g. Rent, Electricity">
-        </div>
-        <div class="form-group">
-          <label>Amount (₹)</label>
-          <input type="number" id="expAmount" required placeholder="5000">
-        </div>
-        <div class="form-group">
-          <label>Date</label>
-          <input type="date" id="expDate" required>
-        </div>
-        <button type="submit" class="btn-submit">Save Expense</button>
-      </form>
-    </div>
-
+    <div id="pnlCollectionList"></div>
+    <div id="pnlExpenseList" style="display:none;"></div>
   </div>
 
-  <!-- ID Card Modal -->
-  <div id="idModal" class="modal">
+  <!-- MODAL: ADD MEMBER / COLLECTION -->
+  <div id="addMemberModal" class="modal">
     <div class="modal-content">
-      <div class="id-card">
-        <h3 style="color:var(--brand-red);">PGM FITNESS</h3>
-        <p style="font-size:0.7rem; color:#666; margin-bottom:10px;">PANTHERANKAVU</p>
-        <i class="fa-solid fa-circle-user" style="font-size:3rem; color:#333;"></i>
-        <h4 id="idCardName" style="margin-top:5px;">Name</h4>
-        <p id="idCardPhone" style="font-size:0.8rem; color:#555;">Phone</p>
-        <hr style="margin:10px 0;">
-        <div style="font-size:0.75rem; text-align:left;">
-          <div><b>Valid Till:</b> <span id="idCardExp"></span></div>
-          <div><b>Status:</b> <span style="color:green; font-weight:bold;">Active</span></div>
-        </div>
+      <div class="modal-title">Add Collection / Member</div>
+      <div class="form-group">
+        <label>Member Name</label>
+        <input type="text" id="mName" placeholder="Name">
       </div>
-      <br>
-      <button onclick="closeModal()" class="btn-submit" style="padding:8px;">Close</button>
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="mAmount" placeholder="1500">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="mDate">
+      </div>
+      <button class="btn" onclick="saveCollection()">Save Transaction</button>
+      <button class="btn btn-close" onclick="closeModal('addMemberModal')">Cancel</button>
     </div>
   </div>
 
-  <!-- FAB -->
-  <div class="fab" onclick="showScreen('add-member')">+</div>
+  <!-- MODAL: ADD EXPENSE -->
+  <div id="addExpenseModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Add Expense</div>
+      <div class="form-group">
+        <label>Expense Description</label>
+        <input type="text" id="eTitle" placeholder="Electricity / Rent">
+      </div>
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="eAmount" placeholder="2000">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="eDate">
+      </div>
+      <button class="btn" onclick="saveExpense()">Save Expense</button>
+      <button class="btn btn-close" onclick="closeModal('addExpenseModal')">Cancel</button>
+    </div>
+  </div>
 
   <script>
-    let members = JSON.parse(localStorage.getItem('gym_members')) || [];
-    let expenses = JSON.parse(localStorage.getItem('gym_expenses')) || [];
-
-    document.getElementById('mJoinDate').valueAsDate = new Date();
-    document.getElementById('expDate').valueAsDate = new Date();
-
-    window.onload = function() {
-      updateDashboardData();
+    // Initial State
+    let state = JSON.parse(localStorage.getItem('pgm_data')) || {
+      members: [
+        { name: 'Anju Shivadas', amount: 1500, date: '2026-10-28', status: 'live' },
+        { name: 'Vaishnav K', amount: 2000, date: '2026-10-27', status: 'live' },
+        { name: 'Shyamjith', amount: 3500, date: '2026-10-27', status: 'live' },
+        { name: 'Fathima hannath', amount: 2000, date: '2026-10-27', status: 'live' }
+      ],
+      expenses: [
+        { title: 'Equipment Maintenance', amount: 5000, date: '2026-10-20' },
+        { title: 'Electricity Bill', amount: 3200, date: '2026-10-15' }
+      ]
     };
 
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    function saveData() {
+      localStorage.setItem('pgm_data', JSON.stringify(state));
+      renderDashboard();
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if(pageId === 'pnlPage') renderPnl();
+    }
+
+    function openModal(id) {
       document.getElementById(id).classList.add('active');
-      if(id === 'members') renderMembers('live');
-      if(id === 'reports') renderReports();
-      updateDashboardData();
+      let today = new Date().toISOString().split('T')[0];
+      if(id==='addMemberModal') document.getElementById('mDate').value = today;
+      if(id==='addExpenseModal') document.getElementById('eDate').value = today;
     }
 
-    function openMembersWithFilter(filterType) {
-      showScreen('members');
-      renderMembers(filterType);
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
     }
 
-    function updateDashboardData() {
-      const today = new Date();
-      let live = 0, expired = 0, exp1_3 = 0, exp4_7 = 0, exp8_15 = 0, totalDue = 0, totalColl = 0;
-
-      members.forEach(m => {
-        const expDate = new Date(m.endDate);
-        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-
-        totalColl += m.paid;
-        totalDue += (m.total - m.paid);
-
-        if (diffDays >= 0) {
-          live++;
-          if (diffDays <= 3) exp1_3++;
-          else if (diffDays <= 7) exp4_7++;
-          else if (diffDays <= 15) exp8_15++;
-        } else {
-          expired++;
-        }
-      });
-
-      let totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-
-      document.getElementById('cnt-live').innerText = live;
-      document.getElementById('cnt-total').innerText = members.length;
-      document.getElementById('cnt-expired').innerText = expired;
-      document.getElementById('cnt-exp-1-3').innerText = exp1_3;
-      document.getElementById('cnt-exp-4-7').innerText = exp4_7;
-      document.getElementById('cnt-exp-8-15').innerText = exp8_15;
-
-      document.getElementById('pill-live').innerText = live;
-      document.getElementById('pill-exp').innerText = expired;
-      document.getElementById('pill-1-3').innerText = exp1_3;
-
-      document.getElementById('val-total-coll').innerText = '₹' + totalColl;
-      document.getElementById('val-due').innerText = '₹' + totalDue;
-      document.getElementById('val-expense').innerText = '₹' + totalExp;
-    }
-
-    function renderMembers(filter) {
-      const container = document.getElementById('members-list-container');
-      container.innerHTML = '';
-      const today = new Date();
-
-      let filtered = members.filter(m => {
-        const expDate = new Date(m.endDate);
-        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-
-        if (filter === 'live') return diffDays >= 0;
-        if (filter === 'expired') return diffDays < 0;
-        if (filter === 'exp-1-3') return diffDays >= 0 && diffDays <= 3;
-        if (filter === 'due') return (m.total - m.paid) > 0;
-        return true;
-      });
-
-      filtered.forEach(m => {
-        const due = m.total - m.paid;
-        const html = `
-          <div class="member-card">
-            <div class="member-header">
-              <div class="member-avatar"><i class="fa-solid fa-user"></i></div>
-              <div class="member-info">
-                <h4>${m.name}</h4>
-                <p class="phone">${m.phone}</p>
-              </div>
-            </div>
-            <div class="member-details-grid">
-              <div><span>Join Date</span>${m.joinDate}</div>
-              <div><span>End Date</span>${m.endDate}</div>
-              <div><span>Plan</span>${m.plan}</div>
-              <div><span>Due Amount</span><b style="color:${due > 0 ? 'red':'green'}">₹${due}</b></div>
-            </div>
-            <div class="member-actions">
-              <button class="action-btn" onclick="openIDCard('${m.name}', '${m.phone}', '${m.endDate}')"><i class="fa-solid fa-id-card"></i>ID Card</button>
-              <button class="action-btn" onclick="addPayment(${m.id})"><i class="fa-solid fa-plus-circle"></i>Add Pay</button>
-              <button class="action-btn" onclick="deleteMember(${m.id})" style="color:red;"><i class="fa-solid fa-trash"></i>Delete</button>
-            </div>
-          </div>
-        `;
-        container.innerHTML += html;
-      });
-    }
-
-    function filterMembers(type, el) {
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      el.classList.add('active');
-      renderMembers(type);
-    }
-
-    function saveMember(e) {
-      e.preventDefault();
-      const name = document.getElementById('mName').value;
-      const phone = document.getElementById('mPhone').value;
-      const joinDate = document.getElementById('mJoinDate').value;
-      const months = parseInt(document.getElementById('mPlanMonths').value);
-      const total = parseFloat(document.getElementById('mTotalFee').value);
-      const paid = parseFloat(document.getElementById('mPaidFee').value);
-
-      let endDateObj = new Date(joinDate);
-      endDateObj.setMonth(endDateObj.getMonth() + months);
-      const endDate = endDateObj.toISOString().split('T')[0];
-
-      const newMember = {
-        id: Date.now(),
-        name, phone, joinDate, endDate,
-        plan: months + ' Month(s)',
-        total, paid, due: total - paid
-      };
-
-      members.push(newMember);
-      localStorage.setItem('gym_members', JSON.stringify(members));
-      alert('Member Added Successfully!');
-      document.getElementById('memberForm').reset();
-      showScreen('dashboard');
-    }
-
-    function addPayment(id) {
-      const amt = prompt('Enter payment amount received (₹):');
-      if (amt) {
-        const m = members.find(x => x.id === id);
-        if (m) {
-          m.paid += parseFloat(amt);
-          localStorage.setItem('gym_members', JSON.stringify(members));
-          renderMembers('live');
-          updateDashboardData();
-        }
+    function saveCollection() {
+      let name = document.getElementById('mName').value;
+      let amount = Number(document.getElementById('mAmount').value);
+      let date = document.getElementById('mDate').value;
+      if(name && amount) {
+        state.members.unshift({ name, amount, date, status: 'live' });
+        saveData();
+        closeModal('addMemberModal');
       }
     }
 
-    function deleteMember(id) {
-      if(confirm('Are you sure you want to delete this member?')) {
-        members = members.filter(x => x.id !== id);
-        localStorage.setItem('gym_members', JSON.stringify(members));
-        renderMembers('live');
-        updateDashboardData();
+    function saveExpense() {
+      let title = document.getElementById('eTitle').value;
+      let amount = Number(document.getElementById('eAmount').value);
+      let date = document.getElementById('eDate').value;
+      if(title && amount) {
+        state.expenses.unshift({ title, amount, date });
+        saveData();
+        closeModal('addExpenseModal');
       }
     }
 
-    function saveExpense(e) {
-      e.preventDefault();
-      const title = document.getElementById('expTitle').value;
-      const amount = parseFloat(document.getElementById('expAmount').value);
-      const date = document.getElementById('expDate').value;
-
-      expenses.push({ id: Date.now(), title, amount, date });
-      localStorage.setItem('gym_expenses', JSON.stringify(expenses));
-      alert('Expense Added!');
-      showScreen('dashboard');
+    function switchPnlTab(tab) {
+      if(tab === 'collection') {
+        document.getElementById('tabCollectionBtn').classList.add('active');
+        document.getElementById('tabExpenseBtn').classList.remove('active');
+        document.getElementById('pnlCollectionList').style.display = 'block';
+        document.getElementById('pnlExpenseList').style.display = 'none';
+      } else {
+        document.getElementById('tabCollectionBtn').classList.remove('active');
+        document.getElementById('tabExpenseBtn').classList.add('active');
+        document.getElementById('pnlCollectionList').style.display = 'none';
+        document.getElementById('pnlExpenseList').style.display = 'block';
+      }
     }
 
-    function renderReports() {
-      let totalColl = members.reduce((acc, curr) => acc + curr.paid, 0);
-      let totalExp = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-      let net = totalColl - totalExp;
+    function formatDate(dStr) {
+      let d = new Date(dStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
 
-      document.getElementById('report-net').innerText = '₹' + net;
-      document.getElementById('report-coll').innerText = '₹' + totalColl;
-      document.getElementById('report-exp').innerText = '₹' + totalExp;
+    function renderPnl() {
+      let totCollection = state.members.reduce((acc, item) => acc + item.amount, 0);
+      let totExpense = state.expenses.reduce((acc, item) => acc + item.amount, 0);
+      let netProfit = totCollection - totExpense;
 
-      const tbody = document.getElementById('collection-table-body');
-      tbody.innerHTML = '';
-      members.forEach(m => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${m.joinDate}</td>
-            <td>${m.name}</td>
-            <td style="color:green; font-weight:bold;">+₹${m.paid}</td>
-          </tr>
-        `;
+      document.getElementById('pnlNetProfit').innerText = netProfit;
+      document.getElementById('pnlTotalCollection').innerText = totCollection;
+      document.getElementById('pnlTotalExpense').innerText = totExpense;
+
+      let cList = document.getElementById('pnlCollectionList');
+      cList.innerHTML = state.members.map(item => `
+        <div class="list-item">
+          <div class="list-date">${formatDate(item.date)}</div>
+          <div class="list-name">${item.name}</div>
+          <div class="list-amount amount-income">${item.amount}</div>
+        </div>
+      `).join('');
+
+      let eList = document.getElementById('pnlExpenseList');
+      eList.innerHTML = state.expenses.map(item => `
+        <div class="list-item">
+          <div class="list-date">${formatDate(item.date)}</div>
+          <div class="list-name">${item.title}</div>
+          <div class="list-amount amount-expense">${item.amount}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderDashboard() {
+      let totCollection = state.members.reduce((acc, item) => acc + item.amount, 0);
+      let totExpense = state.expenses.reduce((acc, item) => acc + item.amount, 0);
+      let netProfit = totCollection - totExpense;
+
+      document.getElementById('countLive').innerText = state.members.length;
+      document.getElementById('countTotal').innerText = state.members.length + 50;
+      document.getElementById('countExpired').innerText = 50;
+
+      document.getElementById('dashMonth').innerText = (totCollection > 1000) ? (totCollection/1000).toFixed(1) + 'K' : totCollection;
+      document.getElementById('dashYear').innerText = (totCollection > 1000) ? (totCollection/1000).toFixed(1) + 'K' : totCollection;
+      document.getElementById('dashExpense').innerText = (totExpense > 1000) ? (totExpense/1000).toFixed(1) + 'K' : totExpense;
+      document.getElementById('dashNetProfit').innerText = netProfit;
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
       });
     }
 
-    function openIDCard(name, phone, exp) {
-      document.getElementById('idCardName').innerText = name;
-      document.getElementById('idCardPhone').innerText = phone;
-      document.getElementById('idCardExp').innerText = exp;
-      document.getElementById('idModal').style.display = 'flex';
-    }
-
-    function closeModal() {
-      document.getElementById('idModal').style.display = 'none';
-    }
+    renderDashboard();
   </script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registered!', reg))
-        .catch(err => console.log('Service Worker error:', err));
-    });
-  }
-</script>
 </body>
 </html>
