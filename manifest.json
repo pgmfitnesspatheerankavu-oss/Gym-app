@@ -1,0 +1,10 @@
+{
+  "name": "PGM Fitness Owner App",
+  "short_name": "PGM Fitness",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#e11d48",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
