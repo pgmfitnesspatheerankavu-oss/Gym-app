@@ -29,6 +29,8 @@
     
     .list-container { padding: 15px; }
     .list-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .member-info { display: flex; align-items: center; gap: 12px; }
+    .member-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #333; border: 1px solid #555; }
     .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; }
     .list-card p { font-size: 0.75rem; color: #aaa; }
     .list-actions { display: flex; gap: 10px; align-items: center; }
@@ -163,7 +165,7 @@
     <div class="list-container" id="pnlDetailsList"></div>
   </div>
 
-  <!-- MODAL: ADD / EDIT MEMBER -->
+  <!-- MODAL: ADD / EDIT MEMBER WITH PHOTO -->
   <div id="addMemberModal" class="modal">
     <div class="modal-content">
       <div class="modal-title" id="modalMemberTitle">Add New Member</div>
@@ -181,6 +183,7 @@
         </select>
       </div>
       <div class="form-group"><label>Expiry Date</label><input type="date" id="mExpiryDate"></div>
+      <div class="form-group"><label>Client Photo</label><input type="file" id="mPhoto" accept="image/*"></div>
       <button class="btn" onclick="saveMember()">Save Member</button>
       <button class="btn btn-close" onclick="closeModal('addMemberModal')" style="margin-top:8px;">Cancel</button>
     </div>
@@ -241,6 +244,7 @@
       document.getElementById('mPhone').value = '';
       document.getElementById('mAmount').value = '';
       document.getElementById('mPayMode').value = 'Cash';
+      document.getElementById('mPhoto').value = '';
       let today = new Date().toISOString().split('T')[0];
       document.getElementById('mExpiryDate').value = today;
       openModal('addMemberModal');
@@ -274,22 +278,37 @@
       let payMode = document.getElementById('mPayMode').value;
       let expiryDate = document.getElementById('mExpiryDate').value;
       let date = new Date().toISOString().split('T')[0];
+      let photoInput = document.getElementById('mPhoto');
 
       if(name && amount && expiryDate) {
-        if(index === -1) {
-          // New Member
-          state.members.unshift({ name, phone, amount, payMode, date, expiryDate });
+        let processMemberData = (photoUrl) => {
+          if(index === -1) {
+            state.members.unshift({ name, phone, amount, payMode, date, expiryDate, photo: photoUrl || '' });
+          } else {
+            state.members[index].name = name;
+            state.members[index].phone = phone;
+            state.members[index].amount = amount;
+            state.members[index].payMode = payMode;
+            state.members[index].expiryDate = expiryDate;
+            if(photoUrl) {
+              state.members[index].photo = photoUrl;
+            }
+          }
+          saveData();
+          closeModal('addMemberModal');
+          openListView(currentListViewType);
+        };
+
+        if(photoInput.files && photoInput.files[0]) {
+          let reader = new FileReader();
+          reader.onload = function(e) {
+            processMemberData(e.target.result);
+          };
+          reader.readAsDataURL(photoInput.files[0]);
         } else {
-          // Edit Existing Member
-          state.members[index].name = name;
-          state.members[index].phone = phone;
-          state.members[index].amount = amount;
-          state.members[index].payMode = payMode;
-          state.members[index].expiryDate = expiryDate;
+          let existingPhoto = index !== -1 ? state.members[index].photo : '';
+          processMemberData(existingPhoto);
         }
-        saveData();
-        closeModal('addMemberModal');
-        openListView(currentListViewType);
       } else {
         alert('എല്ലാ വിവരങ്ങളും പൂരിപ്പിക്കുക!');
       }
@@ -367,7 +386,6 @@
       let todayStr = new Date().toISOString().split('T')[0];
       let currentMonth = todayStr.slice(0, 7);
       
-      // Store original index mapping for safe editing/deleting
       let mappedMembers = state.members.map((m, idx) => ({ ...m, originalIndex: idx }));
       let filtered = [];
 
@@ -417,9 +435,12 @@
 
       html += filtered.map(item => `
         <div class="list-card">
-          <div>
-            <h4>${item.name}</h4>
-            <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate}</p>
+          <div class="member-info">
+            <img src="${item.photo || 'https://via.placeholder.com/45?text=User'}" class="member-avatar" alt="Photo">
+            <div>
+              <h4>${item.name}</h4>
+              <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate}</p>
+            </div>
           </div>
           <div class="list-actions">
             <span style="font-weight:bold; color:#2ecc71; margin-right:5px;">₹${item.amount}</span>
