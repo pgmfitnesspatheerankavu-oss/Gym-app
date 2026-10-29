@@ -36,15 +36,14 @@
     /* Modal */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 200; padding: 15px; }
     .modal.active { display: flex; }
-    .modal-content { background: #1e1e1e; border: 1px solid #333; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; }
+    .modal-content { background: #1e1e1e; border: 1px solid #333; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; max-height: 90vh; overflow-y: auto; }
     .modal-title { font-weight: bold; margin-bottom: 15px; color: #fff; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: #ccc; }
-    .form-group input { width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 0.9rem; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 0.9rem; }
     .btn { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; }
     .btn-close { background: #555; }
     
-    /* Floating Action Button */
     .fab { position: fixed; bottom: 20px; right: 20px; background: #e74c3c; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; z-index: 150; }
   </style>
 </head>
@@ -58,8 +57,8 @@
         <span>PGM FITNESS</span>
       </div>
       <div class="top-icons">
+        <i class="fa-solid fa-wallet" onclick="openModal('openingBalanceModal')" title="Opening Balance"></i>
         <i class="fa-solid fa-user-plus" onclick="openModal('addMemberModal')"></i>
-        <i class="fa-solid fa-message"></i>
         <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
       </div>
     </div>
@@ -135,7 +134,7 @@
     <div class="fab" onclick="openModal('addMemberModal')"><i class="fa-solid fa-plus"></i></div>
   </div>
 
-  <!-- DYNAMIC LIST VIEW PAGE (For Members / Collections) -->
+  <!-- DYNAMIC LIST VIEW PAGE -->
   <div id="listPage" class="page">
     <div class="top-bar">
       <div class="title">
@@ -161,16 +160,36 @@
     <div class="list-container" id="pnlDetailsList"></div>
   </div>
 
-  <!-- MODAL: ADD MEMBER -->
+  <!-- MODAL: ADD MEMBER WITH PAYMENT MODE -->
   <div id="addMemberModal" class="modal">
     <div class="modal-content">
-      <div class="modal-title">Add New Member</div>
+      <div class="modal-title">Add New Member / Collection</div>
       <div class="form-group"><label>Member Name</label><input type="text" id="mName" placeholder="Name"></div>
       <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" placeholder="Phone"></div>
       <div class="form-group"><label>Fee Amount (₹)</label><input type="number" id="mAmount" placeholder="1500"></div>
+      <div class="form-group">
+        <label>Payment Mode</label>
+        <select id="mPayMode">
+          <option value="Cash">Cash</option>
+          <option value="UPI / Google Pay">UPI / Google Pay</option>
+          <option value="Card">Card</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
       <div class="form-group"><label>Expiry Date</label><input type="date" id="mExpiryDate"></div>
       <button class="btn" onclick="saveMember()">Save Member</button>
       <button class="btn btn-close" onclick="closeModal('addMemberModal')" style="margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MODAL: OPENING BALANCE -->
+  <div id="openingBalanceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Set Opening Balance</div>
+      <div class="form-group"><label>Opening Balance Amount (₹)</label><input type="number" id="opAmount" placeholder="50000"></div>
+      <div class="form-group"><label>Note / Description</label><input type="text" id="opNote" placeholder="Previous Gym Cash Balance"></div>
+      <button class="btn" onclick="saveOpeningBalance()">Save Opening Balance</button>
+      <button class="btn btn-close" onclick="closeModal('openingBalanceModal')" style="margin-top:8px;">Cancel</button>
     </div>
   </div>
 
@@ -188,14 +207,9 @@
 
   <script>
     let state = JSON.parse(localStorage.getItem('pgm_fitness_data')) || {
-      members: [
-        { name: 'Anju Shivadas', phone: '9876543210', amount: 1500, date: new Date().toISOString().split('T')[0], expiryDate: '2026-11-28' },
-        { name: 'Vaishnav K', phone: '9876543211', amount: 2000, date: '2026-10-27', expiryDate: '2026-10-30' },
-        { name: 'Shyamjith', phone: '9876543212', amount: 3500, date: '2026-10-25', expiryDate: '2026-10-28' }
-      ],
-      expenses: [
-        { title: 'Electricity Bill', amount: 1200, date: new Date().toISOString().split('T')[0] }
-      ]
+      openingBalance: 0,
+      members: [],
+      expenses: []
     };
 
     function saveData() {
@@ -222,15 +236,26 @@
       let name = document.getElementById('mName').value;
       let phone = document.getElementById('mPhone').value;
       let amount = Number(document.getElementById('mAmount').value);
+      let payMode = document.getElementById('mPayMode').value;
       let expiryDate = document.getElementById('mExpiryDate').value;
       let date = new Date().toISOString().split('T')[0];
 
       if(name && amount && expiryDate) {
-        state.members.unshift({ name, phone, amount, date, expiryDate });
+        state.members.unshift({ name, phone, amount, payMode, date, expiryDate });
         saveData();
         closeModal('addMemberModal');
       } else {
         alert('എല്ലാ വിവരങ്ങളും പൂരിപ്പിക്കുക!');
+      }
+    }
+
+    function saveOpeningBalance() {
+      let amt = Number(document.getElementById('opAmount').value);
+      if(!isNaN(amt)) {
+        state.openingBalance = amt;
+        saveData();
+        closeModal('openingBalanceModal');
+        alert('Opening Balance വിജയകരമായി സേവ് ചെയ്തു!');
       }
     }
 
@@ -273,6 +298,7 @@
         if (m.date && m.date.startsWith(currentMonth)) monthColl += m.amount;
       });
 
+      let totCollectionWithOB = (state.openingBalance || 0) + monthColl;
       let totExpense = state.expenses.reduce((sum, e) => sum + e.amount, 0);
 
       document.getElementById('countLive').innerText = liveCount;
@@ -282,9 +308,9 @@
       document.getElementById('countExp4_7').innerText = exp4_7;
       document.getElementById('countExp8_15').innerText = exp8_15;
       document.getElementById('dashToday').innerText = `₹${todayColl}`;
-      document.getElementById('dashMonth').innerText = `₹${monthColl}`;
+      document.getElementById('dashMonth').innerText = `₹${totCollectionWithOB}`;
       document.getElementById('dashExpense').innerText = `₹${totExpense}`;
-      document.getElementById('dashNetProfit').innerText = `₹${monthColl - totExpense}`;
+      document.getElementById('dashNetProfit').innerText = `₹${totCollectionWithOB - totExpense}`;
     }
 
     function openListView(type) {
@@ -317,44 +343,62 @@
         title.innerText = "Today's Collection";
         filtered = state.members.filter(m => m.date === todayStr);
       } else if(type === 'monthCollection') {
-        title.innerText = "Monthly Collection";
+        title.innerText = "Monthly Collection & OB";
         filtered = state.members.filter(m => m.date && m.date.startsWith(currentMonth));
       }
 
-      if(filtered.length === 0) {
-        content.innerHTML = `<p style="text-align:center; color:#77; margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>`;
+      let html = "";
+      if(type === 'monthCollection' && state.openingBalance > 0) {
+        html += `
+          <div class="list-card" style="border-color: #ffb703;">
+            <div>
+              <h4>Opening Balance</h4>
+              <p>Initial Carried Forward Balance</p>
+            </div>
+            <div class="amount">₹${state.openingBalance}</div>
+          </div>
+        `;
+      }
+
+      if(filtered.length === 0 && (!state.openingBalance || type !== 'monthCollection')) {
+        content.innerHTML = `<p style="text-align:center; color:#777; margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>`;
         return;
       }
 
-      content.innerHTML = filtered.map(item => `
+      html += filtered.map(item => `
         <div class="list-card">
           <div>
-            <h4>${item.name || item.title}</h4>
-            <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Date: ${item.date} ${item.expiryDate ? ' | Exp: ' + item.expiryDate : ''}</p>
+            <h4>${item.name}</h4>
+            <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Date: ${item.date}</p>
           </div>
           <div class="amount">₹${item.amount}</div>
         </div>
       `).join('');
+
+      content.innerHTML = html;
     }
 
     function renderPnl() {
-      let totColl = state.members.reduce((s, m) => s + m.amount, 0);
+      let memberColl = state.members.reduce((s, m) => s + m.amount, 0);
+      let totColl = (state.openingBalance || 0) + memberColl;
       let totExp = state.expenses.reduce((s, e) => s + e.amount, 0);
+
       document.getElementById('pnlNetProfit').innerText = `₹${totColl - totExp}`;
       document.getElementById('pnlTotColl').innerText = `₹${totColl}`;
       document.getElementById('pnlTotExp').innerText = `₹${totExp}`;
 
       let list = document.getElementById('pnlDetailsList');
       let combined = [
-        ...state.members.map(m => ({ date: m.date, name: m.name, amount: m.amount, type: 'Income' })),
-        ...state.expenses.map(e => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense' }))
-      ].sort((a,b) => new Date(b.date) - new Date(a.date));
+        ...(state.openingBalance > 0 ? [{ date: 'Start', name: 'Opening Balance', amount: state.openingBalance, type: 'Income', payMode: 'OB' }] : []),
+        ...state.members.map(m => ({ date: m.date, name: m.name, amount: m.amount, type: 'Income', payMode: m.payMode || 'Cash' })),
+        ...state.expenses.map(e => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', payMode: 'Expense' }))
+      ];
 
       list.innerHTML = combined.map(i => `
         <div class="list-card">
           <div>
             <h4>${i.name} (${i.type})</h4>
-            <p>${i.date}</p>
+            <p>${i.date} ${i.payMode ? '• ' + i.payMode : ''}</p>
           </div>
           <div class="amount" style="color: ${i.type==='Income' ? '#2ecc71' : '#e74c3c'};">
             ${i.type==='Income' ? '+' : '-'}₹${i.amount}
