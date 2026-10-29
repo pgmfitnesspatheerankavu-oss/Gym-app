@@ -31,7 +31,10 @@
     .list-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; }
     .list-card p { font-size: 0.75rem; color: #aaa; }
-    .list-card .amount { font-size: 0.95rem; font-weight: bold; color: #2ecc71; }
+    .list-actions { display: flex; gap: 10px; align-items: center; }
+    .list-actions i { font-size: 1rem; cursor: pointer; padding: 5px; }
+    .fa-pen-to-square { color: #3498db; }
+    .fa-trash { color: #e74c3c; }
 
     /* Modal */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 200; padding: 15px; }
@@ -58,7 +61,7 @@
       </div>
       <div class="top-icons">
         <i class="fa-solid fa-wallet" onclick="openModal('openingBalanceModal')" title="Opening Balance"></i>
-        <i class="fa-solid fa-user-plus" onclick="openModal('addMemberModal')"></i>
+        <i class="fa-solid fa-user-plus" onclick="openAddModal()"></i>
         <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
       </div>
     </div>
@@ -118,7 +121,7 @@
           <div class="card-title">P&L Report</div>
           <div class="pill yellow" id="dashNetProfit">₹0</div>
         </div>
-        <div class="card" onclick="openModal('addMemberModal')">
+        <div class="card" onclick="openAddModal()">
           <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-user-plus"></i></div>
           <div class="card-title">Add Member</div>
           <div class="pill yellow">+</div>
@@ -131,7 +134,7 @@
       </div>
     </div>
     
-    <div class="fab" onclick="openModal('addMemberModal')"><i class="fa-solid fa-plus"></i></div>
+    <div class="fab" onclick="openAddModal()"><i class="fa-solid fa-plus"></i></div>
   </div>
 
   <!-- DYNAMIC LIST VIEW PAGE -->
@@ -160,10 +163,11 @@
     <div class="list-container" id="pnlDetailsList"></div>
   </div>
 
-  <!-- MODAL: ADD MEMBER WITH PAYMENT MODE -->
+  <!-- MODAL: ADD / EDIT MEMBER -->
   <div id="addMemberModal" class="modal">
     <div class="modal-content">
-      <div class="modal-title">Add New Member / Collection</div>
+      <div class="modal-title" id="modalMemberTitle">Add New Member</div>
+      <input type="hidden" id="editMemberIndex" value="-1">
       <div class="form-group"><label>Member Name</label><input type="text" id="mName" placeholder="Name"></div>
       <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" placeholder="Phone"></div>
       <div class="form-group"><label>Fee Amount (₹)</label><input type="number" id="mAmount" placeholder="1500"></div>
@@ -187,7 +191,6 @@
     <div class="modal-content">
       <div class="modal-title">Set Opening Balance</div>
       <div class="form-group"><label>Opening Balance Amount (₹)</label><input type="number" id="opAmount" placeholder="50000"></div>
-      <div class="form-group"><label>Note / Description</label><input type="text" id="opNote" placeholder="Previous Gym Cash Balance"></div>
       <button class="btn" onclick="saveOpeningBalance()">Save Opening Balance</button>
       <button class="btn btn-close" onclick="closeModal('openingBalanceModal')" style="margin-top:8px;">Cancel</button>
     </div>
@@ -212,6 +215,8 @@
       expenses: []
     };
 
+    let currentListViewType = 'total';
+
     function saveData() {
       localStorage.setItem('pgm_fitness_data', JSON.stringify(state));
       updateDashboard();
@@ -225,14 +230,44 @@
 
     function openModal(id) {
       document.getElementById(id).classList.add('active');
-      let today = new Date().toISOString().split('T')[0];
-      if(id === 'addMemberModal') document.getElementById('mExpiryDate').value = today;
-      if(id === 'addExpenseModal') document.getElementById('eDate').value = today;
     }
 
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+    function openAddModal() {
+      document.getElementById('modalMemberTitle').innerText = "Add New Member";
+      document.getElementById('editMemberIndex').value = -1;
+      document.getElementById('mName').value = '';
+      document.getElementById('mPhone').value = '';
+      document.getElementById('mAmount').value = '';
+      document.getElementById('mPayMode').value = 'Cash';
+      let today = new Date().toISOString().split('T')[0];
+      document.getElementById('mExpiryDate').value = today;
+      openModal('addMemberModal');
+    }
+
+    function editMember(index) {
+      let m = state.members[index];
+      document.getElementById('modalMemberTitle').innerText = "Edit Member Details";
+      document.getElementById('editMemberIndex').value = index;
+      document.getElementById('mName').value = m.name || '';
+      document.getElementById('mPhone').value = m.phone || '';
+      document.getElementById('mAmount').value = m.amount || '';
+      document.getElementById('mPayMode').value = m.payMode || 'Cash';
+      document.getElementById('mExpiryDate').value = m.expiryDate || new Date().toISOString().split('T')[0];
+      openModal('addMemberModal');
+    }
+
+    function deleteMember(index) {
+      if(confirm('ഈ മെമ്പറെ ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
+        state.members.splice(index, 1);
+        saveData();
+        openListView(currentListViewType);
+      }
+    }
+
     function saveMember() {
+      let index = Number(document.getElementById('editMemberIndex').value);
       let name = document.getElementById('mName').value;
       let phone = document.getElementById('mPhone').value;
       let amount = Number(document.getElementById('mAmount').value);
@@ -241,9 +276,20 @@
       let date = new Date().toISOString().split('T')[0];
 
       if(name && amount && expiryDate) {
-        state.members.unshift({ name, phone, amount, payMode, date, expiryDate });
+        if(index === -1) {
+          // New Member
+          state.members.unshift({ name, phone, amount, payMode, date, expiryDate });
+        } else {
+          // Edit Existing Member
+          state.members[index].name = name;
+          state.members[index].phone = phone;
+          state.members[index].amount = amount;
+          state.members[index].payMode = payMode;
+          state.members[index].expiryDate = expiryDate;
+        }
         saveData();
         closeModal('addMemberModal');
+        openListView(currentListViewType);
       } else {
         alert('എല്ലാ വിവരങ്ങളും പൂരിപ്പിക്കുക!');
       }
@@ -262,7 +308,7 @@
     function saveExpense() {
       let title = document.getElementById('eTitle').value;
       let amount = Number(document.getElementById('eAmount').value);
-      let date = document.getElementById('eDate').value;
+      let date = document.getElementById('eDate').value || new Date().toISOString().split('T')[0];
 
       if(title && amount) {
         state.expenses.unshift({ title, amount, date });
@@ -314,37 +360,41 @@
     }
 
     function openListView(type) {
+      currentListViewType = type;
       showPage('listPage');
       let title = document.getElementById('listPageTitle');
       let content = document.getElementById('dynamicListContent');
       let todayStr = new Date().toISOString().split('T')[0];
       let currentMonth = todayStr.slice(0, 7);
+      
+      // Store original index mapping for safe editing/deleting
+      let mappedMembers = state.members.map((m, idx) => ({ ...m, originalIndex: idx }));
       let filtered = [];
 
       if(type === 'live') {
         title.innerText = "Live Memberships";
-        filtered = state.members.filter(m => getDaysDiff(m.expiryDate) >= 0);
+        filtered = mappedMembers.filter(m => getDaysDiff(m.expiryDate) >= 0);
       } else if(type === 'total') {
         title.innerText = "Total Memberships";
-        filtered = state.members;
+        filtered = mappedMembers;
       } else if(type === 'expired') {
         title.innerText = "Expired Memberships";
-        filtered = state.members.filter(m => getDaysDiff(m.expiryDate) < 0);
+        filtered = mappedMembers.filter(m => getDaysDiff(m.expiryDate) < 0);
       } else if(type === 'exp1_3') {
         title.innerText = "Expiring (1-3 Days)";
-        filtered = state.members.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 1 && d <= 3; });
+        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 1 && d <= 3; });
       } else if(type === 'exp4_7') {
         title.innerText = "Expiring (4-7 Days)";
-        filtered = state.members.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 4 && d <= 7; });
+        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 4 && d <= 7; });
       } else if(type === 'exp8_15') {
         title.innerText = "Expiring (8-15 Days)";
-        filtered = state.members.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 8 && d <= 15; });
+        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 8 && d <= 15; });
       } else if(type === 'todayCollection') {
         title.innerText = "Today's Collection";
-        filtered = state.members.filter(m => m.date === todayStr);
+        filtered = mappedMembers.filter(m => m.date === todayStr);
       } else if(type === 'monthCollection') {
         title.innerText = "Monthly Collection & OB";
-        filtered = state.members.filter(m => m.date && m.date.startsWith(currentMonth));
+        filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
       }
 
       let html = "";
@@ -355,7 +405,7 @@
               <h4>Opening Balance</h4>
               <p>Initial Carried Forward Balance</p>
             </div>
-            <div class="amount">₹${state.openingBalance}</div>
+            <div style="font-weight:bold; color:#2ecc71;">₹${state.openingBalance}</div>
           </div>
         `;
       }
@@ -369,9 +419,13 @@
         <div class="list-card">
           <div>
             <h4>${item.name}</h4>
-            <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Date: ${item.date}</p>
+            <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate}</p>
           </div>
-          <div class="amount">₹${item.amount}</div>
+          <div class="list-actions">
+            <span style="font-weight:bold; color:#2ecc71; margin-right:5px;">₹${item.amount}</span>
+            <i class="fa-solid fa-pen-to-square" onclick="editMember(${item.originalIndex})" title="Edit"></i>
+            <i class="fa-solid fa-trash" onclick="deleteMember(${item.originalIndex})" title="Delete"></i>
+          </div>
         </div>
       `).join('');
 
@@ -400,7 +454,7 @@
             <h4>${i.name} (${i.type})</h4>
             <p>${i.date} ${i.payMode ? '• ' + i.payMode : ''}</p>
           </div>
-          <div class="amount" style="color: ${i.type==='Income' ? '#2ecc71' : '#e74c3c'};">
+          <div style="font-weight: bold; color: ${i.type==='Income' ? '#2ecc71' : '#e74c3c'};">
             ${i.type==='Income' ? '+' : '-'}₹${i.amount}
           </div>
         </div>
