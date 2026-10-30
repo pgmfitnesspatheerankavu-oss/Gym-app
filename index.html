@@ -85,6 +85,27 @@
       .grid { gap: 7px; }
       .card { min-height: 105px; }
     }
+
+    /* Light theme: replace the former black/dark surfaces with white */
+    body { background:#f5f5f5 !important; color:#222 !important; }
+    .top-bar { background:#fff !important; color:#222 !important; border-bottom:1px solid #e5e5e5 !important; }
+    .top-bar .title, .top-icons { color:#222 !important; }
+    .card, .list-card { background:#fff !important; color:#222 !important; border-color:#e5e5e5 !important; box-shadow:0 2px 6px #0000000d; }
+    .card-title { color:#555 !important; }
+    .list-card h4 { color:#222 !important; }
+    .list-card p { color:#777 !important; }
+    .modal { background:rgba(0,0,0,.45) !important; }
+    .modal-content { background:#fff !important; color:#222 !important; border-color:#e5e5e5 !important; }
+    .modal-title { color:#222 !important; }
+    .form-group label { color:#555 !important; }
+    .form-group input, .form-group select { background:#fff !important; color:#222 !important; border-color:#ccc !important; }
+    #pnlPage > div:nth-child(2) { background:#fff !important; color:#222 !important; }
+    #pnlPage > div:nth-child(2) h3 { color:#555 !important; }
+    #pnlIncomeList > div, #pnlExpenseList > div { border-bottom-color:#e5e5e5 !important; }
+    .pill { background:#eee !important; color:#222 !important; }
+    .pill.yellow { background:#fff0c2 !important; color:#725000 !important; }
+    .pill.purple { background:#f1e5f5 !important; color:#672b78 !important; }
+    .pill.red { background:#fde7e7 !important; color:#a51f2b !important; }
   </style>
 </head>
 <body>
@@ -148,6 +169,11 @@
           <div class="card-icon" style="color:#2ecc71;"><i class="fa-solid fa-calendar-days"></i></div>
           <div class="card-title">Monthly Collection</div>
           <div class="pill yellow" id="dashMonthCollection">₹0</div>
+        </div>
+        <div class="card" onclick="openListView('monthlyExpense')">
+          <div class="card-icon" style="color:#e74c3c;"><i class="fa-solid fa-calendar-minus"></i></div>
+          <div class="card-title">Monthly Expense</div>
+          <div class="pill red" id="dashMonthExpense">₹0</div>
         </div>
         <div class="card" onclick="openListView('dueAmountList')">
           <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-wallet"></i></div>
@@ -564,6 +590,7 @@
 
       const totCollectionWithOB = (Number(state.openingBalance) || 0) + monthColl;
       const totExpense = state.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const monthExpense = state.expenses.reduce((sum, e) => sum + ((e.date && e.date.startsWith(currentMonth)) ? (Number(e.amount) || 0) : 0), 0);
 
       document.getElementById('countLive').innerText = liveCount;
       document.getElementById('countTotal').innerText = state.members.length;
@@ -573,6 +600,7 @@
       document.getElementById('countExp8_15').innerText = exp8_15;
       document.getElementById('dashToday').innerText = `₹${todayColl}`;
       document.getElementById('dashMonthCollection').innerText = `₹${monthColl}`;
+      document.getElementById('dashMonthExpense').innerText = `₹${monthExpense}`;
       document.getElementById('dashDue').innerText = `₹${totalDue}`;
       document.getElementById('dashExpense').innerText = `₹${totExpense}`;
       document.getElementById('dashExpenseCount').innerText = state.expenses.length;
@@ -634,6 +662,24 @@
             const label = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
             return '<div class="list-card" style="display:flex;justify-content:space-between;align-items:center;"><div><h4>'+label+'</h4><p style="font-size:12px;color:#888;">Monthly Collection</p></div><strong style="color:#239b56;">₹'+monthlyTotals[key]+'</strong></div>';
           }).join('') : '<p style="text-align:center;color:#777;margin:30px;">Collection data ഇല്ല</p>');
+        return;
+      } else if (type === 'monthlyExpense') {
+        title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Expense`;
+        const monthlyTotals = {};
+        state.expenses.forEach(e => {
+          if (e.date) {
+            const key = e.date.slice(0,7);
+            monthlyTotals[key] = (monthlyTotals[key] || 0) + (Number(e.amount) || 0);
+          }
+        });
+        const months = Object.keys(monthlyTotals).sort().reverse();
+        const grandTotal = Object.values(monthlyTotals).reduce((sum,value)=>sum+value,0);
+        content.innerHTML = '<div style="margin:10px;padding:14px;background:#fff;border-radius:12px;box-shadow:0 2px 6px #0002;color:#222;text-align:center;"><div style="font-size:13px;color:#777;">Total Expense (All Months)</div><div style="font-size:23px;font-weight:bold;color:#d9534f;margin-top:5px;">₹'+grandTotal+'</div></div>' +
+          (months.length ? months.map(key => {
+            const d = new Date(key+'-01T00:00:00');
+            const label = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+            return '<div class="list-card" style="display:flex;justify-content:space-between;align-items:center;"><div><h4>'+label+'</h4><p style="font-size:12px;color:#888;">Monthly Expense</p></div><strong style="color:#d9534f;">₹'+monthlyTotals[key]+'</strong></div>';
+          }).join('') : '<p style="text-align:center;color:#777;margin:30px;">Expense data ഇല്ല</p>');
         return;
       } else if (type === 'monthCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection & OB`;
