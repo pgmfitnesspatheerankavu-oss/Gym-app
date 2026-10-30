@@ -37,10 +37,10 @@
 
     .member-summary-strip{display:flex;gap:10px;overflow-x:auto;padding:8px 4px 14px;scrollbar-width:none}
     .member-summary-card{flex:0 0 145px;background:#fff;color:#222;border-radius:16px;padding:14px 10px;text-align:center;box-shadow:0 2px 8px #0002;cursor:pointer}
-    .member-summary-card.active{background:#303033;color:#fff}
+    .member-summary-card.active{background:#fff;color:#222;border:2px solid #888;box-shadow:0 2px 8px #0002}
     .member-summary-card .summary-label{font-size:14px;line-height:1.35;min-height:38px}
-    .member-summary-card .summary-count{display:inline-flex;margin-top:8px;width:54px;height:54px;border-radius:50%;background:#303033;color:#fff;align-items:center;justify-content:center;font-size:19px}
-    .member-summary-card.active .summary-count{background:#fff;color:#303033}
+    .member-summary-card .summary-count{display:inline-flex;margin-top:8px;width:54px;height:54px;border-radius:50%;background:#f1f1f1;color:#222;align-items:center;justify-content:center;font-size:19px}
+    .member-summary-card.active .summary-count{background:#f1f1f1;color:#222}
     .member-profile-card{background:#fff;color:#171717;border:1px solid #e5e5e5;border-radius:18px;padding:15px;margin:10px 2px 14px;box-shadow:0 2px 5px #0002}
     .member-profile-top{display:grid;grid-template-columns:145px minmax(0,1fr);gap:12px;align-items:center}
     .member-profile-photo{width:100%;height:140px;object-fit:cover;border-radius:50%;background:#eee;cursor:pointer}
@@ -631,7 +631,7 @@
         return;
       }
 
-      if (['live','total','expired','exp1_3','exp4_7','exp8_15','dueAmountList'].includes(type)) {
+      if (['live','total'].includes(type)) {
         const live = mappedMembers.filter(m => getDaysDiff(m.expiryDate) >= 0).length;
         const tabs = [['total','Total Memberships',mappedMembers.length],['live','Live Memberships',live],['expired','Expired Memberships',mappedMembers.length-live]];
         const summary = '<div class="member-summary-strip">' + tabs.map(t => '<div class="member-summary-card '+(type===t[0]?'active':'')+'" onclick="openListView(\''+t[0]+'\')"><div class="summary-label">'+t[1]+'</div><div class="summary-count">'+t[2]+'</div></div>').join('') + '</div>';
@@ -647,7 +647,7 @@
           const act = (ic,lab,fn) => '<button type="button" class="member-icon-action" onclick="'+fn+'"><i class="fa-solid '+ic+'"></i><span>'+lab+'</span></button>';
           return '<article class="member-profile-card"><div class="member-profile-top">' +
             '<img src="'+photo+'" class="member-profile-photo" onclick="viewFullPhoto(\''+(item.photo||'')+'\',\''+safeName+'\')">' +
-            '<div><div class="member-field-label">Name</div><div class="member-field-value" style="font-size:18px;margin-bottom:12px;">'+(item.name||'-')+'</div><div class="member-field-label">Contact Number</div><div class="member-contact">'+(item.phone||'-')+'</div><div style="font-size:11px;color:'+(getDaysDiff(item.expiryDate)>=0?'#5b9b69':'#d9534f')+';margin-top:12px;">'+(getDaysDiff(item.expiryDate)>=0?'● Live Member':'● Expired')+'</div></div></div>' +
+            '<div><div class="member-field-label">Name</div><div class="member-field-value" style="font-size:18px;margin-bottom:12px;">'+(item.name||'-')+'</div><div class="member-field-label">Address</div><div class="member-field-value" style="font-size:14px;margin-bottom:10px;">'+(item.address||'-')+'</div><div class="member-field-label">Contact Number</div><div class="member-contact">'+(item.phone||'-')+'</div><div style="font-size:11px;color:'+(getDaysDiff(item.expiryDate)>=0?'#5b9b69':'#d9534f')+';margin-top:12px;">'+(getDaysDiff(item.expiryDate)>=0?'● Live Member':'● Expired')+'</div></div></div>' +
             '<div class="member-detail-grid">' +
             '<div class="member-detail"><span class="member-field-label">Join Date</span><span class="member-field-value">'+fmt(item.date)+'</span></div>' +
             '<div class="member-detail"><span class="member-field-label">End Date</span><span class="member-field-value">'+fmt(item.expiryDate)+'</span></div>' +
