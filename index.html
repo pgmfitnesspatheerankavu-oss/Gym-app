@@ -737,10 +737,11 @@
         const day = todayStr;
         const records = Array.isArray(state.attendance) ? state.attendance : [];
         const present = records.filter(a => a.date === day);
+        const displayDay = day.split('-').reverse().join('-');
         content.innerHTML = `
           <div style="background:#fff;border:1px solid #e5e5e5;border-radius:9px;padding:10px;margin-bottom:10px;color:#222;display:flex;justify-content:space-between;align-items:center;">
             <div><div style="font-size:11px;color:#777;">Today's Present</div><strong style="font-size:20px;color:#16865b;">${present.length}</strong></div>
-            <div style="font-size:12px;color:#666;">${day}</div>
+            <div style="font-size:12px;color:#666;">${displayDay}</div>
           </div>` + (filtered.length ? filtered.map(item => {
             const key = item.phone ? String(item.phone) : String(item.originalIndex);
             const marked = present.some(a => a.memberKey === key);
