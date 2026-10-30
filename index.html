@@ -23,23 +23,25 @@
     .pill.yellow { background-color: #ffb703; color: #000; }
     .pill.purple { background-color: #8a1c7c; }
     .pill.red { background-color: #dc3545; }
-    
+
     .page { display: none; }
     .page.active { display: block; }
-    
-    .list-container { padding: 15px; }
-    .list-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .member-info { display: flex; align-items: center; gap: 12px; }
-    
-    .member-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #333; border: 2px solid #555; cursor: pointer; transition: transform 0.2s; }
-    .member-avatar:hover { transform: scale(1.05); }
 
-    .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; }
-    .list-card p { font-size: 0.75rem; color: #aaa; }
-    .list-actions { display: flex; gap: 12px; align-items: center; }
-    .list-actions i { font-size: 1.1rem; cursor: pointer; padding: 6px; background: #2a2a2a; border-radius: 6px; }
-    .fa-pen-to-square { color: #3498db; }
-    .fa-trash { color: #e74c3c; }
+    .list-container { padding: 15px; }
+    .list-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .member-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .member-avatar { width: 60px; height: 60px; flex: 0 0 60px; border-radius: 50%; object-fit: cover; background: #333; border: 2px solid #555; cursor: pointer; transition: transform 0.2s; }
+    .member-avatar:hover { transform: scale(1.05); }
+    .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; overflow-wrap: anywhere; }
+    .list-card p { font-size: 0.75rem; color: #aaa; overflow-wrap: anywhere; }
+
+    /* Action Buttons */
+    .list-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .action-btn { min-height: 42px; padding: 9px 12px; border: none; border-radius: 7px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; white-space: nowrap; touch-action: manipulation; }
+    .edit-btn { background: #1976d2; }
+    .delete-btn { background: #d32f2f; }
+    .action-btn:active { transform: scale(0.96); }
+    .amount-text { font-weight: bold; color: #2ecc71; white-space: nowrap; }
 
     /* Modal */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 200; padding: 15px; }
@@ -49,12 +51,21 @@
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: #ccc; }
     .form-group input, .form-group select { width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 0.9rem; }
-    .btn { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+    .btn { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; min-height: 42px; }
     .btn-secondary { background: #3498db; }
     .btn-close { background: #555; }
-    
+
     #photoViewerImg { max-width: 100%; max-height: 75vh; border-radius: 8px; border: 2px solid #555; margin-bottom: 15px; object-fit: contain; }
     .fab { position: fixed; bottom: 20px; right: 20px; background: #e74c3c; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; z-index: 150; }
+
+    @media (max-width: 420px) {
+      .list-card { align-items: flex-start; flex-direction: column; }
+      .list-actions { width: 100%; justify-content: flex-start; }
+      .list-actions .action-btn { flex: 1; }
+      .amount-text { margin-right: 4px; align-self: center; }
+      .grid { gap: 7px; }
+      .card { min-height: 105px; }
+    }
   </style>
 </head>
 <body>
@@ -142,7 +153,6 @@
         </div>
       </div>
     </div>
-    
     <div class="fab" onclick="openAddModal()"><i class="fa-solid fa-plus"></i></div>
   </div>
 
@@ -172,7 +182,7 @@
     <div class="list-container" id="pnlDetailsList"></div>
   </div>
 
-  <!-- MODAL: ADD / EDIT MEMBER WITH PENDING FEE & PHOTO -->
+  <!-- MODAL: ADD / EDIT MEMBER -->
   <div id="addMemberModal" class="modal">
     <div class="modal-content">
       <div class="modal-title" id="modalMemberTitle">Add New Member</div>
@@ -197,7 +207,7 @@
     </div>
   </div>
 
-  <!-- MODAL: FULL SIZE PHOTO VIEWER -->
+  <!-- PHOTO VIEWER -->
   <div id="photoViewerModal" class="modal" onclick="closeModal('photoViewerModal')" style="text-align: center;">
     <div class="modal-content" onclick="event.stopPropagation()" style="text-align: center;">
       <div class="modal-title" id="photoViewerTitle" style="margin-bottom:10px;">Client Photo</div>
@@ -206,7 +216,7 @@
     </div>
   </div>
 
-  <!-- MODAL: OPENING BALANCE -->
+  <!-- OPENING BALANCE -->
   <div id="openingBalanceModal" class="modal">
     <div class="modal-content">
       <div class="modal-title">Set Opening Balance</div>
@@ -216,7 +226,7 @@
     </div>
   </div>
 
-  <!-- MODAL: ADD EXPENSE -->
+  <!-- ADD EXPENSE -->
   <div id="addExpenseModal" class="modal">
     <div class="modal-content">
       <div class="modal-title">Add Expense</div>
@@ -228,7 +238,7 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT P&L ITEM (EXPENSE / OPENING BALANCE / MEMBER PAYMENT) -->
+  <!-- EDIT P&L ITEM -->
   <div id="editPnlItemModal" class="modal">
     <div class="modal-content">
       <div class="modal-title" id="editPnlTitle">Edit Item</div>
@@ -259,21 +269,18 @@
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
-      if(pageId === 'pnlPage') renderPnl();
+      if (pageId === 'pnlPage') renderPnl();
     }
 
-    function openModal(id) {
-      document.getElementById(id).classList.add('active');
-    }
-
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // BACKUP & RESTORE FUNCTIONS
+    // BACKUP & RESTORE
     function exportBackup() {
-      let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-      let downloadAnchor = document.createElement('a');
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+      const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      let dateStr = new Date().toISOString().split('T')[0];
+      const dateStr = new Date().toISOString().split('T')[0];
       downloadAnchor.setAttribute("download", `pgm_fitness_backup_${dateStr}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
@@ -281,14 +288,15 @@
     }
 
     function importBackup(event) {
-      let file = event.target.files[0];
+      const file = event.target.files[0];
       if (!file) return;
-      let reader = new FileReader();
+      const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          let importedData = JSON.parse(e.target.result);
-          if (importedData && importedData.members && importedData.expenses) {
+          const importedData = JSON.parse(e.target.result);
+          if (importedData && Array.isArray(importedData.members) && Array.isArray(importedData.expenses)) {
             state = importedData;
+            if (typeof state.openingBalance !== 'number') state.openingBalance = Number(state.openingBalance) || 0;
             saveData();
             alert('ഡാറ്റ വിജയകരമായി Restore ചെയ്തു!');
             showPage('dashboardPage');
@@ -298,6 +306,7 @@
         } catch (err) {
           alert('ഫയൽ റീഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!');
         }
+        event.target.value = '';
       };
       reader.readAsText(file);
     }
@@ -311,13 +320,13 @@
       document.getElementById('mPaidAmount').value = '';
       document.getElementById('mPayMode').value = 'Cash';
       document.getElementById('mPhoto').value = '';
-      let today = new Date().toISOString().split('T')[0];
-      document.getElementById('mExpiryDate').value = today;
+      document.getElementById('mExpiryDate').value = new Date().toISOString().split('T')[0];
       openModal('addMemberModal');
     }
 
     function editMember(index) {
-      let m = state.members[index];
+      const m = state.members[index];
+      if (!m) return;
       document.getElementById('modalMemberTitle').innerText = "Edit Member Details";
       document.getElementById('editMemberIndex').value = index;
       document.getElementById('mName').value = m.name || '';
@@ -326,11 +335,13 @@
       document.getElementById('mPaidAmount').value = m.amount || '';
       document.getElementById('mPayMode').value = m.payMode || 'Cash';
       document.getElementById('mExpiryDate').value = m.expiryDate || new Date().toISOString().split('T')[0];
+      document.getElementById('mPhoto').value = '';
       openModal('addMemberModal');
     }
 
     function deleteMember(index) {
-      if(confirm('ഈ മെമ്പറെ ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
+      if (!state.members[index]) return;
+      if (confirm('ഈ മെമ്പറെ ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
         state.members.splice(index, 1);
         saveData();
         openListView(currentListViewType);
@@ -338,43 +349,40 @@
     }
 
     function viewFullPhoto(photoUrl, name) {
-      if(!photoUrl) return;
+      if (!photoUrl) return;
       document.getElementById('photoViewerTitle').innerText = name + "'s Photo";
       document.getElementById('photoViewerImg').src = photoUrl;
       openModal('photoViewerModal');
     }
 
     function saveMember() {
-      let index = Number(document.getElementById('editMemberIndex').value);
-      let name = document.getElementById('mName').value;
-      let phone = document.getElementById('mPhone').value;
-      let totalFee = Number(document.getElementById('mTotalFee').value);
-      let paidAmount = Number(document.getElementById('mPaidAmount').value);
-      let payMode = document.getElementById('mPayMode').value;
-      let expiryDate = document.getElementById('mExpiryDate').value;
-      let date = new Date().toISOString().split('T')[0];
-      let photoInput = document.getElementById('mPhoto');
+      const index = Number(document.getElementById('editMemberIndex').value);
+      const name = document.getElementById('mName').value.trim();
+      const phone = document.getElementById('mPhone').value.trim();
+      const totalFee = Number(document.getElementById('mTotalFee').value);
+      const paidAmount = Number(document.getElementById('mPaidAmount').value);
+      const payMode = document.getElementById('mPayMode').value;
+      const expiryDate = document.getElementById('mExpiryDate').value;
+      const date = new Date().toISOString().split('T')[0];
+      const photoInput = document.getElementById('mPhoto');
 
-      if(name && !isNaN(totalFee) && !isNaN(paidAmount) && expiryDate) {
-        let processMemberData = (photoUrl) => {
-          let memberData = {
-            name,
-            phone,
-            amount: paidAmount,
-            totalFee: totalFee,
+      if (name && document.getElementById('mTotalFee').value !== '' &&
+          document.getElementById('mPaidAmount').value !== '' &&
+          totalFee >= 0 && paidAmount >= 0 && expiryDate) {
+        const processMemberData = (photoUrl) => {
+          const memberData = {
+            name, phone, amount: paidAmount, totalFee,
             dueAmount: totalFee - paidAmount,
-            payMode,
-            date,
+            payMode, date: index === -1 ? date : (state.members[index]?.date || date),
             expiryDate,
             photo: photoUrl || ''
           };
 
-          if(index === -1) {
+          if (index === -1) {
             state.members.unshift(memberData);
           } else {
-            if(!photoUrl) {
-              memberData.photo = state.members[index].photo || '';
-            }
+            if (!state.members[index]) return;
+            if (!photoUrl) memberData.photo = state.members[index].photo || '';
             state.members[index] = memberData;
           }
           saveData();
@@ -382,14 +390,12 @@
           openListView(currentListViewType);
         };
 
-        if(photoInput.files && photoInput.files[0]) {
-          let reader = new FileReader();
-          reader.onload = function(e) {
-            processMemberData(e.target.result);
-          };
+        if (photoInput.files && photoInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) { processMemberData(e.target.result); };
           reader.readAsDataURL(photoInput.files[0]);
         } else {
-          let existingPhoto = index !== -1 ? state.members[index].photo : '';
+          const existingPhoto = index !== -1 && state.members[index] ? state.members[index].photo : '';
           processMemberData(existingPhoto);
         }
       } else {
@@ -398,59 +404,64 @@
     }
 
     function saveOpeningBalance() {
-      let amt = Number(document.getElementById('opAmount').value);
-      if(!isNaN(amt)) {
+      const value = document.getElementById('opAmount').value;
+      const amt = Number(value);
+      if (value !== '' && Number.isFinite(amt) && amt >= 0) {
         state.openingBalance = amt;
         saveData();
         closeModal('openingBalanceModal');
         alert('Opening Balance വിജയകരമായി സേവ് ചെയ്തു!');
+      } else {
+        alert('ശരിയായ തുക നൽകുക!');
       }
     }
 
     function saveExpense() {
-      let title = document.getElementById('eTitle').value;
-      let amount = Number(document.getElementById('eAmount').value);
-      let date = document.getElementById('eDate').value || new Date().toISOString().split('T')[0];
+      const title = document.getElementById('eTitle').value.trim();
+      const amountValue = document.getElementById('eAmount').value;
+      const amount = Number(amountValue);
+      const date = document.getElementById('eDate').value || new Date().toISOString().split('T')[0];
 
-      if(title && amount) {
+      if (title && amountValue !== '' && Number.isFinite(amount) && amount >= 0) {
         state.expenses.unshift({ title, amount, date });
         saveData();
         closeModal('addExpenseModal');
+        document.getElementById('eTitle').value = '';
+        document.getElementById('eAmount').value = '';
+        document.getElementById('eDate').value = '';
       } else {
-        alert('വിവരങ്ങൾ നൽകുക!');
+        alert('വിവരങ്ങൾ ശരിയായി നൽകുക!');
       }
     }
 
     function getDaysDiff(dateStr) {
-      let today = new Date();
-      let exp = new Date(dateStr);
-      let diffTime = exp - today;
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (!dateStr) return -1;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const exp = new Date(dateStr + 'T00:00:00');
+      return Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
     }
 
     function updateDashboard() {
-      let todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       let liveCount = 0, exp1_3 = 0, exp4_7 = 0, exp8_15 = 0, expiredCount = 0, todayColl = 0, monthColl = 0, totalDue = 0;
-      let currentMonth = todayStr.slice(0, 7);
+      const currentMonth = todayStr.slice(0, 7);
 
       state.members.forEach(m => {
-        let days = getDaysDiff(m.expiryDate);
+        const days = getDaysDiff(m.expiryDate);
         if (days >= 0) liveCount++;
         else expiredCount++;
-
         if (days >= 1 && days <= 3) exp1_3++;
         if (days >= 4 && days <= 7) exp4_7++;
         if (days >= 8 && days <= 15) exp8_15++;
-
-        if (m.date === todayStr) todayColl += m.amount;
-        if (m.date && m.date.startsWith(currentMonth)) monthColl += m.amount;
-
-        let due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
-        if(due > 0) totalDue += due;
+        if (m.date === todayStr) todayColl += Number(m.amount) || 0;
+        if (m.date && m.date.startsWith(currentMonth)) monthColl += Number(m.amount) || 0;
+        const due = (m.totalFee !== undefined ? Number(m.totalFee) : Number(m.amount)) - Number(m.amount);
+        if (due > 0) totalDue += due;
       });
 
-      let totCollectionWithOB = (state.openingBalance || 0) + monthColl;
-      let totExpense = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+      const totCollectionWithOB = (Number(state.openingBalance) || 0) + monthColl;
+      const totExpense = state.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
       document.getElementById('countLive').innerText = liveCount;
       document.getElementById('countTotal').innerText = state.members.length;
@@ -467,101 +478,98 @@
     function openListView(type) {
       currentListViewType = type;
       showPage('listPage');
-      let title = document.getElementById('listPageTitle');
-      let content = document.getElementById('dynamicListContent');
-      let todayStr = new Date().toISOString().split('T')[0];
-      let currentMonth = todayStr.slice(0, 7);
-      
-      let mappedMembers = state.members.map((m, idx) => ({ ...m, originalIndex: idx }));
+      const title = document.getElementById('listPageTitle');
+      const content = document.getElementById('dynamicListContent');
+      const todayStr = new Date().toISOString().split('T')[0];
+      const currentMonth = todayStr.slice(0, 7);
+
+      const mappedMembers = state.members.map((m, idx) => ({ ...m, originalIndex: idx }));
       let filtered = [];
 
-      if(type === 'live') {
+      if (type === 'live') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Live Memberships`;
         filtered = mappedMembers.filter(m => getDaysDiff(m.expiryDate) >= 0);
-      } else if(type === 'total') {
+      } else if (type === 'total') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Total Memberships`;
         filtered = mappedMembers;
-      } else if(type === 'expired') {
+      } else if (type === 'expired') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expired Memberships`;
         filtered = mappedMembers.filter(m => getDaysDiff(m.expiryDate) < 0);
-      } else if(type === 'exp1_3') {
+      } else if (type === 'exp1_3') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expiring (1-3 Days)`;
-        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 1 && d <= 3; });
-      } else if(type === 'exp4_7') {
+        filtered = mappedMembers.filter(m => { const d = getDaysDiff(m.expiryDate); return d >= 1 && d <= 3; });
+      } else if (type === 'exp4_7') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expiring (4-7 Days)`;
-        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 4 && d <= 7; });
-      } else if(type === 'exp8_15') {
+        filtered = mappedMembers.filter(m => { const d = getDaysDiff(m.expiryDate); return d >= 4 && d <= 7; });
+      } else if (type === 'exp8_15') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expiring (8-15 Days)`;
-        filtered = mappedMembers.filter(m => { let d = getDaysDiff(m.expiryDate); return d >= 8 && d <= 15; });
-      } else if(type === 'todayCollection') {
+        filtered = mappedMembers.filter(m => { const d = getDaysDiff(m.expiryDate); return d >= 8 && d <= 15; });
+      } else if (type === 'todayCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Today's Collection`;
         filtered = mappedMembers.filter(m => m.date === todayStr);
-      } else if(type === 'monthCollection') {
+      } else if (type === 'monthCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection & OB`;
         filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
-      } else if(type === 'dueAmountList') {
+      } else if (type === 'dueAmountList') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Due / Pending Fee Members`;
         filtered = mappedMembers.filter(m => {
-          let due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
+          const due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
           return due > 0;
         });
       }
 
       let html = "";
-      if(type === 'monthCollection' && state.openingBalance > 0) {
+      if (type === 'monthCollection' && state.openingBalance > 0) {
         html += `
           <div class="list-card" style="border-color: #ffb703;">
-            <div>
-              <h4>Opening Balance</h4>
-              <p>Initial Carried Forward Balance</p>
-            </div>
+            <div><h4>Opening Balance</h4><p>Initial Carried Forward Balance</p></div>
             <div style="font-weight:bold; color:#2ecc71;">₹${state.openingBalance}</div>
-          </div>
-        `;
+          </div>`;
       }
 
-      if(filtered.length === 0 && (!state.openingBalance || type !== 'monthCollection')) {
+      if (filtered.length === 0 && (!state.openingBalance || type !== 'monthCollection')) {
         content.innerHTML = `<p style="text-align:center; color:#777; margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>`;
         return;
       }
 
       html += filtered.map(item => {
-        let total = item.totalFee !== undefined ? item.totalFee : item.amount;
-        let due = total - item.amount;
-        let dueText = due > 0 ? ` | <span style="color:#e74c3c;">Due: ₹${due}</span>` : '';
+        const total = item.totalFee !== undefined ? item.totalFee : item.amount;
+        const due = total - item.amount;
+        const dueText = due > 0 ? ` | <span style="color:#e74c3c;">Due: ₹${due}</span>` : '';
+        const safeName = String(item.name || '').replace(/'/g, "\\'");
 
         return `
           <div class="list-card">
             <div class="member-info">
-              <img src="${item.photo || 'https://via.placeholder.com/60?text=User'}" class="member-avatar" alt="Photo" onclick="viewFullPhoto('${item.photo || ''}', '${item.name}')" title="Click to view full photo">
+              <img src="${item.photo || 'https://via.placeholder.com/60?text=User'}" class="member-avatar" alt="Photo"
+                onclick="viewFullPhoto('${item.photo || ''}', '${safeName}')" title="Click to view full photo">
               <div>
-                <h4>${item.name}</h4>
-                <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate} ${dueText}</p>
+                <h4>${item.name || ''}</h4>
+                <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate || ''} ${dueText}</p>
               </div>
             </div>
             <div class="list-actions">
-              <span style="font-weight:bold; color:#2ecc71; margin-right:5px;">₹${item.amount}</span>
-              <i class="fa-solid fa-pen-to-square" onclick="editMember(${item.originalIndex})" title="Edit"></i>
-              <i class="fa-solid fa-trash" onclick="deleteMember(${item.originalIndex})" title="Delete"></i>
+              <span class="amount-text">₹${item.amount}</span>
+              <button type="button" class="action-btn edit-btn" onclick="editMember(${item.originalIndex})">✏️ Edit</button>
+              <button type="button" class="action-btn delete-btn" onclick="deleteMember(${item.originalIndex})">🗑 Delete</button>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
 
       content.innerHTML = html;
     }
 
     function renderPnl() {
-      let memberColl = state.members.reduce((s, m) => s + m.amount, 0);
-      let totColl = (state.openingBalance || 0) + memberColl;
-      let totExp = state.expenses.reduce((s, e) => s + e.amount, 0);
+      const memberColl = state.members.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+      const totColl = (Number(state.openingBalance) || 0) + memberColl;
+      const totExp = state.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
       document.getElementById('pnlNetProfit').innerText = `₹${totColl - totExp}`;
       document.getElementById('pnlTotColl').innerText = `₹${totColl}`;
       document.getElementById('pnlTotExp').innerText = `₹${totExp}`;
 
-      let list = document.getElementById('pnlDetailsList');
-      let combined = [
+      const list = document.getElementById('pnlDetailsList');
+      const combined = [
         ...(state.openingBalance > 0 ? [{ date: 'Start', name: 'Opening Balance', amount: state.openingBalance, type: 'OpeningBalance', index: 0 }] : []),
         ...state.members.map((m, idx) => ({ date: m.date, name: m.name, amount: m.amount, type: 'Member', index: idx, payMode: m.payMode || 'Cash' })),
         ...state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }))
@@ -569,47 +577,48 @@
 
       list.innerHTML = combined.map(i => `
         <div class="list-card">
-          <div>
+          <div style="min-width:0;">
             <h4>${i.name} (${i.type === 'Member' ? 'Income' : i.type})</h4>
-            <p>${i.date} ${i.payMode ? '• ' + i.payMode : ''}</p>
+            <p>${i.date || ''} ${i.payMode ? '• ' + i.payMode : ''}</p>
           </div>
           <div class="list-actions">
-            <span style="font-weight: bold; color: ${i.type !== 'Expense' ? '#2ecc71' : '#e74c3c'};">
+            <span style="font-weight:bold; color:${i.type !== 'Expense' ? '#2ecc71' : '#e74c3c'}; white-space:nowrap;">
               ${i.type !== 'Expense' ? '+' : '-'}₹${i.amount}
             </span>
-            <i class="fa-solid fa-pen-to-square" onclick="openEditPnlItem('${i.type}', ${i.index})" title="Edit"></i>
-            ${i.type === 'Expense' ? `<i class="fa-solid fa-trash" onclick="deleteExpense(${i.index})" title="Delete"></i>` : ''}
+            <button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('${i.type}', ${i.index})">✏️ Edit</button>
+            ${i.type === 'Expense' ? `<button type="button" class="action-btn delete-btn" onclick="deleteExpense(${i.index})">🗑 Delete</button>` : ''}
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
     function openEditPnlItem(type, index) {
       document.getElementById('editPnlType').value = type;
       document.getElementById('editPnlIndex').value = index;
-      
-      let nameGroup = document.getElementById('pnlNameGroup');
-      let dateGroup = document.getElementById('pnlDateGroup');
-      
-      if(type === 'OpeningBalance') {
+
+      const nameGroup = document.getElementById('pnlNameGroup');
+      const dateGroup = document.getElementById('pnlDateGroup');
+
+      if (type === 'OpeningBalance') {
         document.getElementById('editPnlTitle').innerText = "Edit Opening Balance";
         nameGroup.style.display = 'none';
         dateGroup.style.display = 'none';
         document.getElementById('pnlItemAmount').value = state.openingBalance;
-      } else if(type === 'Member') {
+      } else if (type === 'Member') {
+        const m = state.members[index];
+        if (!m) return;
         document.getElementById('editPnlTitle').innerText = "Edit Member Payment";
         nameGroup.style.display = 'block';
         dateGroup.style.display = 'block';
-        let m = state.members[index];
-        document.getElementById('pnlItemName').value = m.name;
+        document.getElementById('pnlItemName').value = m.name || '';
         document.getElementById('pnlItemAmount').value = m.amount;
         document.getElementById('pnlItemDate').value = m.date || new Date().toISOString().split('T')[0];
-      } else if(type === 'Expense') {
+      } else if (type === 'Expense') {
+        const e = state.expenses[index];
+        if (!e) return;
         document.getElementById('editPnlTitle').innerText = "Edit Expense";
         nameGroup.style.display = 'block';
         dateGroup.style.display = 'block';
-        let e = state.expenses[index];
-        document.getElementById('pnlItemName').value = e.title;
+        document.getElementById('pnlItemName').value = e.title || '';
         document.getElementById('pnlItemAmount').value = e.amount;
         document.getElementById('pnlItemDate').value = e.date || new Date().toISOString().split('T')[0];
       }
@@ -617,26 +626,30 @@
     }
 
     function savePnlEdit() {
-      let type = document.getElementById('editPnlType').value;
-      let index = Number(document.getElementById('editPnlIndex').value);
-      let amount = Number(document.getElementById('pnlItemAmount').value);
-      let name = document.getElementById('pnlItemName').value;
-      let date = document.getElementById('pnlItemDate').value;
+      const type = document.getElementById('editPnlType').value;
+      const index = Number(document.getElementById('editPnlIndex').value);
+      const amountValue = document.getElementById('pnlItemAmount').value;
+      const amount = Number(amountValue);
+      const name = document.getElementById('pnlItemName').value.trim();
+      const date = document.getElementById('pnlItemDate').value;
 
-      if(isNaN(amount)) {
+      if (amountValue === '' || !Number.isFinite(amount) || amount < 0) {
         alert('ശരിയായ തുക നൽകുക!');
         return;
       }
 
-      if(type === 'OpeningBalance') {
+      if (type === 'OpeningBalance') {
         state.openingBalance = amount;
-      } else if(type === 'Member') {
-        if(!name) { alert('പേര് നൽകുക!'); return; }
+      } else if (type === 'Member') {
+        if (!state.members[index]) return;
+        if (!name) { alert('പേര് നൽകുക!'); return; }
         state.members[index].name = name;
         state.members[index].amount = amount;
         state.members[index].date = date;
-      } else if(type === 'Expense') {
-        if(!name) { alert('വിവരണം നൽകുക!'); return; }
+        state.members[index].dueAmount = (Number(state.members[index].totalFee) || 0) - amount;
+      } else if (type === 'Expense') {
+        if (!state.expenses[index]) return;
+        if (!name) { alert('വിവരണം നൽകുക!'); return; }
         state.expenses[index].title = name;
         state.expenses[index].amount = amount;
         state.expenses[index].date = date;
@@ -648,7 +661,8 @@
     }
 
     function deleteExpense(index) {
-      if(confirm('ഈ ചെലവ് ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
+      if (!state.expenses[index]) return;
+      if (confirm('ഈ ചെലവ് ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
         state.expenses.splice(index, 1);
         saveData();
         renderPnl();
