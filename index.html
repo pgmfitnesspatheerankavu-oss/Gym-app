@@ -140,6 +140,11 @@
 
     <div class="container">
       <div class="grid">
+        <div class="card" onclick="openListView('attendance')">
+          <div class="card-icon" style="color:#16a085;"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="card-title">Attendance</div>
+          <div class="pill" id="dashAttendance">0</div>
+        </div>
         <div class="card" onclick="openListView('live')">
           <div class="card-icon" style="color: #4a90e2;"><i class="fa-solid fa-users"></i></div>
           <div class="card-title">Live Memberships</div>
@@ -542,6 +547,22 @@
       openModal('addExpenseModal');
     }
 
+    function toggleAttendance(memberIndex) {
+      const member = state.members[memberIndex];
+      if (!member) return;
+      if (!Array.isArray(state.attendance)) state.attendance = [];
+      const date = new Date().toISOString().split('T')[0];
+      const memberKey = member.phone ? String(member.phone) : String(memberIndex);
+      const existing = state.attendance.findIndex(a => a.date === date && a.memberKey === memberKey);
+      if (existing >= 0) {
+        if (confirm('ഈ അംഗത്തിന്റെ ഇന്നത്തെ ഹാജർ ഒഴിവാക്കണോ?')) state.attendance.splice(existing, 1);
+      } else {
+        state.attendance.push({date, memberKey, memberName:member.name || 'Member', phone:member.phone || '', time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+      }
+      saveData();
+      openListView('attendance');
+    }
+
     function deleteExpenseFromList(index) {
       if (!state.expenses[index]) return;
       if (confirm('ഈ ചെലവ് ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
@@ -604,6 +625,7 @@
       const totExpense = state.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
       const monthExpense = state.expenses.reduce((sum, e) => sum + ((e.date && e.date.startsWith(currentMonth)) ? (Number(e.amount) || 0) : 0), 0);
 
+      document.getElementById('dashAttendance').innerText = (Array.isArray(state.attendance) ? state.attendance : []).filter(a => a.date === todayStr).length;
       document.getElementById('countLive').innerText = liveCount;
       document.getElementById('countTotal').innerText = state.members.length;
       document.getElementById('countExpired').innerText = expiredCount;
@@ -696,6 +718,9 @@
       } else if (type === 'monthCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection & OB`;
         filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
+      } else if (type === 'attendance') {
+        title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Today's Attendance`;
+        filtered = mappedMembers.filter(m => getDaysDiff(m.expiryDate) >= 0);
       } else if (type === 'expenseList') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expense List`;
         filtered = state.expenses.map((e, idx) => ({...e, originalIndex: idx}));
@@ -706,6 +731,25 @@
           const due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount - paidLater;
           return due > 0;
         });
+      }
+
+      if (type === 'attendance') {
+        const day = todayStr;
+        const records = Array.isArray(state.attendance) ? state.attendance : [];
+        const present = records.filter(a => a.date === day);
+        content.innerHTML = `
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:9px;padding:10px;margin-bottom:10px;color:#222;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:11px;color:#777;">Today's Present</div><strong style="font-size:20px;color:#16865b;">${present.length}</strong></div>
+            <div style="font-size:12px;color:#666;">${day}</div>
+          </div>` + (filtered.length ? filtered.map(item => {
+            const key = item.phone ? String(item.phone) : String(item.originalIndex);
+            const marked = present.some(a => a.memberKey === key);
+            return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:9px;margin-bottom:6px;color:#222;">
+              <div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:600;overflow-wrap:anywhere;">${String(item.name || 'Member').replace(/</g,'&lt;')}</div><div style="font-size:10px;color:#777;">${String(item.phone || '')}</div></div>
+              <button type="button" class="action-btn ${marked?'delete-btn':'edit-btn'}" style="min-height:32px;padding:5px 9px;font-size:11px;" onclick="toggleAttendance(${item.originalIndex})">${marked?'Present ✓':'Present'}</button>
+            </div>`;
+          }).join('') : '<p style="text-align:center;color:#777;margin:25px;">Live members ഇല്ല</p>');
+        return;
       }
 
       if (type === 'expenseList') {
