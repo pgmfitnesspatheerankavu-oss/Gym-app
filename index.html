@@ -184,7 +184,7 @@
       <h3 style="font-size: 1rem; color: #aaa;">Net Profit: <span id="pnlNetProfit" style="color: #2ecc71;">₹0</span></h3>
       <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">Collection: <span id="pnlTotColl">₹0</span> | Expense: <span id="pnlTotExp">₹0</span></p>
     </div>
-    <div class="list-container" id="pnlDetailsList"></div>
+    <div id="pnlDetailsList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;align-items:start;"><section style="min-width:0;background:#1e1e1e;border:1px solid #2ecc71;border-radius:8px;padding:7px;"><h3 style="text-align:center;color:#2ecc71;font-size:0.9rem;padding:6px 2px;">Income / Collection</h3><div id="pnlIncomeList"></div></section><section style="min-width:0;background:#1e1e1e;border:1px solid #e74c3c;border-radius:8px;padding:7px;"><h3 style="text-align:center;color:#e74c3c;font-size:0.9rem;padding:6px 2px;">Expense</h3><div id="pnlExpenseList"></div></section></div>
   </div>
 
   <!-- MODAL: ADD / EDIT MEMBER -->
@@ -660,30 +660,33 @@
       document.getElementById('pnlTotColl').innerText = `₹${totColl}`;
       document.getElementById('pnlTotExp').innerText = `₹${totExp}`;
 
-      const list = document.getElementById('pnlDetailsList');
-      const combined = [
+      const incomeList = document.getElementById('pnlIncomeList');
+      const expenseList = document.getElementById('pnlExpenseList');
+      const incomeItems = [
         ...(state.openingBalance > 0 ? [{ date: 'Start', name: 'Opening Balance', amount: state.openingBalance, type: 'OpeningBalance', index: 0 }] : []),
         ...state.members.flatMap((m, idx) => [
           { date: m.date, name: m.name, amount: m.amount, type: 'Member', index: idx, payMode: m.payMode || 'Cash' },
           ...(m.payments || []).map(p => ({ date: p.date, name: m.name + ' (Pending Fee)', amount: p.amount, type: 'MemberPayment', index: idx, payMode: p.payMode || 'Cash' }))
-        ]),
-        ...state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }))
+        ])
       ];
-
-      list.innerHTML = combined.map(i => `
-        <div class="list-card">
-          <div style="min-width:0;">
-            <h4>${i.name} (${i.type === 'Member' ? 'Income' : i.type})</h4>
-            <p>${i.date || ''} ${i.payMode ? '• ' + i.payMode : ''}</p>
-          </div>
-          <div class="list-actions">
-            <span style="font-weight:bold; color:${i.type !== 'Expense' ? '#2ecc71' : '#e74c3c'}; white-space:nowrap;">
-              ${i.type !== 'Expense' ? '+' : '-'}₹${i.amount}
-            </span>
-            ${i.type !== 'MemberPayment' ? `<button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('${i.type}', ${i.index})">✏️ Edit</button>` : ''}
-            ${i.type === 'Expense' ? `<button type="button" class="action-btn delete-btn" onclick="deleteExpense(${i.index})">🗑 Delete</button>` : ''}
-          </div>
-        </div>`).join('');
+      const expenseItems = state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }));
+      incomeList.innerHTML = incomeItems.length ? incomeItems.map(i =>
+        '<div style="padding:9px 5px;border-bottom:1px solid #444;min-width:0;">' +
+        '<div style="font-size:0.72rem;color:#aaa;">' + (i.date || '') + '</div>' +
+        '<div style="font-size:0.82rem;overflow-wrap:anywhere;margin:3px 0;">' + i.name + '</div>' +
+        '<div style="color:#2ecc71;font-weight:bold;font-size:0.85rem;">+₹' + (Number(i.amount) || 0) + '</div>' +
+        (i.type !== 'MemberPayment' ? '<button type="button" class="action-btn edit-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="openEditPnlItem(\'' + i.type + '\',' + i.index + ')">Edit</button>' : '') +
+        '</div>'
+      ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Income ഇല്ല</p>';
+      expenseList.innerHTML = expenseItems.length ? expenseItems.map(i =>
+        '<div style="padding:9px 5px;border-bottom:1px solid #444;min-width:0;">' +
+        '<div style="font-size:0.72rem;color:#aaa;">' + (i.date || '') + '</div>' +
+        '<div style="font-size:0.82rem;overflow-wrap:anywhere;margin:3px 0;">' + i.name + '</div>' +
+        '<div style="color:#e74c3c;font-weight:bold;font-size:0.85rem;">-₹' + (Number(i.amount) || 0) + '</div>' +
+        '<button type="button" class="action-btn edit-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="openEditPnlItem(\'Expense\',' + i.index + ')">Edit</button> ' +
+        '<button type="button" class="action-btn delete-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="deleteExpense(' + i.index + ')">Delete</button>' +
+        '</div>'
+      ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Expense ഇല്ല</p>';
     }
 
     function openEditPnlItem(type, index) {
