@@ -644,7 +644,7 @@
             <span style="font-weight:bold; color:${i.type !== 'Expense' ? '#2ecc71' : '#e74c3c'}; white-space:nowrap;">
               ${i.type !== 'Expense' ? '+' : '-'}₹${i.amount}
             </span>
-            <button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('${i.type}', ${i.index})">✏️ Edit</button>
+            ${i.type !== 'MemberPayment' ? `<button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('${i.type}', ${i.index})">✏️ Edit</button>` : ''}
             ${i.type === 'Expense' ? `<button type="button" class="action-btn delete-btn" onclick="deleteExpense(${i.index})">🗑 Delete</button>` : ''}
           </div>
         </div>`).join('');
