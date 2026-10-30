@@ -738,7 +738,7 @@
         const day = todayStr;
         const records = Array.isArray(state.attendance) ? state.attendance : [];
         const present = records.filter(a => a.date === day);
-        const displayDay = day.split('-').reverse().join('-');
+        const displayDay = formatDateDDMMYY(day);
         content.innerHTML = `
           <div style="background:#fff;border:1px solid #e5e5e5;border-radius:9px;padding:10px;margin-bottom:10px;color:#222;display:flex;justify-content:space-between;align-items:center;">
             <div><div style="font-size:11px;color:#777;">Today's Present</div><strong style="font-size:20px;color:#16865b;">${present.length}</strong></div>
@@ -758,10 +758,10 @@
         content.innerHTML = `<button class="btn" onclick="openAddExpenseFromList()" style="margin-bottom:10px;padding:8px;font-size:13px;min-height:36px;">➕ Add Expense</button>` +
           (filtered.length ? `
             <div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:6px 3px;background:#eaeaea;border-radius:6px;margin-bottom:4px;font-size:9px;font-weight:700;color:#333;">
-              <div>Date</div><div>Expense</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div>
+              <div>Date</div><div>Name</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div>
             </div>` + filtered.map(item => `
             <div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:5px 3px;margin-bottom:4px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;box-shadow:0 1px 3px #0000000d;color:#222;font-size:9px;">
-              <div style="font-size:9px;color:#666;overflow-wrap:anywhere;">${formatExpenseDate(item.date)}</div>
+              <div style="font-size:9px;color:#666;overflow-wrap:anywhere;">${formatDateDDMMYY(item.date)}</div>
               <div style="font-size:9px;font-weight:600;overflow-wrap:anywhere;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</div>
               <div style="font-size:9px;font-weight:700;color:#d9534f;text-align:right;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
               <button type="button" class="action-btn edit-btn" style="min-height:25px;padding:3px 1px;font-size:8px;border-radius:4px;" onclick="openEditPnlItem('Expense', ${item.originalIndex})">Edit</button>
@@ -783,7 +783,7 @@
           const due = Math.max(0,total-paid-extra);
           const photo = item.photo || 'https://via.placeholder.com/150?text=User';
           const safeName = String(item.name || '').replace(/'/g,"\\'");
-          const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '-';
+          const fmt = d => formatDateDDMMYY(d);
           const act = (ic,lab,fn) => '<button type="button" class="member-icon-action" onclick="'+fn+'"><i class="fa-solid '+ic+'"></i><span>'+lab+'</span></button>';
           return '<article class="member-profile-card"><div class="member-profile-top">' +
             '<img src="'+photo+'" class="member-profile-photo" onclick="viewFullPhoto(\''+(item.photo||'')+'\',\''+safeName+'\')">' +
@@ -817,14 +817,17 @@
         html += '<div class="list-card"><div><h4>Opening Balance</h4><p>Initial Carried Forward Balance</p></div><div>₹'+state.openingBalance+'</div></div>';
       }
       if (!filtered.length) { content.innerHTML = '<p style="text-align:center;color:#777;margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>'; return; }
-      html += filtered.map(item => '<div class="list-card"><div><h4>'+(item.name||'')+'</h4><p>'+(item.phone||'')+' | Exp: '+(item.expiryDate||'')+'</p></div><div class="list-actions"><span class="amount-text">₹'+item.amount+'</span><button class="action-btn edit-btn" onclick="editMember('+item.originalIndex+')">Edit</button></div></div>').join('');
+      html += filtered.map(item => '<div class="list-card"><div><h4>'+(item.name||'')+'</h4><p>'+(item.phone||'')+' | Exp: '+formatDateDDMMYY(item.expiryDate)+'</p></div><div class="list-actions"><span class="amount-text">₹'+item.amount+'</span><button class="action-btn edit-btn" onclick="editMember('+item.originalIndex+')">Edit</button></div></div>').join('');
       content.innerHTML = html;
     }
 
-    function formatExpenseDate(value) {
+    function formatDateDDMMYY(value) {
       if (!value) return '-';
       const parts = String(value).split('-');
-      return parts.length === 3 ? parts.reverse().join('-') : value;
+      if (parts.length !== 3) return value;
+      if (parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0].slice(-2)}`;
+      if (parts[2].length === 4) return `${parts[0]}-${parts[1]}-${parts[2].slice(-2)}`;
+      return value;
     }
 
     let pnlActiveTab = 'income';
@@ -858,20 +861,20 @@
       const expenseItems = state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }));
       incomeList.innerHTML = incomeItems.length ? incomeItems.map(i =>
         '<div style="padding:7px 4px;border-bottom:1px solid #444;min-width:0;">' +
-        '<div style="font-size:0.65rem;color:#aaa;">' + (i.date || '') + '</div>' +
+        '<div style="font-size:0.65rem;color:#aaa;">' + formatDateDDMMYY(i.date) + '</div>' +
         '<div style="font-size:0.76rem;line-height:1.25;overflow-wrap:anywhere;margin:2px 0;">' + i.name + '</div>' +
         '<div style="color:#2ecc71;font-weight:600;font-size:0.78rem;">+₹' + (Number(i.amount) || 0) + '</div>' +
         (i.type !== 'MemberPayment' ? '<button type="button" class="action-btn edit-btn" style="font-size:10px;min-height:27px;padding:3px 6px;margin-top:3px;" onclick="openEditPnlItem(\'' + i.type + '\',' + i.index + ')">Edit</button>' : '') +
         '</div>'
       ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Income ഇല്ല</p>';
       expenseList.innerHTML = expenseItems.length ?
-        '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:6px 3px;background:#eaeaea;border-radius:6px;margin-bottom:4px;font-size:9px;font-weight:700;color:#333;"><div>Date</div><div>Expense</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div></div>' +
+        '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:6px 3px;background:#eaeaea;border-radius:6px;margin-bottom:4px;font-size:9px;font-weight:700;color:#333;"><div>Date</div><div>Name</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div></div>' +
         expenseItems.map(i =>
         '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:5px 3px;margin-bottom:4px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;color:#222;font-size:9px;">' +
-        '<div style="font-size:9px;color:#666;overflow-wrap:anywhere;">' + formatExpenseDate(i.date) + '</div>' +
+        '<div style="font-size:9px;color:#666;overflow-wrap:anywhere;">' + formatDateDDMMYY(i.date) + '</div>' +
         '<div style="font-size:9px;font-weight:600;overflow-wrap:anywhere;">' + String(i.name || 'Expense').replace(/</g, '&lt;') + '</div>' +
         '<div style="color:#d9534f;font-weight:bold;font-size:9px;text-align:right;white-space:nowrap;">₹' + (Number(i.amount) || 0) + '</div>' +
-        '<button type="button" class="action-btn edit-btn" style="font-size:8px;min-height:25px;padding:3px 1px;margin:0;border-radius:4px;" onclick="openEditPnlItem(\\'Expense\\',' + i.index + ')">Edit</button>' +
+        '<button type="button" class="action-btn edit-btn" style="font-size:8px;min-height:25px;padding:3px 1px;margin:0;border-radius:4px;" onclick="openEditPnlItem(\'Expense\',' + i.index + ')">Edit</button>' +
         '<button type="button" class="action-btn delete-btn" style="font-size:8px;min-height:25px;padding:3px 1px;margin:0;border-radius:4px;" onclick="deleteExpense(' + i.index + ')">Delete</button>' +
         '</div>'
       ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Expense ഇല്ല</p>';
