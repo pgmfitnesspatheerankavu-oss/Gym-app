@@ -709,13 +709,19 @@
       }
 
       if (type === 'expenseList') {
-        content.innerHTML = `<button class="btn" onclick="openAddExpenseFromList()" style="margin-bottom:12px;">➕ Add Expense</button>` + (filtered.length ? filtered.map(item => `
-          <div class="list-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:150px;"><p style="margin:0 0 5px;color:#777;font-size:13px;">${item.date || '-'}</p><h4 style="margin:0;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</h4></div>
-            <div style="font-weight:bold;color:#e74c3c;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
-            <div style="display:flex;gap:6px;"><button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('Expense', ${item.originalIndex})">✏️ Edit</button><button type="button" class="action-btn delete-btn" onclick="deleteExpenseFromList(${item.originalIndex})">🗑 Delete</button></div>
-          </div>
-        `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`);
+        content.innerHTML = `<button class="btn" onclick="openAddExpenseFromList()" style="margin-bottom:10px;padding:8px;font-size:13px;min-height:36px;">➕ Add Expense</button>` +
+          (filtered.length ? `
+            <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 66px 48px 52px;gap:4px;align-items:center;padding:8px 5px;background:#eaeaea;border-radius:7px;margin-bottom:5px;font-size:11px;font-weight:700;color:#333;">
+              <div>Date</div><div>Expense</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div>
+            </div>` + filtered.map(item => `
+            <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 66px 48px 52px;gap:4px;align-items:center;padding:8px 5px;margin-bottom:5px;background:#fff;border:1px solid #e5e5e5;border-radius:7px;box-shadow:0 1px 3px #0000000d;color:#222;font-size:11px;">
+              <div style="font-size:10px;color:#666;overflow-wrap:anywhere;">${item.date || '-'}</div>
+              <div style="font-size:11px;font-weight:600;overflow-wrap:anywhere;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</div>
+              <div style="font-size:11px;font-weight:700;color:#d9534f;text-align:right;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
+              <button type="button" class="action-btn edit-btn" style="min-height:29px;padding:4px 2px;font-size:10px;border-radius:5px;" onclick="openEditPnlItem('Expense', ${item.originalIndex})">Edit</button>
+              <button type="button" class="action-btn delete-btn" style="min-height:29px;padding:4px 2px;font-size:10px;border-radius:5px;" onclick="deleteExpenseFromList(${item.originalIndex})">Delete</button>
+            </div>
+          `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`);
         return;
       }
 
