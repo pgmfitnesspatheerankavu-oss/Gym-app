@@ -127,13 +127,18 @@
         </div>
         <div class="card" onclick="openListView('dueAmountList')">
           <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-wallet"></i></div>
-          <div class="card-title">Due Amount</div>
+          <div class="card-title">Pending Fee</div>
           <div class="pill yellow" id="dashDue">₹0</div>
         </div>
         <div class="card" onclick="showPage('pnlPage')">
           <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
           <div class="card-title">Total Expense</div>
           <div class="pill red" id="dashExpense">₹0</div>
+        </div>
+        <div class="card" onclick="openListView('expenseList')">
+          <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-list"></i></div>
+          <div class="card-title">Expense List</div>
+          <div class="pill red" id="dashExpenseCount">0</div>
         </div>
 
         <div class="card" onclick="showPage('pnlPage')">
@@ -525,6 +530,7 @@
       document.getElementById('dashToday').innerText = `₹${todayColl}`;
       document.getElementById('dashDue').innerText = `₹${totalDue}`;
       document.getElementById('dashExpense').innerText = `₹${totExpense}`;
+      document.getElementById('dashExpenseCount').innerText = state.expenses.length;
       document.getElementById('dashNetProfit').innerText = `₹${totCollectionWithOB - totExpense}`;
     }
 
@@ -563,6 +569,9 @@
       } else if (type === 'monthCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection & OB`;
         filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
+      } else if (type === 'expenseList') {
+        title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Expense List`;
+        filtered = state.expenses.map((e, idx) => ({...e, originalIndex: idx}));
       } else if (type === 'dueAmountList') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Due / Pending Fee Members`;
         filtered = mappedMembers.filter(m => {
@@ -570,6 +579,13 @@
           const due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount - paidLater;
           return due > 0;
         });
+      }
+
+      if (type === 'expenseList') {
+        content.innerHTML = filtered.length ? filtered.map(item => `
+          <div class="list-card"><div><h4>${String(item.title || 'Expense').replace(/</g, '&lt;')}</h4></div></div>
+        `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`;
+        return;
       }
 
       let html = "";
