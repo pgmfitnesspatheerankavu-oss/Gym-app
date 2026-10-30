@@ -386,14 +386,23 @@
 
     // BACKUP & RESTORE
     function exportBackup() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      const dateStr = new Date().toISOString().split('T')[0];
-      downloadAnchor.setAttribute("download", `pgm_fitness_backup_${dateStr}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+      try {
+        const backupData = JSON.stringify(state, null, 2);
+        const backupBlob = new Blob([backupData], { type: 'application/json;charset=utf-8' });
+        const backupUrl = URL.createObjectURL(backupBlob);
+        const downloadAnchor = document.createElement('a');
+        const dateStr = new Date().toISOString().split('T')[0];
+        downloadAnchor.href = backupUrl;
+        downloadAnchor.download = `pgm_fitness_backup_${dateStr}.json`;
+        downloadAnchor.style.display = 'none';
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
+      } catch (error) {
+        console.error('Backup download failed:', error);
+        alert('Backup download failed. Chrome-ൽ വീണ്ടും ശ്രമിക്കുക.');
+      }
     }
 
     function importBackup(event) {
