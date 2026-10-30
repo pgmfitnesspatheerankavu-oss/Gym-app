@@ -266,6 +266,7 @@
       <input type="hidden" id="editMemberIndex" value="-1">
       <div class="form-group"><label>Member Name</label><input type="text" id="mName" placeholder="Name"></div>
       <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" placeholder="Phone"></div>
+      <div class="form-group"><label>Membership Plan</label><select id="mPlan" onchange="applyMemberPlan()"><option value="">Select Plan</option><option value="1 Month">1 Month - ₹650</option><option value="3 Month">3 Month - ₹1600</option><option value="6 Month">6 Month - ₹2700</option><option value="12 Month">12 Month - ₹4700</option></select></div>
       <div class="form-group"><label>Total Fee (₹)</label><input type="number" id="mTotalFee" placeholder="1000"></div>
       <div class="form-group"><label>Paid Amount (₹)</label><input type="number" id="mPaidAmount" placeholder="800"></div>
       <div class="form-group">
@@ -309,6 +310,7 @@
       <div class="modal-title">Add Membership Renewal</div>
       <input type="hidden" id="renewalMemberIndex" value="-1">
       <p id="renewalMemberInfo" style="color:#aaa;margin-bottom:12px;"></p>
+      <div class="form-group"><label>Membership Plan</label><select id="renewalPlan" onchange="applyRenewalPlan()"><option value="">Select Plan</option><option value="1 Month">1 Month - ₹650</option><option value="3 Month">3 Month - ₹1600</option><option value="6 Month">6 Month - ₹2700</option><option value="12 Month">12 Month - ₹4700</option></select></div>
       <div class="form-group"><label>Renewal Fee (₹)</label><input type="number" id="renewalFee" min="0" placeholder="Total renewal fee"></div>
       <div class="form-group"><label>Paid Amount (₹)</label><input type="number" id="renewalPaid" min="0" placeholder="Amount received"></div>
       <div class="form-group"><label>Payment Date</label><input type="date" id="renewalDate"></div>
@@ -418,11 +420,55 @@
       reader.readAsText(file);
     }
 
+    const membershipPlanDetails = {
+      '1 Month': { months: 1, fee: 650 },
+      '3 Month': { months: 3, fee: 1600 },
+      '6 Month': { months: 6, fee: 2700 },
+      '12 Month': { months: 12, fee: 4700 }
+    };
+
+    function dateToISO(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + d;
+    }
+
+    function addMonthsToDate(dateValue, months) {
+      const base = dateValue ? new Date(dateValue + 'T00:00:00') : new Date();
+      const day = base.getDate();
+      base.setDate(1);
+      base.setMonth(base.getMonth() + months);
+      const lastDay = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      base.setDate(Math.min(day, lastDay));
+      return dateToISO(base);
+    }
+
+    function applyMemberPlan() {
+      const plan = document.getElementById('mPlan').value;
+      const detail = membershipPlanDetails[plan];
+      if (!detail) return;
+      document.getElementById('mTotalFee').value = detail.fee;
+      document.getElementById('mExpiryDate').value = addMonthsToDate(dateToISO(new Date()), detail.months);
+    }
+
+    function applyRenewalPlan() {
+      const plan = document.getElementById('renewalPlan').value;
+      const detail = membershipPlanDetails[plan];
+      if (!detail) return;
+      document.getElementById('renewalFee').value = detail.fee;
+      const m = state.members[Number(document.getElementById('renewalMemberIndex').value)];
+      const today = dateToISO(new Date());
+      const startDate = m && m.expiryDate && m.expiryDate >= today ? m.expiryDate : today;
+      document.getElementById('renewalExpiry').value = addMonthsToDate(startDate, detail.months);
+    }
+
     function openAddModal() {
       document.getElementById('modalMemberTitle').innerText = "Add New Member";
       document.getElementById('editMemberIndex').value = -1;
       document.getElementById('mName').value = '';
       document.getElementById('mPhone').value = '';
+      document.getElementById('mPlan').value = '';
       document.getElementById('mTotalFee').value = '';
       document.getElementById('mPaidAmount').value = '';
       document.getElementById('mPayMode').value = 'Cash';
@@ -438,6 +484,7 @@
       document.getElementById('editMemberIndex').value = index;
       document.getElementById('mName').value = m.name || '';
       document.getElementById('mPhone').value = m.phone || '';
+      document.getElementById('mPlan').value = m.plan || '';
       document.getElementById('mTotalFee').value = m.totalFee !== undefined ? m.totalFee : m.amount;
       document.getElementById('mPaidAmount').value = m.amount || '';
       document.getElementById('mPayMode').value = m.payMode || 'Cash';
@@ -479,6 +526,7 @@
         const processMemberData = (photoUrl) => {
           const memberData = {
             name, phone, amount: paidAmount, totalFee,
+            plan: document.getElementById('mPlan').value || '',
             dueAmount: totalFee - paidAmount,
             payMode, date: index === -1 ? date : (state.members[index]?.date || date),
             expiryDate,
@@ -516,13 +564,14 @@
       if (!m) return;
       document.getElementById('renewalMemberIndex').value = index;
       document.getElementById('renewalMemberInfo').innerText = (m.name || 'Member') + ' | Current Expiry: ' + formatDateDDMMYY(m.expiryDate);
+      document.getElementById('renewalPlan').value = '';
       document.getElementById('renewalFee').value = '';
       document.getElementById('renewalPaid').value = '';
       document.getElementById('renewalDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('renewalPayMode').value = 'Cash';
-      const currentExpiry = m.expiryDate ? new Date(m.expiryDate + 'T00:00:00') : new Date();
-      currentExpiry.setMonth(currentExpiry.getMonth() + 1);
-      document.getElementById('renewalExpiry').value = currentExpiry.toISOString().split('T')[0];
+      const today = dateToISO(new Date());
+      const startDate = m.expiryDate && m.expiryDate >= today ? m.expiryDate : today;
+      document.getElementById('renewalExpiry').value = addMonthsToDate(startDate, 1);
       openModal('renewalModal');
     }
 
@@ -535,6 +584,7 @@
       const date = document.getElementById('renewalDate').value || new Date().toISOString().split('T')[0];
       const expiryDate = document.getElementById('renewalExpiry').value;
       const payMode = document.getElementById('renewalPayMode').value;
+      const plan = document.getElementById('renewalPlan').value;
       if (!m || feeValue === '' || paidValue === '' || !Number.isFinite(fee) || !Number.isFinite(paid) || fee <= 0 || paid < 0 || paid > fee || !expiryDate) {
         alert('Renewal Fee, Paid Amount, Payment Date, Payment Mode, New Expiry Date എന്നിവ ശരിയായി നൽകുക!');
         return;
@@ -543,7 +593,8 @@
       if (!Array.isArray(m.payments)) m.payments = [];
       const previousTotal = Number(m.totalFee !== undefined ? m.totalFee : m.amount) || 0;
       m.totalFee = previousTotal + fee;
-      m.renewals.push({ fee, paidAmount: paid, date, payMode, expiryDate });
+      m.renewals.push({ fee, paidAmount: paid, date, payMode, expiryDate, plan });
+      if (plan) m.plan = plan;
       if (paid > 0) m.payments.push({ amount: paid, date, payMode, type: 'Renewal', feeAmount: fee });
       m.expiryDate = expiryDate;
       saveData();
