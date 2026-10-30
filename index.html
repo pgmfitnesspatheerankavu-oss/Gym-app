@@ -303,6 +303,22 @@
     </div>
   </div>
 
+  <!-- ADD MEMBERSHIP RENEWAL -->
+  <div id="renewalModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Add Membership Renewal</div>
+      <input type="hidden" id="renewalMemberIndex" value="-1">
+      <p id="renewalMemberInfo" style="color:#aaa;margin-bottom:12px;"></p>
+      <div class="form-group"><label>Renewal Fee (₹)</label><input type="number" id="renewalFee" min="0" placeholder="Total renewal fee"></div>
+      <div class="form-group"><label>Paid Amount (₹)</label><input type="number" id="renewalPaid" min="0" placeholder="Amount received"></div>
+      <div class="form-group"><label>Payment Date</label><input type="date" id="renewalDate"></div>
+      <div class="form-group"><label>Payment Mode</label><select id="renewalPayMode"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option></select></div>
+      <div class="form-group"><label>New Expiry Date</label><input type="date" id="renewalExpiry"></div>
+      <button class="btn" onclick="saveRenewal()">Save Renewal</button>
+      <button class="btn btn-close" onclick="closeModal('renewalModal')" style="margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+
   <!-- ADD PENDING FEE PAYMENT -->
   <div id="pendingFeeModal" class="modal">
     <div class="modal-content">
@@ -493,6 +509,49 @@
       } else {
         alert('എല്ലാ വിവരങ്ങളും കൃത്യമായി പൂരിപ്പിക്കുക!');
       }
+    }
+
+    function openRenewal(index) {
+      const m = state.members[index];
+      if (!m) return;
+      document.getElementById('renewalMemberIndex').value = index;
+      document.getElementById('renewalMemberInfo').innerText = (m.name || 'Member') + ' | Current Expiry: ' + formatDateDDMMYY(m.expiryDate);
+      document.getElementById('renewalFee').value = '';
+      document.getElementById('renewalPaid').value = '';
+      document.getElementById('renewalDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('renewalPayMode').value = 'Cash';
+      const currentExpiry = m.expiryDate ? new Date(m.expiryDate + 'T00:00:00') : new Date();
+      currentExpiry.setMonth(currentExpiry.getMonth() + 1);
+      document.getElementById('renewalExpiry').value = currentExpiry.toISOString().split('T')[0];
+      openModal('renewalModal');
+    }
+
+    function saveRenewal() {
+      const index = Number(document.getElementById('renewalMemberIndex').value);
+      const m = state.members[index];
+      const feeValue = document.getElementById('renewalFee').value;
+      const paidValue = document.getElementById('renewalPaid').value;
+      const fee = Number(feeValue), paid = Number(paidValue);
+      const date = document.getElementById('renewalDate').value || new Date().toISOString().split('T')[0];
+      const expiryDate = document.getElementById('renewalExpiry').value;
+      const payMode = document.getElementById('renewalPayMode').value;
+      if (!m || feeValue === '' || paidValue === '' || !Number.isFinite(fee) || !Number.isFinite(paid) || fee <= 0 || paid < 0 || paid > fee || !expiryDate) {
+        alert('Renewal Fee, Paid Amount, Payment Date, Payment Mode, New Expiry Date എന്നിവ ശരിയായി നൽകുക!');
+        return;
+      }
+      if (!Array.isArray(m.renewals)) m.renewals = [];
+      if (!Array.isArray(m.payments)) m.payments = [];
+      const previousTotal = Number(m.totalFee !== undefined ? m.totalFee : m.amount) || 0;
+      m.totalFee = previousTotal + fee;
+      m.renewals.push({ fee, paidAmount: paid, date, payMode, expiryDate });
+      if (paid > 0) m.payments.push({ amount: paid, date, payMode, type: 'Renewal', feeAmount: fee });
+      m.expiryDate = expiryDate;
+      saveData();
+      closeModal('renewalModal');
+      openListView(currentListViewType);
+      updateDashboard();
+      if (typeof renderPnl === 'function') renderPnl();
+      alert('Membership Renewal വിജയകരമായി ചേർത്തു!');
     }
 
     function openPendingFee(index) {
@@ -799,6 +858,7 @@
             act('fa-user','Profile','viewFullPhoto(\''+(item.photo||'')+'\',\''+safeName+'\')')+
             act('fa-pen','Edit','editMember('+item.originalIndex+')')+
             act('fa-money-bill-wave','Add Pay','openPendingFee('+item.originalIndex+')')+
+            act('fa-rotate','Renewal','openRenewal('+item.originalIndex+')')+
             act('fa-trash','Delete','deleteMember('+item.originalIndex+')')+'</div></article>';
         }).join('');
         return;
@@ -855,7 +915,7 @@
         ...(state.openingBalance > 0 ? [{ date: 'Start', name: 'Opening Balance', amount: state.openingBalance, type: 'OpeningBalance', index: 0 }] : []),
         ...state.members.flatMap((m, idx) => [
           { date: m.date, name: m.name, amount: m.amount, type: 'Member', index: idx, payMode: m.payMode || 'Cash' },
-          ...(m.payments || []).map(p => ({ date: p.date, name: m.name + ' (Pending Fee)', amount: p.amount, type: 'MemberPayment', index: idx, payMode: p.payMode || 'Cash' }))
+          ...(m.payments || []).map(p => ({ date: p.date, name: m.name + (p.type === 'Renewal' ? ' (Renewal Fee)' : ' (Pending Fee)'), amount: p.amount, type: 'MemberPayment', index: idx, payMode: p.payMode || 'Cash' }))
         ])
       ];
       const expenseItems = state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }));
