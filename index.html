@@ -203,7 +203,11 @@
       <h3 style="font-size: 1rem; color: #aaa;">Net Profit: <span id="pnlNetProfit" style="color: #2ecc71;">₹0</span></h3>
       <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">Collection: <span id="pnlTotColl">₹0</span> | Expense: <span id="pnlTotExp">₹0</span></p>
     </div>
-    <div id="pnlDetailsList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;align-items:start;"><section style="min-width:0;background:#1e1e1e;border:1px solid #2ecc71;border-radius:8px;padding:7px;"><h3 style="text-align:center;color:#2ecc71;font-size:0.9rem;padding:6px 2px;">Income / Collection</h3><div id="pnlIncomeList"></div></section><section style="min-width:0;background:#1e1e1e;border:1px solid #e74c3c;border-radius:8px;padding:7px;"><h3 style="text-align:center;color:#e74c3c;font-size:0.9rem;padding:6px 2px;">Expense</h3><div id="pnlExpenseList"></div></section></div>
+    <div style="display:flex;background:#fff;color:#222;box-shadow:0 2px 5px #0002;margin-bottom:10px;">
+<button id="pnlIncomeTab" onclick="setPnlTab('income')" style="flex:1;padding:16px 8px;border:0;border-bottom:3px solid #333;background:#fff;color:#222;font-size:16px;">Income</button>
+<button id="pnlExpenseTab" onclick="setPnlTab('expense')" style="flex:1;padding:16px 8px;border:0;border-bottom:3px solid transparent;background:#fff;color:#999;font-size:16px;">Expense</button></div>
+<div style="padding:0 12px 8px;"><div id="pnlIncomePanel"><h3 style="text-align:right;color:#2ecc71;font-size:15px;padding:8px 5px;">Total Income: <span id="pnlIncomeTotal">₹0</span></h3><div id="pnlIncomeList" class="list-container"></div></div>
+<div id="pnlExpensePanel" style="display:none;"><h3 style="text-align:right;color:#e74c3c;font-size:15px;padding:8px 5px;">Total Expense: <span id="pnlExpenseTotal">₹0</span></h3><div id="pnlExpenseList" class="list-container"></div></div></div>
   </div>
 
   <!-- MODAL: ADD / EDIT MEMBER -->
@@ -668,6 +672,8 @@
       content.innerHTML = html;
     }
 
+    let pnlActiveTab = 'income';
+    function setPnlTab(tab) { pnlActiveTab = tab; renderPnl(); }
     function renderPnl() {
       const memberColl = state.members.reduce((s, m) => s + (Number(m.amount) || 0) + (m.payments || []).reduce((ps, p) => ps + (Number(p.amount) || 0), 0), 0);
       const totColl = (Number(state.openingBalance) || 0) + memberColl;
@@ -677,6 +683,14 @@
       document.getElementById('pnlTotColl').innerText = `₹${totColl}`;
       document.getElementById('pnlTotExp').innerText = `₹${totExp}`;
 
+      document.getElementById('pnlIncomeTotal').innerText = '₹' + totColl;
+      document.getElementById('pnlExpenseTotal').innerText = '₹' + totExp;
+      document.getElementById('pnlIncomePanel').style.display = pnlActiveTab === 'income' ? 'block' : 'none';
+      document.getElementById('pnlExpensePanel').style.display = pnlActiveTab === 'expense' ? 'block' : 'none';
+      document.getElementById('pnlIncomeTab').style.borderBottomColor = pnlActiveTab === 'income' ? '#333' : 'transparent';
+      document.getElementById('pnlExpenseTab').style.borderBottomColor = pnlActiveTab === 'expense' ? '#333' : 'transparent';
+      document.getElementById('pnlIncomeTab').style.color = pnlActiveTab === 'income' ? '#222' : '#999';
+      document.getElementById('pnlExpenseTab').style.color = pnlActiveTab === 'expense' ? '#222' : '#999';
       const incomeList = document.getElementById('pnlIncomeList');
       const expenseList = document.getElementById('pnlExpenseList');
       const incomeItems = [
