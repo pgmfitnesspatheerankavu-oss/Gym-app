@@ -130,7 +130,7 @@
           <div class="card-title">Pending Fee</div>
           <div class="pill yellow" id="dashDue">₹0</div>
         </div>
-        <div class="card" onclick="showPage('pnlPage')">
+        <div class="card" onclick="openListView('expenseList')">
           <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
           <div class="card-title">Total Expense</div>
           <div class="pill red" id="dashExpense">₹0</div>
@@ -469,6 +469,21 @@
       }
     }
 
+    function openAddExpenseFromList() {
+      document.getElementById('eTitle').value = '';
+      document.getElementById('eAmount').value = '';
+      document.getElementById('eDate').value = new Date().toISOString().split('T')[0];
+      openModal('addExpenseModal');
+    }
+
+    function deleteExpenseFromList(index) {
+      if (!state.expenses[index]) return;
+      if (confirm('ഈ ചെലവ് ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?')) {
+        state.expenses.splice(index, 1);
+        saveData();
+        openListView('expenseList');
+      }
+    }
     function saveExpense() {
       const title = document.getElementById('eTitle').value.trim();
       const amountValue = document.getElementById('eAmount').value;
@@ -482,6 +497,7 @@
         document.getElementById('eTitle').value = '';
         document.getElementById('eAmount').value = '';
         document.getElementById('eDate').value = '';
+        if (currentListViewType === 'expenseList') openListView('expenseList');
       } else {
         alert('വിവരങ്ങൾ ശരിയായി നൽകുക!');
       }
@@ -582,9 +598,13 @@
       }
 
       if (type === 'expenseList') {
-        content.innerHTML = filtered.length ? filtered.map(item => `
-          <div class="list-card"><div><h4>${String(item.title || 'Expense').replace(/</g, '&lt;')}</h4></div></div>
-        `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`;
+        content.innerHTML = `<button class="btn" onclick="openAddExpenseFromList()" style="margin-bottom:12px;">➕ Add Expense</button>` + (filtered.length ? filtered.map(item => `
+          <div class="list-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:150px;"><p style="margin:0 0 5px;color:#777;font-size:13px;">${item.date || '-'}</p><h4 style="margin:0;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</h4></div>
+            <div style="font-weight:bold;color:#e74c3c;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
+            <div style="display:flex;gap:6px;"><button type="button" class="action-btn edit-btn" onclick="openEditPnlItem('Expense', ${item.originalIndex})">✏️ Edit</button><button type="button" class="action-btn delete-btn" onclick="deleteExpenseFromList(${item.originalIndex})">🗑 Delete</button></div>
+          </div>
+        `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`);
         return;
       }
 
