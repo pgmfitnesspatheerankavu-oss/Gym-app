@@ -757,14 +757,14 @@
       if (type === 'expenseList') {
         content.innerHTML = `<button class="btn" onclick="openAddExpenseFromList()" style="margin-bottom:10px;padding:8px;font-size:13px;min-height:36px;">➕ Add Expense</button>` +
           (filtered.length ? `
-            <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 66px 48px 52px;gap:4px;align-items:center;padding:8px 5px;background:#eaeaea;border-radius:7px;margin-bottom:5px;font-size:11px;font-weight:700;color:#333;">
+            <div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:6px 3px;background:#eaeaea;border-radius:6px;margin-bottom:4px;font-size:9px;font-weight:700;color:#333;">
               <div>Date</div><div>Expense</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div>
             </div>` + filtered.map(item => `
-            <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 66px 48px 52px;gap:4px;align-items:center;padding:8px 5px;margin-bottom:5px;background:#fff;border:1px solid #e5e5e5;border-radius:7px;box-shadow:0 1px 3px #0000000d;color:#222;font-size:11px;">
-              <div style="font-size:10px;color:#666;overflow-wrap:anywhere;">${item.date || '-'}</div>
-              <div style="font-size:11px;font-weight:600;overflow-wrap:anywhere;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</div>
-              <div style="font-size:11px;font-weight:700;color:#d9534f;text-align:right;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
-              <button type="button" class="action-btn edit-btn" style="min-height:29px;padding:4px 2px;font-size:10px;border-radius:5px;" onclick="openEditPnlItem('Expense', ${item.originalIndex})">Edit</button>
+            <div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:5px 3px;margin-bottom:4px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;box-shadow:0 1px 3px #0000000d;color:#222;font-size:9px;">
+              <div style="font-size:9px;color:#666;overflow-wrap:anywhere;">${formatExpenseDate(item.date)}</div>
+              <div style="font-size:9px;font-weight:600;overflow-wrap:anywhere;">${String(item.title || 'Expense').replace(/</g, '&lt;')}</div>
+              <div style="font-size:9px;font-weight:700;color:#d9534f;text-align:right;white-space:nowrap;">₹${Number(item.amount) || 0}</div>
+              <button type="button" class="action-btn edit-btn" style="min-height:25px;padding:3px 1px;font-size:8px;border-radius:4px;" onclick="openEditPnlItem('Expense', ${item.originalIndex})">Edit</button>
               <button type="button" class="action-btn delete-btn" style="min-height:29px;padding:4px 2px;font-size:10px;border-radius:5px;" onclick="deleteExpenseFromList(${item.originalIndex})">Delete</button>
             </div>
           `).join('') : `<p style="text-align:center;color:#777;margin-top:30px;">ചെലവുകൾ ഒന്നും ചേർത്തിട്ടില്ല</p>`);
@@ -821,6 +821,12 @@
       content.innerHTML = html;
     }
 
+    function formatExpenseDate(value) {
+      if (!value) return '-';
+      const parts = String(value).split('-');
+      return parts.length === 3 ? parts.reverse().join('-') : value;
+    }
+
     let pnlActiveTab = 'income';
     function setPnlTab(tab) { pnlActiveTab = tab; renderPnl(); }
     function renderPnl() {
@@ -858,13 +864,15 @@
         (i.type !== 'MemberPayment' ? '<button type="button" class="action-btn edit-btn" style="font-size:10px;min-height:27px;padding:3px 6px;margin-top:3px;" onclick="openEditPnlItem(\'' + i.type + '\',' + i.index + ')">Edit</button>' : '') +
         '</div>'
       ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Income ഇല്ല</p>';
-      expenseList.innerHTML = expenseItems.length ? expenseItems.map(i =>
-        '<div style="padding:9px 5px;border-bottom:1px solid #444;min-width:0;">' +
-        '<div style="font-size:0.72rem;color:#aaa;">' + (i.date || '') + '</div>' +
-        '<div style="font-size:0.82rem;overflow-wrap:anywhere;margin:3px 0;">' + i.name + '</div>' +
-        '<div style="color:#e74c3c;font-weight:bold;font-size:0.85rem;">-₹' + (Number(i.amount) || 0) + '</div>' +
-        '<button type="button" class="action-btn edit-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="openEditPnlItem(\'Expense\',' + i.index + ')">Edit</button> ' +
-        '<button type="button" class="action-btn delete-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="deleteExpense(' + i.index + ')">Delete</button>' +
+      expenseList.innerHTML = expenseItems.length ?
+        '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:6px 3px;background:#eaeaea;border-radius:6px;margin-bottom:4px;font-size:9px;font-weight:700;color:#333;"><div>Date</div><div>Expense</div><div style="text-align:right;">Amount</div><div style="text-align:center;">Edit</div><div style="text-align:center;">Delete</div></div>' +
+        expenseItems.map(i =>
+        '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) 54px 38px 42px;gap:3px;align-items:center;padding:5px 3px;margin-bottom:4px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;color:#222;font-size:9px;">' +
+        '<div style="font-size:9px;color:#666;overflow-wrap:anywhere;">' + formatExpenseDate(i.date) + '</div>' +
+        '<div style="font-size:9px;font-weight:600;overflow-wrap:anywhere;">' + String(i.name || 'Expense').replace(/</g, '&lt;') + '</div>' +
+        '<div style="color:#d9534f;font-weight:bold;font-size:9px;text-align:right;white-space:nowrap;">₹' + (Number(i.amount) || 0) + '</div>' +
+        '<button type="button" class="action-btn edit-btn" style="font-size:8px;min-height:25px;padding:3px 1px;margin:0;border-radius:4px;" onclick="openEditPnlItem(\\'Expense\\',' + i.index + ')">Edit</button>' +
+        '<button type="button" class="action-btn delete-btn" style="font-size:8px;min-height:25px;padding:3px 1px;margin:0;border-radius:4px;" onclick="deleteExpense(' + i.index + ')">Delete</button>' +
         '</div>'
       ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Expense ഇല്ല</p>';
     }
