@@ -36,8 +36,8 @@
 
     .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; }
     .list-card p { font-size: 0.75rem; color: #aaa; }
-    .list-actions { display: flex; gap: 10px; align-items: center; }
-    .list-actions i { font-size: 1rem; cursor: pointer; padding: 5px; }
+    .list-actions { display: flex; gap: 12px; align-items: center; }
+    .list-actions i { font-size: 1.1rem; cursor: pointer; padding: 6px; background: #2a2a2a; border-radius: 6px; }
     .fa-pen-to-square { color: #3498db; }
     .fa-trash { color: #e74c3c; }
 
@@ -573,12 +573,12 @@
             <h4>${i.name} (${i.type === 'Member' ? 'Income' : i.type})</h4>
             <p>${i.date} ${i.payMode ? '• ' + i.payMode : ''}</p>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="list-actions">
             <span style="font-weight: bold; color: ${i.type !== 'Expense' ? '#2ecc71' : '#e74c3c'};">
               ${i.type !== 'Expense' ? '+' : '-'}₹${i.amount}
             </span>
-            <i class="fa-solid fa-pen-to-square" style="color: #3498db; cursor: pointer;" onclick="openEditPnlItem('${i.type}', ${i.index})" title="Edit"></i>
-            ${i.type === 'Expense' ? `<i class="fa-solid fa-trash" style="color: #e74c3c; cursor: pointer;" onclick="deleteExpense(${i.index})" title="Delete"></i>` : ''}
+            <i class="fa-solid fa-pen-to-square" onclick="openEditPnlItem('${i.type}', ${i.index})" title="Edit"></i>
+            ${i.type === 'Expense' ? `<i class="fa-solid fa-trash" onclick="deleteExpense(${i.index})" title="Delete"></i>` : ''}
           </div>
         </div>
       `).join('');
