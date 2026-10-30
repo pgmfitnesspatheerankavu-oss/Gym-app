@@ -35,6 +35,25 @@
     .list-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 3px; overflow-wrap: anywhere; }
     .list-card p { font-size: 0.75rem; color: #aaa; overflow-wrap: anywhere; }
 
+    .member-summary-strip{display:flex;gap:10px;overflow-x:auto;padding:8px 4px 14px;scrollbar-width:none}
+    .member-summary-card{flex:0 0 145px;background:#fff;color:#222;border-radius:16px;padding:14px 10px;text-align:center;box-shadow:0 2px 8px #0002;cursor:pointer}
+    .member-summary-card.active{background:#303033;color:#fff}
+    .member-summary-card .summary-label{font-size:14px;line-height:1.35;min-height:38px}
+    .member-summary-card .summary-count{display:inline-flex;margin-top:8px;width:54px;height:54px;border-radius:50%;background:#303033;color:#fff;align-items:center;justify-content:center;font-size:19px}
+    .member-summary-card.active .summary-count{background:#fff;color:#303033}
+    .member-profile-card{background:#fff;color:#171717;border:1px solid #e5e5e5;border-radius:18px;padding:15px;margin:10px 2px 14px;box-shadow:0 2px 5px #0002}
+    .member-profile-top{display:grid;grid-template-columns:145px minmax(0,1fr);gap:12px;align-items:center}
+    .member-profile-photo{width:100%;height:140px;object-fit:cover;border-radius:50%;background:#eee;cursor:pointer}
+    .member-field-label{font-size:13px;color:#999;margin-bottom:2px}
+    .member-field-value{font-size:16px;color:#171717;overflow-wrap:anywhere}
+    .member-contact{color:#3498db;font-size:17px}
+    .member-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;margin-top:18px}
+    .member-detail{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline;min-width:0}
+    .member-detail .member-field-value{font-size:14px}
+    .member-action-row{display:flex;gap:0;overflow-x:auto;border-top:1px solid #e5e5e5;margin-top:14px;padding-top:10px}
+    .member-icon-action{flex:0 0 76px;min-height:74px;border:0;background:transparent;color:#333;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:12px;cursor:pointer}
+    .member-icon-action i{font-size:25px}
+    @media(max-width:420px){.member-detail{grid-template-columns:1fr;gap:2px}.member-detail .member-field-value{font-size:14px}}
     /* Large, mobile-friendly action buttons */
     .list-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .action-btn { min-height: 42px; padding: 9px 12px; border: none; border-radius: 7px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; white-space: nowrap; touch-action: manipulation; }
@@ -608,46 +627,44 @@
         return;
       }
 
-      let html = "";
-      if (type === 'monthCollection' && state.openingBalance > 0) {
-        html += `
-          <div class="list-card" style="border-color: #ffb703;">
-            <div><h4>Opening Balance</h4><p>Initial Carried Forward Balance</p></div>
-            <div style="font-weight:bold; color:#2ecc71;">₹${state.openingBalance}</div>
-          </div>`;
-      }
-
-      if (filtered.length === 0 && (!state.openingBalance || type !== 'monthCollection')) {
-        content.innerHTML = `<p style="text-align:center; color:#777; margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>`;
+      if (['live','total','expired','exp1_3','exp4_7','exp8_15','dueAmountList'].includes(type)) {
+        const live = mappedMembers.filter(m => getDaysDiff(m.expiryDate) >= 0).length;
+        const tabs = [['total','Total Memberships',mappedMembers.length],['live','Live Memberships',live],['expired','Expired Memberships',mappedMembers.length-live]];
+        const summary = '<div class="member-summary-strip">' + tabs.map(t => '<div class="member-summary-card '+(type===t[0]?'active':'')+'" onclick="openListView(\''+t[0]+'\')"><div class="summary-label">'+t[1]+'</div><div class="summary-count">'+t[2]+'</div></div>').join('') + '</div>';
+        if (!filtered.length) { content.innerHTML = summary + '<p style="text-align:center;color:#777;margin:30px 0;">വിവരങ്ങൾ ലഭ്യമല്ല</p>'; return; }
+        content.innerHTML = summary + filtered.map(item => {
+          const total = Number(item.totalFee !== undefined ? item.totalFee : item.amount) || 0;
+          const paid = Number(item.amount) || 0;
+          const extra = (item.payments || []).reduce((s,p) => s + (Number(p.amount)||0),0);
+          const due = Math.max(0,total-paid-extra);
+          const photo = item.photo || 'https://via.placeholder.com/150?text=User';
+          const safeName = String(item.name || '').replace(/'/g,"\\'");
+          const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '-';
+          const act = (ic,lab,fn) => '<button type="button" class="member-icon-action" onclick="'+fn+'"><i class="fa-solid '+ic+'"></i><span>'+lab+'</span></button>';
+          return '<article class="member-profile-card"><div class="member-profile-top">' +
+            '<img src="'+photo+'" class="member-profile-photo" onclick="viewFullPhoto(\''+(item.photo||'')+'\',\''+safeName+'\')">' +
+            '<div><div class="member-field-label">Name</div><div class="member-field-value" style="font-size:18px;margin-bottom:12px;">'+(item.name||'-')+'</div><div class="member-field-label">Contact Number</div><div class="member-contact">'+(item.phone||'-')+'</div><div style="font-size:11px;color:'+(getDaysDiff(item.expiryDate)>=0?'#5b9b69':'#d9534f')+';margin-top:12px;">'+(getDaysDiff(item.expiryDate)>=0?'● Live Member':'● Expired')+'</div></div></div>' +
+            '<div class="member-detail-grid">' +
+            '<div class="member-detail"><span class="member-field-label">Join Date</span><span class="member-field-value">'+fmt(item.date)+'</span></div>' +
+            '<div class="member-detail"><span class="member-field-label">End Date</span><span class="member-field-value">'+fmt(item.expiryDate)+'</span></div>' +
+            '<div class="member-detail"><span class="member-field-label">Plan</span><span class="member-field-value">'+(item.plan||'-')+'</span></div>' +
+            '<div class="member-detail"><span class="member-field-label">Final Amt</span><span class="member-field-value">₹'+total+'</span></div>' +
+            '<div class="member-detail"><span class="member-field-label">Paid Amt</span><span class="member-field-value">₹'+(paid+extra)+'</span></div>' +
+            '<div class="member-detail"><span class="member-field-label">Due</span><span class="member-field-value" style="color:'+(due>0?'#d9534f':'#5b9b69')+';">₹'+due+'</span></div></div>' +
+            '<div class="member-action-row">'+
+            act('fa-user','Profile','viewFullPhoto(\''+(item.photo||'')+'\',\''+safeName+'\')')+
+            act('fa-pen','Edit','editMember('+item.originalIndex+')')+
+            act('fa-money-bill-wave','Add Pay','openPendingFee('+item.originalIndex+')')+
+            act('fa-trash','Delete','deleteMember('+item.originalIndex+')')+'</div></article>';
+        }).join('');
         return;
       }
-
-      html += filtered.map(item => {
-        const total = item.totalFee !== undefined ? item.totalFee : item.amount;
-        const extraPaid = (item.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        const due = total - item.amount - extraPaid;
-        const dueText = due > 0 ? ` | <span style="color:#e74c3c;">Due: ₹${due}</span>` : '';
-        const safeName = String(item.name || '').replace(/'/g, "\\'");
-
-        return `
-          <div class="list-card">
-            <div class="member-info">
-              <img src="${item.photo || 'https://via.placeholder.com/60?text=User'}" class="member-avatar" alt="Photo"
-                onclick="viewFullPhoto('${item.photo || ''}', '${safeName}')" title="Click to view full photo">
-              <div>
-                <h4>${item.name || ''}</h4>
-                <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate || ''} ${dueText}</p>
-              </div>
-            </div>
-            <div class="list-actions">
-              <span class="amount-text">₹${item.amount}</span>
-               ${type === 'dueAmountList' ? `<button type="button" class="action-btn edit-btn" onclick="openPendingFee(${item.originalIndex})">➕ Add Pending Fee</button>` : ''}
-              <button type="button" class="action-btn edit-btn" onclick="editMember(${item.originalIndex})">✏️ Edit</button>
-              <button type="button" class="action-btn delete-btn" onclick="deleteMember(${item.originalIndex})">🗑 Delete</button>
-            </div>
-          </div>`;
-      }).join('');
-
+      let html = "";
+      if (type === 'monthCollection' && state.openingBalance > 0) {
+        html += '<div class="list-card"><div><h4>Opening Balance</h4><p>Initial Carried Forward Balance</p></div><div>₹'+state.openingBalance+'</div></div>';
+      }
+      if (!filtered.length) { content.innerHTML = '<p style="text-align:center;color:#777;margin-top:30px;">വിവരങ്ങൾ ലഭ്യമല്ല</p>'; return; }
+      html += filtered.map(item => '<div class="list-card"><div><h4>'+(item.name||'')+'</h4><p>'+(item.phone||'')+' | Exp: '+(item.expiryDate||'')+'</p></div><div class="list-actions"><span class="amount-text">₹'+item.amount+'</span><button class="action-btn edit-btn" onclick="editMember('+item.originalIndex+')">Edit</button></div></div>').join('');
       content.innerHTML = html;
     }
 
