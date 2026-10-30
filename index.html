@@ -226,6 +226,20 @@
     </div>
   </div>
 
+  <!-- ADD PENDING FEE PAYMENT -->
+  <div id="pendingFeeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Add Pending Fee Payment</div>
+      <input type="hidden" id="pendingMemberIndex" value="-1">
+      <p id="pendingMemberInfo" style="color:#aaa;margin-bottom:12px;"></p>
+      <div class="form-group"><label>Payment Amount (₹)</label><input type="number" id="pendingAmount" min="1" placeholder="Amount"></div>
+      <div class="form-group"><label>Payment Date</label><input type="date" id="pendingDate"></div>
+      <div class="form-group"><label>Payment Mode</label><select id="pendingPayMode"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option></select></div>
+      <button class="btn" onclick="savePendingFee()">Save Payment</button>
+      <button class="btn btn-close" onclick="closeModal('pendingFeeModal')" style="margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+
   <!-- ADD EXPENSE -->
   <div id="addExpenseModal" class="modal">
     <div class="modal-content">
@@ -383,6 +397,7 @@
           } else {
             if (!state.members[index]) return;
             if (!photoUrl) memberData.photo = state.members[index].photo || '';
+            memberData.payments = Array.isArray(state.members[index].payments) ? state.members[index].payments : [];
             state.members[index] = memberData;
           }
           saveData();
@@ -401,6 +416,39 @@
       } else {
         alert('എല്ലാ വിവരങ്ങളും കൃത്യമായി പൂരിപ്പിക്കുക!');
       }
+    }
+
+    function openPendingFee(index) {
+      const m = state.members[index];
+      if (!m) return;
+      const paidLater = (m.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const due = (Number(m.totalFee !== undefined ? m.totalFee : m.amount) || 0) - (Number(m.amount) || 0) - paidLater;
+      if (due <= 0) { alert('ഈ അംഗത്തിന് Pending Fee ഇല്ല.'); return; }
+      document.getElementById('pendingMemberIndex').value = index;
+      document.getElementById('pendingMemberInfo').innerText = m.name + ' | Pending: ₹' + due;
+      document.getElementById('pendingAmount').value = '';
+      document.getElementById('pendingAmount').max = due;
+      document.getElementById('pendingDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('pendingPayMode').value = 'Cash';
+      openModal('pendingFeeModal');
+    }
+
+    function savePendingFee() {
+      const index = Number(document.getElementById('pendingMemberIndex').value);
+      const m = state.members[index];
+      const value = document.getElementById('pendingAmount').value;
+      const amount = Number(value);
+      if (!m || value === '' || !Number.isFinite(amount) || amount <= 0) { alert('ശരിയായ തുക നൽകുക!'); return; }
+      const paidLater = (m.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const due = (Number(m.totalFee !== undefined ? m.totalFee : m.amount) || 0) - (Number(m.amount) || 0) - paidLater;
+      if (amount > due) { alert('Pending Fee-നെക്കാൾ കൂടുതൽ തുക നൽകാൻ കഴിയില്ല. ബാക്കി: ₹' + due); return; }
+      if (!Array.isArray(m.payments)) m.payments = [];
+      m.payments.push({ amount, date: document.getElementById('pendingDate').value || new Date().toISOString().split('T')[0], payMode: document.getElementById('pendingPayMode').value });
+      saveData();
+      closeModal('pendingFeeModal');
+      openListView('dueAmountList');
+      updateDashboard();
+      alert('Pending Fee Payment വിജയകരമായി ചേർത്തു!');
     }
 
     function saveOpeningBalance() {
@@ -456,8 +504,13 @@
         if (days >= 8 && days <= 15) exp8_15++;
         if (m.date === todayStr) todayColl += Number(m.amount) || 0;
         if (m.date && m.date.startsWith(currentMonth)) monthColl += Number(m.amount) || 0;
-        const due = (m.totalFee !== undefined ? Number(m.totalFee) : Number(m.amount)) - Number(m.amount);
+        const extraPaid = (m.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const due = (m.totalFee !== undefined ? Number(m.totalFee) : Number(m.amount)) - Number(m.amount) - extraPaid;
         if (due > 0) totalDue += due;
+        (m.payments || []).forEach(p => {
+          if (p.date === todayStr) todayColl += Number(p.amount) || 0;
+          if (p.date && p.date.startsWith(currentMonth)) monthColl += Number(p.amount) || 0;
+        });
       });
 
       const totCollectionWithOB = (Number(state.openingBalance) || 0) + monthColl;
@@ -513,7 +566,8 @@
       } else if (type === 'dueAmountList') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Due / Pending Fee Members`;
         filtered = mappedMembers.filter(m => {
-          const due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
+          const paidLater = (m.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+          const due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount - paidLater;
           return due > 0;
         });
       }
@@ -534,7 +588,8 @@
 
       html += filtered.map(item => {
         const total = item.totalFee !== undefined ? item.totalFee : item.amount;
-        const due = total - item.amount;
+        const extraPaid = (item.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const due = total - item.amount - extraPaid;
         const dueText = due > 0 ? ` | <span style="color:#e74c3c;">Due: ₹${due}</span>` : '';
         const safeName = String(item.name || '').replace(/'/g, "\\'");
 
@@ -550,6 +605,7 @@
             </div>
             <div class="list-actions">
               <span class="amount-text">₹${item.amount}</span>
+               ${type === 'dueAmountList' ? `<button type="button" class="action-btn edit-btn" onclick="openPendingFee(${item.originalIndex})">➕ Add Pending Fee</button>` : ''}
               <button type="button" class="action-btn edit-btn" onclick="editMember(${item.originalIndex})">✏️ Edit</button>
               <button type="button" class="action-btn delete-btn" onclick="deleteMember(${item.originalIndex})">🗑 Delete</button>
             </div>
@@ -560,7 +616,7 @@
     }
 
     function renderPnl() {
-      const memberColl = state.members.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+      const memberColl = state.members.reduce((s, m) => s + (Number(m.amount) || 0) + (m.payments || []).reduce((ps, p) => ps + (Number(p.amount) || 0), 0), 0);
       const totColl = (Number(state.openingBalance) || 0) + memberColl;
       const totExp = state.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
@@ -571,7 +627,10 @@
       const list = document.getElementById('pnlDetailsList');
       const combined = [
         ...(state.openingBalance > 0 ? [{ date: 'Start', name: 'Opening Balance', amount: state.openingBalance, type: 'OpeningBalance', index: 0 }] : []),
-        ...state.members.map((m, idx) => ({ date: m.date, name: m.name, amount: m.amount, type: 'Member', index: idx, payMode: m.payMode || 'Cash' })),
+        ...state.members.flatMap((m, idx) => [
+          { date: m.date, name: m.name, amount: m.amount, type: 'Member', index: idx, payMode: m.payMode || 'Cash' },
+          ...(m.payments || []).map(p => ({ date: p.date, name: m.name + ' (Pending Fee)', amount: p.amount, type: 'MemberPayment', index: idx, payMode: p.payMode || 'Cash' }))
+        ]),
         ...state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }))
       ];
 
