@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PGM FITNESS</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e1e1e">
+  <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -106,6 +106,17 @@
     .pill.yellow { background:#fff0c2 !important; color:#725000 !important; }
     .pill.purple { background:#f1e5f5 !important; color:#672b78 !important; }
     .pill.red { background:#fde7e7 !important; color:#a51f2b !important; }
+
+    /* Match the supplied white dashboard reference across the entire app */
+    html, body, #dashboardPage, #listPage, #pnlPage { background:#f5f5f5 !important; color:#222 !important; }
+    #dashboardPage .container, .list-container { background:#f5f5f5 !important; }
+    #dashboardPage .grid .card { background:#fff !important; color:#222 !important; border:1px solid #ddd !important; box-shadow:0 2px 5px #0002 !important; }
+    #dashboardPage .card-title { color:#222 !important; }
+    #dashboardPage .card .pill { background:#f1f1f1 !important; color:#222 !important; }
+    #dashboardPage .card .pill.yellow { background:#ffb703 !important; color:#222 !important; }
+    #dashboardPage .card .pill.purple { background:#8a1c7c !important; color:#fff !important; }
+    #dashboardPage .card .pill.red { background:#dc3545 !important; color:#fff !important; }
+    .fab { box-shadow:0 4px 10px rgba(0,0,0,.2) !important; }
   </style>
 </head>
 <body>
