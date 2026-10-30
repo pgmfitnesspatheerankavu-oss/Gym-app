@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'pgm-fitness-v9';
+const CACHE_NAME = 'pgm-fitness-v10';
 
 const APP_SHELL = [
   './',
