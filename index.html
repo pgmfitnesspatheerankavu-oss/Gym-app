@@ -204,10 +204,10 @@
       <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">Collection: <span id="pnlTotColl">₹0</span> | Expense: <span id="pnlTotExp">₹0</span></p>
     </div>
     <div style="display:flex;background:#fff;color:#222;box-shadow:0 2px 5px #0002;margin-bottom:10px;">
-<button id="pnlIncomeTab" onclick="setPnlTab('income')" style="flex:1;padding:16px 8px;border:0;border-bottom:3px solid #333;background:#fff;color:#222;font-size:16px;">Income</button>
-<button id="pnlExpenseTab" onclick="setPnlTab('expense')" style="flex:1;padding:16px 8px;border:0;border-bottom:3px solid transparent;background:#fff;color:#999;font-size:16px;">Expense</button></div>
-<div style="padding:0 12px 8px;"><div id="pnlIncomePanel"><h3 style="text-align:right;color:#2ecc71;font-size:15px;padding:8px 5px;">Total Income: <span id="pnlIncomeTotal">₹0</span></h3><div id="pnlIncomeList" class="list-container"></div></div>
-<div id="pnlExpensePanel" style="display:none;"><h3 style="text-align:right;color:#e74c3c;font-size:15px;padding:8px 5px;">Total Expense: <span id="pnlExpenseTotal">₹0</span></h3><div id="pnlExpenseList" class="list-container"></div></div></div>
+<button id="pnlIncomeTab" onclick="setPnlTab('income')" style="flex:1;padding:11px 8px;border:0;border-bottom:2px solid #333;background:#fff;color:#222;font-size:14px;font-weight:600;">Income</button>
+<button id="pnlExpenseTab" onclick="setPnlTab('expense')" style="flex:1;padding:11px 8px;border:0;border-bottom:2px solid transparent;background:#fff;color:#999;font-size:14px;font-weight:600;">Expense</button></div>
+<div style="padding:0 8px 8px;"><div id="pnlIncomePanel"><h3 style="text-align:right;color:#2ecc71;font-size:13px;padding:5px 4px;margin:0 0 5px;">Total Income: <span id="pnlIncomeTotal">₹0</span></h3><div id="pnlIncomeList" class="list-container"></div></div>
+<div id="pnlExpensePanel" style="display:none;"><h3 style="text-align:right;color:#e74c3c;font-size:13px;padding:5px 4px;margin:0 0 5px;">Total Expense: <span id="pnlExpenseTotal">₹0</span></h3><div id="pnlExpenseList" class="list-container"></div></div></div>
   </div>
 
   <!-- MODAL: ADD / EDIT MEMBER -->
@@ -702,11 +702,11 @@
       ];
       const expenseItems = state.expenses.map((e, idx) => ({ date: e.date, name: e.title, amount: e.amount, type: 'Expense', index: idx }));
       incomeList.innerHTML = incomeItems.length ? incomeItems.map(i =>
-        '<div style="padding:9px 5px;border-bottom:1px solid #444;min-width:0;">' +
-        '<div style="font-size:0.72rem;color:#aaa;">' + (i.date || '') + '</div>' +
-        '<div style="font-size:0.82rem;overflow-wrap:anywhere;margin:3px 0;">' + i.name + '</div>' +
-        '<div style="color:#2ecc71;font-weight:bold;font-size:0.85rem;">+₹' + (Number(i.amount) || 0) + '</div>' +
-        (i.type !== 'MemberPayment' ? '<button type="button" class="action-btn edit-btn" style="font-size:11px;min-height:32px;padding:5px;margin-top:5px;" onclick="openEditPnlItem(\'' + i.type + '\',' + i.index + ')">Edit</button>' : '') +
+        '<div style="padding:7px 4px;border-bottom:1px solid #444;min-width:0;">' +
+        '<div style="font-size:0.65rem;color:#aaa;">' + (i.date || '') + '</div>' +
+        '<div style="font-size:0.76rem;line-height:1.25;overflow-wrap:anywhere;margin:2px 0;">' + i.name + '</div>' +
+        '<div style="color:#2ecc71;font-weight:600;font-size:0.78rem;">+₹' + (Number(i.amount) || 0) + '</div>' +
+        (i.type !== 'MemberPayment' ? '<button type="button" class="action-btn edit-btn" style="font-size:10px;min-height:27px;padding:3px 6px;margin-top:3px;" onclick="openEditPnlItem(\'' + i.type + '\',' + i.index + ')">Edit</button>' : '') +
         '</div>'
       ).join('') : '<p style="color:#888;text-align:center;font-size:0.75rem;padding:12px 2px;">Income ഇല്ല</p>';
       expenseList.innerHTML = expenseItems.length ? expenseItems.map(i =>
