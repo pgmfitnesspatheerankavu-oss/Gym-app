@@ -144,6 +144,11 @@
           <div class="card-title">Today Collection</div>
           <div class="pill red" id="dashToday">₹0</div>
         </div>
+        <div class="card" onclick="openListView('monthlyCollection')">
+          <div class="card-icon" style="color:#2ecc71;"><i class="fa-solid fa-calendar-days"></i></div>
+          <div class="card-title">Monthly Collection</div>
+          <div class="pill yellow" id="dashMonthCollection">₹0</div>
+        </div>
         <div class="card" onclick="openListView('dueAmountList')">
           <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-wallet"></i></div>
           <div class="card-title">Pending Fee</div>
@@ -567,6 +572,7 @@
       document.getElementById('countExp4_7').innerText = exp4_7;
       document.getElementById('countExp8_15').innerText = exp8_15;
       document.getElementById('dashToday').innerText = `₹${todayColl}`;
+      document.getElementById('dashMonthCollection').innerText = `₹${monthColl}`;
       document.getElementById('dashDue').innerText = `₹${totalDue}`;
       document.getElementById('dashExpense').innerText = `₹${totExpense}`;
       document.getElementById('dashExpenseCount').innerText = state.expenses.length;
@@ -605,6 +611,30 @@
       } else if (type === 'todayCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Today's Collection`;
         filtered = mappedMembers.filter(m => m.date === todayStr);
+      } else if (type === 'monthlyCollection') {
+        title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection`;
+        const monthlyTotals = {};
+        state.members.forEach(m => {
+          if (m.date) {
+            const key = m.date.slice(0,7);
+            monthlyTotals[key] = (monthlyTotals[key] || 0) + (Number(m.amount) || 0);
+          }
+          (m.payments || []).forEach(p => {
+            if (p.date) {
+              const key = p.date.slice(0,7);
+              monthlyTotals[key] = (monthlyTotals[key] || 0) + (Number(p.amount) || 0);
+            }
+          });
+        });
+        const months = Object.keys(monthlyTotals).sort().reverse();
+        const grandTotal = Object.values(monthlyTotals).reduce((s,v)=>s+v,0);
+        content.innerHTML = '<div style="margin:10px;padding:14px;background:#fff;border-radius:12px;box-shadow:0 2px 6px #0002;color:#222;text-align:center;"><div style="font-size:13px;color:#777;">Total Collection (All Months)</div><div style="font-size:23px;font-weight:bold;color:#239b56;margin-top:5px;">₹'+grandTotal+'</div></div>' +
+          (months.length ? months.map(key => {
+            const d = new Date(key+'-01T00:00:00');
+            const label = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+            return '<div class="list-card" style="display:flex;justify-content:space-between;align-items:center;"><div><h4>'+label+'</h4><p style="font-size:12px;color:#888;">Monthly Collection</p></div><strong style="color:#239b56;">₹'+monthlyTotals[key]+'</strong></div>';
+          }).join('') : '<p style="text-align:center;color:#777;margin:30px;">Collection data ഇല്ല</p>');
+        return;
       } else if (type === 'monthCollection') {
         title.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Monthly Collection & OB`;
         filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
