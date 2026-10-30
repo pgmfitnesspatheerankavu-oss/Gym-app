@@ -802,6 +802,15 @@
         }).join('');
         return;
       }
+      if (type === 'dueAmountList') {
+        content.innerHTML = filtered.length ? filtered.map(item => {
+          const paidLater = (item.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+          const total = Number(item.totalFee !== undefined ? item.totalFee : item.amount) || 0;
+          const due = Math.max(0, total - (Number(item.amount) || 0) - paidLater);
+          return '<div class="list-card"><div><h4>'+(item.name||'')+'</h4><p>'+(item.phone||'')+' | Pending Amount: ₹'+due+'</p></div><div class="list-actions"><button class="action-btn edit-btn" onclick="openPendingFee('+item.originalIndex+')">Add Pay</button></div></div>';
+        }).join('') : '<p style="text-align:center;color:#777;margin-top:30px;">Pending Fee ഇല്ല</p>';
+        return;
+      }
       let html = "";
       if (type === 'monthCollection' && state.openingBalance > 0) {
         html += '<div class="list-card"><div><h4>Opening Balance</h4><p>Initial Carried Forward Balance</p></div><div>₹'+state.openingBalance+'</div></div>';
