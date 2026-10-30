@@ -10,7 +10,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #121212; color: #fff; padding-bottom: 30px; }
-    .top-bar { background-color: #1e1e1e; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; margin-top: 38px; z-index: 100; border-bottom: 1px solid #333; }
+    .top-bar { background-color: #1e1e1e; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }
     .top-bar .title { font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
     .top-icons { display: flex; gap: 12px; align-items: center; cursor: pointer; }
     .container { padding: 12px; max-width: 600px; margin: 0 auto; }
@@ -114,10 +114,10 @@
           <div class="card-title">Today Collection</div>
           <div class="pill red" id="dashToday">₹0</div>
         </div>
-        <div class="card" onclick="openListView('monthCollection')">
-          <div class="card-icon" style="color: #2ecc71;"><i class="fa-solid fa-vault"></i></div>
-          <div class="card-title">Collection(Month)</div>
-          <div class="pill purple" id="dashMonth">₹0</div>
+        <div class="card" onclick="openListView('dueAmountList')">
+          <div class="card-icon" style="color: #e67e22;"><i class="fa-solid fa-wallet"></i></div>
+          <div class="card-title">Due Amount</div>
+          <div class="pill yellow" id="dashDue">₹0</div>
         </div>
         <div class="card" onclick="openModal('addExpenseModal')">
           <div class="card-icon" style="color: #e74c3c;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
@@ -172,14 +172,15 @@
     <div class="list-container" id="pnlDetailsList"></div>
   </div>
 
-  <!-- MODAL: ADD / EDIT MEMBER WITH PHOTO -->
+  <!-- MODAL: ADD / EDIT MEMBER WITH PENDING FEE & PHOTO -->
   <div id="addMemberModal" class="modal">
     <div class="modal-content">
       <div class="modal-title" id="modalMemberTitle">Add New Member</div>
       <input type="hidden" id="editMemberIndex" value="-1">
       <div class="form-group"><label>Member Name</label><input type="text" id="mName" placeholder="Name"></div>
       <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" placeholder="Phone"></div>
-      <div class="form-group"><label>Fee Amount (₹)</label><input type="number" id="mAmount" placeholder="1500"></div>
+      <div class="form-group"><label>Total Fee (₹)</label><input type="number" id="mTotalFee" placeholder="1000"></div>
+      <div class="form-group"><label>Paid Amount (₹)</label><input type="number" id="mPaidAmount" placeholder="800"></div>
       <div class="form-group">
         <label>Payment Mode</label>
         <select id="mPayMode">
@@ -292,7 +293,8 @@
       document.getElementById('editMemberIndex').value = -1;
       document.getElementById('mName').value = '';
       document.getElementById('mPhone').value = '';
-      document.getElementById('mAmount').value = '';
+      document.getElementById('mTotalFee').value = '';
+      document.getElementById('mPaidAmount').value = '';
       document.getElementById('mPayMode').value = 'Cash';
       document.getElementById('mPhoto').value = '';
       let today = new Date().toISOString().split('T')[0];
@@ -306,7 +308,8 @@
       document.getElementById('editMemberIndex').value = index;
       document.getElementById('mName').value = m.name || '';
       document.getElementById('mPhone').value = m.phone || '';
-      document.getElementById('mAmount').value = m.amount || '';
+      document.getElementById('mTotalFee').value = m.totalFee !== undefined ? m.totalFee : m.amount;
+      document.getElementById('mPaidAmount').value = m.amount || '';
       document.getElementById('mPayMode').value = m.payMode || 'Cash';
       document.getElementById('mExpiryDate').value = m.expiryDate || new Date().toISOString().split('T')[0];
       openModal('addMemberModal');
@@ -331,25 +334,34 @@
       let index = Number(document.getElementById('editMemberIndex').value);
       let name = document.getElementById('mName').value;
       let phone = document.getElementById('mPhone').value;
-      let amount = Number(document.getElementById('mAmount').value);
+      let totalFee = Number(document.getElementById('mTotalFee').value);
+      let paidAmount = Number(document.getElementById('mPaidAmount').value);
       let payMode = document.getElementById('mPayMode').value;
       let expiryDate = document.getElementById('mExpiryDate').value;
       let date = new Date().toISOString().split('T')[0];
       let photoInput = document.getElementById('mPhoto');
 
-      if(name && amount && expiryDate) {
+      if(name && !isNaN(totalFee) && !isNaN(paidAmount) && expiryDate) {
         let processMemberData = (photoUrl) => {
+          let memberData = {
+            name,
+            phone,
+            amount: paidAmount, // Actual collected amount for collection & P&L
+            totalFee: totalFee,
+            dueAmount: totalFee - paidAmount,
+            payMode,
+            date,
+            expiryDate,
+            photo: photoUrl || ''
+          };
+
           if(index === -1) {
-            state.members.unshift({ name, phone, amount, payMode, date, expiryDate, photo: photoUrl || '' });
+            state.members.unshift(memberData);
           } else {
-            state.members[index].name = name;
-            state.members[index].phone = phone;
-            state.members[index].amount = amount;
-            state.members[index].payMode = payMode;
-            state.members[index].expiryDate = expiryDate;
-            if(photoUrl) {
-              state.members[index].photo = photoUrl;
+            if(!photoUrl) {
+              memberData.photo = state.members[index].photo || '';
             }
+            state.members[index] = memberData;
           }
           saveData();
           closeModal('addMemberModal');
@@ -367,7 +379,7 @@
           processMemberData(existingPhoto);
         }
       } else {
-        alert('എല്ലാ വിവരങ്ങളും പൂരിപ്പിക്കുക!');
+        alert('എല്ലാ വിവരങ്ങളും കൃത്യമായി പൂരിപ്പിക്കുക!');
       }
     }
 
@@ -404,7 +416,7 @@
 
     function updateDashboard() {
       let todayStr = new Date().toISOString().split('T')[0];
-      let liveCount = 0, exp1_3 = 0, exp4_7 = 0, exp8_15 = 0, expiredCount = 0, todayColl = 0, monthColl = 0;
+      let liveCount = 0, exp1_3 = 0, exp4_7 = 0, exp8_15 = 0, expiredCount = 0, todayColl = 0, monthColl = 0, totalDue = 0;
       let currentMonth = todayStr.slice(0, 7);
 
       state.members.forEach(m => {
@@ -418,6 +430,9 @@
 
         if (m.date === todayStr) todayColl += m.amount;
         if (m.date && m.date.startsWith(currentMonth)) monthColl += m.amount;
+
+        let due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
+        if(due > 0) totalDue += due;
       });
 
       let totCollectionWithOB = (state.openingBalance || 0) + monthColl;
@@ -431,6 +446,7 @@
       document.getElementById('countExp8_15').innerText = exp8_15;
       document.getElementById('dashToday').innerText = `₹${todayColl}`;
       document.getElementById('dashMonth').innerText = `₹${totCollectionWithOB}`;
+      document.getElementById('dashDue').innerText = `₹${totalDue}`;
       document.getElementById('dashExpense').innerText = `₹${totExpense}`;
       document.getElementById('dashNetProfit').innerText = `₹${totCollectionWithOB - totExpense}`;
     }
@@ -470,6 +486,12 @@
       } else if(type === 'monthCollection') {
         title.innerText = "Monthly Collection & OB";
         filtered = mappedMembers.filter(m => m.date && m.date.startsWith(currentMonth));
+      } else if(type === 'dueAmountList') {
+        title.innerText = "Due / Pending Fee Members";
+        filtered = mappedMembers.filter(m => {
+          let due = (m.totalFee !== undefined ? m.totalFee : m.amount) - m.amount;
+          return due > 0;
+        });
       }
 
       let html = "";
@@ -490,22 +512,28 @@
         return;
       }
 
-      html += filtered.map(item => `
-        <div class="list-card">
-          <div class="member-info">
-            <img src="${item.photo || 'https://via.placeholder.com/60?text=User'}" class="member-avatar" alt="Photo" onclick="viewFullPhoto('${item.photo || ''}', '${item.name}')" title="Click to view full photo">
-            <div>
-              <h4>${item.name}</h4>
-              <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate}</p>
+      html += filtered.map(item => {
+        let total = item.totalFee !== undefined ? item.totalFee : item.amount;
+        let due = total - item.amount;
+        let dueText = due > 0 ? ` | <span style="color:#e74c3c;">Due: ₹${due}</span>` : '';
+
+        return `
+          <div class="list-card">
+            <div class="member-info">
+              <img src="${item.photo || 'https://via.placeholder.com/60?text=User'}" class="member-avatar" alt="Photo" onclick="viewFullPhoto('${item.photo || ''}', '${item.name}')" title="Click to view full photo">
+              <div>
+                <h4>${item.name}</h4>
+                <p>${item.phone ? 'Phone: ' + item.phone + ' | ' : ''}Mode: <b>${item.payMode || 'Cash'}</b> | Exp: ${item.expiryDate} ${dueText}</p>
+              </div>
+            </div>
+            <div class="list-actions">
+              <span style="font-weight:bold; color:#2ecc71; margin-right:5px;">₹${item.amount}</span>
+              <i class="fa-solid fa-pen-to-square" onclick="editMember(${item.originalIndex})" title="Edit"></i>
+              <i class="fa-solid fa-trash" onclick="deleteMember(${item.originalIndex})" title="Delete"></i>
             </div>
           </div>
-          <div class="list-actions">
-            <span style="font-weight:bold; color:#2ecc71; margin-right:5px;">₹${item.amount}</span>
-            <i class="fa-solid fa-pen-to-square" onclick="editMember(${item.originalIndex})" title="Edit"></i>
-            <i class="fa-solid fa-trash" onclick="deleteMember(${item.originalIndex})" title="Delete"></i>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
       content.innerHTML = html;
     }
