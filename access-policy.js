@@ -11,7 +11,7 @@ const OWNER = new Set([
 
 const STAFF = new Set([
   "members.read", "members.create", "members.update",
-  "payments.create", "renewals.create",
+  "payments.create", "payments.read.own", "renewals.create", "renewals.read.own",
   "attendance.read", "attendance.create"
 ]);
 
