@@ -19,8 +19,8 @@ test("unprovisioned, inactive and invalid profiles are denied", () => {
   assert.equal(decideAccess({ uid: "staff" }, "owner-uid", { role: "owner", active: true }).allowed, false);
 });
 
-test("active staff are still denied the legacy dashboard until cloud migration is ready", () => {
-  assert.deepEqual(decideAccess({ uid: "staff" }, "owner-uid", { role: "staff", active: true }), {
-    allowed: false, reason: "staff-cloud-migration-pending", role: "staff"
+test("active staff receive limited Staff role access", () => {
+  assert.deepEqual(decideAccess({ uid: "staff" }, "owner-uid", { role: "staff", active: true, displayName: "Trainer" }), {
+    allowed: true, role: "staff", uid: "staff", displayName: "Trainer"
   });
 });
