@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:migration": "node --test migration-preview.test.mjs migration-plan.test.mjs migration-verification.test.mjs"
+    "test:migration": "node --test migration-preview.test.mjs migration-plan.test.mjs migration-verification.test.mjs migration-safety.test.mjs"
   }
 }
