@@ -33,7 +33,7 @@ service cloud.firestore {
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
         (!("planFee" in request.resource.data) ||
-          request.resource.data.planFee is number) &&
+          (isOwner() && request.resource.data.planFee is number)) &&
         // Migration metadata is reserved for the Owner-only migration runner.
         ((!("migrationVersion" in request.resource.data) &&
           !("migrationSourceData" in request.resource.data) &&
