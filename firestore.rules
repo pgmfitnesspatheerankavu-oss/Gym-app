@@ -13,6 +13,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
     }
     function canUseGym() { return isOwner() || isActiveStaff(); }
+    function expectedPlanFee(plan) {
+      return plan == "1 Month" ? 650 :
+        plan == "3 Months" ? 1600 :
+        plan == "6 Months" ? 2700 :
+        plan == "12 Months" ? 4700 :
+        plan == "Couple / Duo - 3 Months" ? 3000 : -1;
+    }
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isOwner());
@@ -35,7 +42,10 @@ service cloud.firestore {
         (!("createdBy" in request.resource.data) || request.resource.data.createdBy == request.auth.uid || isOwner()) &&
         (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
         (!("planFee" in request.resource.data) ||
-          (isOwner() && request.resource.data.planFee is number)) &&
+          (request.resource.data.planFee is number &&
+           (isOwner() ||
+            (isActiveStaff() &&
+             request.resource.data.planFee == expectedPlanFee(request.resource.data.plan))))) &&
         (!("registrationFee" in request.resource.data) ||
           (request.resource.data.registrationFee is number &&
            request.resource.data.registrationFee in [500, 800])) &&
