@@ -83,3 +83,10 @@ Owner UID rules-ൽ നിശ്ചയിച്ചതാണ്. Client-ൽ ന�
 ## നിലവിലെ നില
 
 ഇത് schema-യും migration-ഉം നിർവചിക്കുന്ന specification മാത്രമാണ്. Login UI, Firestore adapter, automated rules tests, migration runner, backup/restore, cloud sync എന്നിവ ഇനിയും implement ചെയ്യേണ്ടതാണ്. Rules publish ചെയ്യരുത്; live data ചേർക്കരുത്; APK uninstall/clear storage ചെയ്യരുത്.
+
+
+## Read-only Migration Pre-check
+
+Development branch-ൽ `migration-preview.js` ചേർത്തിട്ടുണ്ട്. ഇത് raw backup JSON സ്വീകരിച്ച് അംഗങ്ങൾ, ആദ്യ payment എണ്ണം, payment rows/തുക, renewal rows/paid തുക, expenses/തുക, opening balance എന്നിവയുടെ summary നൽകുന്നു. Duplicate member IDs, പേരില്ലാത്ത അംഗങ്ങൾ, വലിയ photo data, അസാധുവായ തുകകൾ എന്നിവ warnings ആയി കാണിക്കും.
+
+ഇത് preview മാത്രം ആണ്: localStorage-ലോ Firestore-ലോ എഴുതില്ല; migration നടത്തുകയുമില്ല. നിലവിലെ UI-യുമായി ബന്ധിപ്പിച്ചിട്ടില്ല. Cloud migration തുടങ്ങുന്നതിന് മുമ്പ് ഇതിന്റെ output പരിശോധിക്കുകയും യഥാർത്ഥ legacy data-യിൽ edge-case tests നടത്തുകയും വേണം.
