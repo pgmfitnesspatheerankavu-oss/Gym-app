@@ -19,7 +19,13 @@ export function previewLegacyMigration(rawJson) {
   let initialPayments = 0;
   let memberPaymentRows = 0;
   let memberPaymentAmount = 0;
+  let renewalPaymentRows = 0;
+  let renewalPaymentAmount = 0;
+  let pendingPaymentRows = 0;
+  let pendingPaymentAmount = 0;
+  let unclassifiedPaymentRows = 0;
   let renewalRows = 0;
+  let renewalFeeAmount = 0;
   let renewalPaidAmount = 0;
   let expenseAmount = 0;
   let invalidAmounts = 0;
@@ -50,11 +56,24 @@ export function previewLegacyMigration(rawJson) {
     for (const p of payments) {
       if (!p || typeof p !== "object") { warnings.push(`അംഗം #${index + 1}: തെറ്റായ payment`); continue; }
       memberPaymentRows++;
-      memberPaymentAmount += validAmount(p.amount);
+      const paymentAmount = validAmount(p.amount);
+      memberPaymentAmount += paymentAmount;
+      if (String(p.type || "").toLowerCase() === "renewal") {
+        renewalPaymentRows++;
+        renewalPaymentAmount += paymentAmount;
+      } else if (p.type) {
+        pendingPaymentRows++;
+        pendingPaymentAmount += paymentAmount;
+      } else {
+        // Legacy pending-fee payments have no type field.
+        pendingPaymentRows++;
+        pendingPaymentAmount += paymentAmount;
+      }
     }
     for (const r of renewals) {
       if (!r || typeof r !== "object") { warnings.push(`അംഗം #${index + 1}: തെറ്റായ renewal`); continue; }
       renewalRows++;
+      renewalFeeAmount += validAmount(r.fee);
       renewalPaidAmount += validAmount(r.paidAmount);
     }
   }
@@ -67,6 +86,9 @@ export function previewLegacyMigration(rawJson) {
   if (missingNames) warnings.push(`${missingNames} അംഗങ്ങൾക്ക് പേര് ഇല്ല`);
   if (largePhotos) warnings.push(`${largePhotos} അംഗങ്ങളുടെ photo 500 KB-ൽ കൂടുതലാണ്`);
   if (invalidAmounts) warnings.push(`${invalidAmounts} തുകകൾ അസാധുവാണ്; migration മുമ്പ് പരിശോധിക്കുക`);
+  if (renewalPaymentRows && renewalPaidAmount) {
+    warnings.push("Renewal paid amount payments[]-ലും renewals[]-ലും ഒരേ payment ആയി രേഖപ്പെടുത്തിയിരിക്കാം. രണ്ട് collection-ലും തുകകൾ കൂട്ടി മൊത്തം വരുമാനമായി കണക്കാക്കരുത്.");
+  }
 
   return {
     readOnly: true,
@@ -76,8 +98,14 @@ export function previewLegacyMigration(rawJson) {
     initialPayments,
     memberPaymentRows,
     memberPaymentAmount: Number(memberPaymentAmount.toFixed(2)),
+    pendingPaymentRows,
+    pendingPaymentAmount: Number(pendingPaymentAmount.toFixed(2)),
+    renewalPaymentRows,
+    renewalPaymentAmount: Number(renewalPaymentAmount.toFixed(2)),
     renewalRows,
+    renewalFeeAmount: Number(renewalFeeAmount.toFixed(2)),
     renewalPaidAmount: Number(renewalPaidAmount.toFixed(2)),
+    attendanceRows: Array.isArray(state.attendance) ? state.attendance.length : 0,
     expenses: state.expenses.length,
     expenseAmount: Number(expenseAmount.toFixed(2)),
     warnings
