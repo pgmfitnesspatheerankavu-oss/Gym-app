@@ -385,25 +385,27 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // BACKUP & RESTORE
-    async function exportBackup() {
+    async async function exportBackup() {
       const dateStr = new Date().toISOString().split('T')[0];
       const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
         const backupData = JSON.stringify(state, null, 2);
         const backupBlob = new Blob([backupData], { type: 'application/json' });
-        const backupFile = new File([backupBlob], fileName, { type: 'application/json' });
 
-        // Prefer Android's native share sheet so the installed app can save/share the file.
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [backupFile] })) {
-          await navigator.share({
-            files: [backupFile],
-            title: 'PGM Fitness Backup',
-            text: 'PGM Fitness App data backup'
-          });
-          return;
+        // Prefer Android's native share sheet; this avoids blocked PWA downloads.
+        if (navigator.share && navigator.canShare && typeof File !== 'undefined') {
+          const backupFile = new File([backupBlob], fileName, { type: 'application/json' });
+          if (navigator.canShare({ files: [backupFile] })) {
+            await navigator.share({
+              files: [backupFile],
+              title: 'PGM Fitness Backup',
+              text: 'PGM Fitness App data backup'
+            });
+            return;
+          }
         }
 
-        // Fall back to the browser download when file sharing is unavailable.
+        // Fall back to a normal file download on browsers without file sharing.
         const backupUrl = URL.createObjectURL(backupBlob);
         const downloadAnchor = document.createElement('a');
         downloadAnchor.href = backupUrl;
@@ -416,7 +418,7 @@
       } catch (error) {
         if (error && error.name === 'AbortError') return;
         console.error('Backup export failed:', error);
-        alert('Backup Share/Download പരാജയപ്പെട്ടു. Chrome-ൽ തുറന്ന് വീണ്ടും ശ്രമിക്കുക.');
+        alert('Backup Share/Download പരാജയപ്പെട്ടു. App വീണ്ടും തുറന്ന് ശ്രമിക്കുക.');
       }
     }
 
