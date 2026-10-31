@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // The owner identity is pinned to the Firebase Auth UID supplied by the owner.
+    function isOwner() {
+      return request.auth != null &&
+        request.auth.uid == "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
+    }
+
+    function signedIn() { return request.auth != null; }
+
+    // Staff accounts are provisioned by the owner in Firebase Console.
+    // A user cannot grant themselves a role or edit another user's role.
+    match /users/{userId} {
+      allow read: if signedIn() &&
+        (request.auth.uid == userId || isOwner());
+      allow create, update, delete: if isOwner();
+    }
+
+    // Until payment/renewal history is moved into append-only subcollections,
+    // keep all gym records owner-only. This prevents staff from rewriting
+    // embedded historical payment arrays in the current localStorage schema.
+    match /gymData/{document=**} {
+      allow read, write: if isOwner();
+    }
+
+    // Default deny for every collection not explicitly opened above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
