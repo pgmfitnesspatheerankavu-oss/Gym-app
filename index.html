@@ -385,7 +385,7 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // BACKUP & RESTORE
-    async async function exportBackup() {
+    async function exportBackup() {
       const dateStr = new Date().toISOString().split('T')[0];
       const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
