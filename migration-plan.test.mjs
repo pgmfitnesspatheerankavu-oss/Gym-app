@@ -65,3 +65,15 @@ test("does not mutate original source data", () => {
   buildLegacyMigrationPlan(source);
   assert.equal(JSON.stringify(source), before);
 });
+
+test("links legacy attendance by phone and preserves check-in time", () => {
+  const plan = buildLegacyMigrationPlan({
+    members: [{ name: "Phone Member", phone: "9876543210" }],
+    expenses: [],
+    attendance: [{ date: "2026-10-31", memberKey: "9876543210", memberName: "Phone Member", phone: "9876543210", time: "08:15 AM" }]
+  });
+  const attendance = plan.operations.find(x => x.collection === "attendance");
+  assert.ok(attendance);
+  assert.equal(attendance.data.memberId, "legacy_m_1");
+  assert.equal(attendance.data.checkInAt, "08:15 AM");
+});
