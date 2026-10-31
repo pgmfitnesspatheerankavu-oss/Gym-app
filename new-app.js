@@ -54,7 +54,7 @@ $("renewalForm").addEventListener("submit",async e=>{
  try{
   await saveRenewalWithPayment({memberId:m.id,
    renewal:{memberId:m.id,memberName:m.name,phone:m.phone||"",feeAmount,amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal",plan:f.get("plan"),expiryDate:f.get("expiryDate")},
-   memberChanges:{plan:f.get("plan"),...(currentRole==="owner"?{planFee:feeAmount}:{}),registrationFee:0,planStartDate:f.get("date"),expiryDate:f.get("expiryDate"),status:"active"},
+   memberChanges:{plan:f.get("plan"),...(currentRole==="owner"?{planFee:feeAmount}:{}),...(currentRole==="owner"?{registrationFee:0}:{}),planStartDate:f.get("date"),expiryDate:f.get("expiryDate"),status:"active"},
    payment:amount>0?{memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"}:null
   });
   out.textContent="Renewal saved.";
