@@ -36,7 +36,7 @@ function render(){const q=$("search").value.trim().toLowerCase(),box=$("memberLi
 $("search").addEventListener("input",render);
 function openForm(m={}){const form=$("memberForm");form.reset();for(const [k,v] of Object.entries(m))if(form.elements.namedItem(k))form.elements.namedItem(k).value=v??"";$("formTitle").textContent=m.id?"Edit Member":"Add Member";const preview=$("memberPhotoPreview");preview.src=m.photoURL||"";preview.hidden=!m.photoURL;$("memberDialog").showModal();}
 $("memberForm").elements.plan.addEventListener("change",updateMemberPlanFields);$("memberForm").elements.joinDate.addEventListener("change",updateMemberPlanFields);$("addMember").addEventListener("click",()=>openForm());$("cancelForm").addEventListener("click",()=>$("memberDialog").close());
-$("memberPhotoFile").addEventListener("change",e=>{const file=e.target.files[0],preview=$("memberPhotoPreview");if(!file){preview.hidden=true;preview.removeAttribute("src");return;}if(!file.type.startsWith("image/")||file.size>5*1024*1024){alert("5 MB-ൽ താഴെയുള്ള image file മാത്രം തിരഞ്ഞെടുക്കുക.");e.target.value="";return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
+$("memberPhotoFile").addEventListener("change",e=>{const file=e.target.files[0],preview=$("memberPhotoPreview");if(!file){preview.hidden=true;preview.removeAttribute("src");return;}if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size===0||file.size>5*1024*1024){alert("JPG, PNG, WEBP ഫോട്ടോ മാത്രം; 5 MB-ൽ താഴെ തിരഞ്ഞെടുക്കുക.");e.target.value="";return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
 $("memberForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const f=e.currentTarget,values=Object.fromEntries(new FormData(f));
