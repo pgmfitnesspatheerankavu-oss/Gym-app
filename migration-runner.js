@@ -51,7 +51,7 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
     const chunk = missing.slice(offset, offset + CHUNK_SIZE);
     for (const op of chunk) {
       const ref = doc(db, op.collection, op.id);
-      batch.set(ref, {
+      batch.create(ref, {
         ...op.data,
         ...(op.collection === "payments" || op.collection === "renewals" || op.collection === "attendance"
           ? { createdBy: user.uid } : {}),
@@ -60,7 +60,7 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
         migrationSourceData: op.data,
         migratedAt: serverTimestamp(),
         migratedBy: user.uid
-      }, { merge: false });
+      });
     }
     await batch.commit();
     written += chunk.length;
