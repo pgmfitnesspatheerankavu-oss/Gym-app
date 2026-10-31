@@ -1,0 +1,20 @@
+name: Migration safety tests
+
+on:
+  push:
+    branches: [firebase-login-development]
+  pull_request:
+    branches: [main, firebase-login-development]
+
+jobs:
+  migration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run migration tests
+        run: npm run test:migration
