@@ -40,7 +40,7 @@ function populateMembers(){for(const id of ["paymentMember","attendanceMember","
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 
 $("renewalForm").elements.date.value=today();
-function syncRenewalFee(){const member=members.find(x=>x.id===$("renewalMember").value);if(member&&currentRole==="staff")$("renewalForm").elements.feeAmount.value=Number(member.planFee||0);}
+function syncRenewalFee(){const member=members.find(x=>x.id===$("renewalMember").value),plan=$("renewalForm").elements.plan.value||member?.plan,price=PLAN_PRICES[plan];if(price!==undefined){$("renewalForm").elements.plan.value=plan;$("renewalForm").elements.feeAmount.value=price;}}
 $("renewalMember").addEventListener("change",syncRenewalFee);
 $("renewalForm").addEventListener("submit",async e=>{
  e.preventDefault();
