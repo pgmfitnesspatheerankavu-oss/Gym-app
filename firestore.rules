@@ -48,7 +48,7 @@ service cloud.firestore {
       allow update: if isOwner() ||
         (isActiveStaff() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-           "name", "phone", "address", "gender", "joinDate", "planStartDate",
+           "name", "phone", "address", "gender", "joinDate",
            "plan", "expiryDate", "status", "notes",
            "updatedAt", "updatedBy"
          ]));
