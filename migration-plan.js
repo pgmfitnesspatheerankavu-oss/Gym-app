@@ -80,15 +80,30 @@ export function buildLegacyMigrationPlan(rawJson) {
   });
 
   (Array.isArray(state.attendance) ? state.attendance : []).forEach((a, i) => {
-    const member = memberRefs.find(m => m.index === Number(a.memberIndex));
+    // Legacy app stores memberKey as phone when available, otherwise the member's array index.
+    const key = clean(a.memberKey);
+    const byPhone = key ? memberRefs.filter(m => clean(state.members[m.index].phone) === key) : [];
+    let member = byPhone.length === 1 ? byPhone[0] : null;
+    if (!member && key !== "" && /^\\d+$/.test(key)) {
+      const index = Number(key);
+      if (Number.isSafeInteger(index) && state.members[index]) {
+        const candidate = memberRefs.find(m => m.index === index);
+        if (candidate && !clean(state.members[index].phone)) member = candidate;
+      }
+    }
+    // A name-only match is accepted only when unique; ambiguous records are skipped.
+    if (!member && clean(a.memberName)) {
+      const matches = memberRefs.filter(m => m.name.trim().toLowerCase() === clean(a.memberName).trim().toLowerCase());
+      if (matches.length === 1) member = matches[0];
+    }
     if (!member) {
-      warnings.push(`Attendance #${i + 1}: member link പഴയ ഡാറ്റയിൽ വ്യക്തമല്ല; migration-ൽ ഒഴിവാക്കി.`);
+      warnings.push(`Attendance #${i + 1}: memberKey/name ഉപയോഗിച്ച് അംഗത്തെ ഉറപ്പിക്കാൻ കഴിഞ്ഞില്ല; സ്വമേധയാ പരിശോധിക്കുക.`);
       return;
     }
     operations.push({
       collection: "attendance", id: `legacy_attendance_${i + 1}`,
-      data: { memberId: member.id, memberNameSnapshot: member.name,
-        date: clean(a.date), checkInAt: clean(a.checkInAt),
+      data: { memberId: member.id, memberNameSnapshot: clean(a.memberName || member.name),
+        phone: clean(a.phone), date: clean(a.date), checkInAt: clean(a.time),
         legacySource: "pgm_fitness_data", legacyIndex: i }
     });
   });
