@@ -13,7 +13,7 @@ test("owner has every administrative capability", () => {
 test("staff can handle routine member, payment, renewal and attendance work", () => {
   for (const capability of [
     "members.read", "members.create", "members.update",
-    "payments.create", "renewals.create", "attendance.read", "attendance.create"
+    "payments.create", "payments.read.own", "renewals.create", "renewals.read.own", "attendance.read", "attendance.create"
   ]) assert.equal(canRole("staff", capability), true, capability);
 });
 
