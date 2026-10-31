@@ -2,7 +2,7 @@ import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
 import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[], dashboardPayments=[], dashboardRenewals=[];
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
 function calculateBalanceDue(member,payments,renewals,asOf=today()){
  const fee=Number(member.planFee);if(!Number.isFinite(fee)||fee<=0)return 0;
  const ownRenewals=renewals.filter(r=>r.memberId===member.id&&r.date&&r.date<=asOf).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
@@ -20,7 +20,7 @@ function render(){const q=$("search").value.trim().toLowerCase(),box=$("memberLi
 $("search").addEventListener("input",render);
 function openForm(m={}){const form=$("memberForm");form.reset();for(const [k,v] of Object.entries(m))if(form.elements.namedItem(k))form.elements.namedItem(k).value=v??"";$("formTitle").textContent=m.id?"Edit Member":"Add Member";$("memberDialog").showModal();}
 $("addMember").addEventListener("click",()=>openForm());$("cancelForm").addEventListener("click",()=>$("memberDialog").close());
-$("memberForm").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,values=Object.fromEntries(new FormData(f));const id=values.id;delete values.id;values.planFee=values.planFee===""?undefined:Number(values.planFee);try{if(id)await updateMember(id,values);else await createMember(values);$("memberDialog").close();await refresh();}catch(err){alert("Save failed: "+err.message);}});
+$("memberForm").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,values=Object.fromEntries(new FormData(f));const id=values.id;delete values.id;values.planFee=values.planFee===""?undefined:Number(values.planFee);if(!id&&!values.planStartDate)values.planStartDate=values.joinDate||today();try{if(id)await updateMember(id,values);else await createMember(values);$("memberDialog").close();await refresh();}catch(err){alert("Save failed: "+err.message);}});
 function populateMembers(){for(const id of ["paymentMember","attendanceMember","renewalMember"]){const sel=$(id),current=sel.value;sel.replaceChildren();for(const m of members){const o=document.createElement("option");o.value=m.id;o.textContent=m.name+(m.phone?" · "+m.phone:"");sel.append(o);}if([...sel.options].some(o=>o.value===current))sel.value=current;}}
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 
@@ -35,7 +35,7 @@ $("renewalForm").addEventListener("submit",async e=>{
  try{
   await saveRenewalWithPayment({memberId:m.id,
    renewal:{memberId:m.id,memberName:m.name,phone:m.phone||"",feeAmount,amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal",plan:f.get("plan"),expiryDate:f.get("expiryDate")},
-   memberChanges:{plan:f.get("plan"),planFee:feeAmount,expiryDate:f.get("expiryDate"),status:"active"},
+   memberChanges:{plan:f.get("plan"),planFee:feeAmount,planStartDate:f.get("date"),expiryDate:f.get("expiryDate"),status:"active"},
    payment:amount>0?{memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"}:null
   });
   out.textContent="Renewal saved.";
@@ -49,7 +49,7 @@ async function loadRenewals(){
  catch(e){box.textContent="Renewals unavailable: "+e.message;}
 }
 $("paymentForm").elements.date.value=today();
-$("paymentForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId"));if(!m)return;const out=$("paymentStatus");out.textContent="Saving…";try{await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount:Number(f.get("amount")),date:f.get("date"),payMode:f.get("payMode"),type:"payment"});out.textContent="Payment saved.";e.currentTarget.reset();e.currentTarget.elements.date.value=today();await loadPayments();}catch(err){out.textContent="Payment failed: "+err.message;}});
+$("paymentForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId"));if(!m)return;const out=$("paymentStatus");out.textContent="Saving…";try{await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount:Number(f.get("amount")),date:f.get("date"),payMode:f.get("payMode"),type:"payment"});out.textContent="Payment saved.";e.currentTarget.reset();e.currentTarget.elements.date.value=today();await refresh();await loadPayments();}catch(err){out.textContent="Payment failed: "+err.message;}});
 async function loadPayments(){const box=$("paymentList");box.textContent="Loading…";try{const rows=await listAllPayments();box.replaceChildren();rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!rows.length)box.textContent="No payments yet.";for(const p of rows)cardLine(box,(p.memberName||"Member")+" — ₹"+Number(p.amount||0).toFixed(2),[p.date,p.payMode,p.type].filter(Boolean).join(" · "));}catch(e){box.textContent="Payments unavailable: "+e.message;}}
 $("attendanceDate").value=today();
 $("attendanceDate").addEventListener("change",loadAttendance);
