@@ -56,6 +56,30 @@ export async function createMember(record) {
     updatedAt: serverTimestamp(), updatedBy: user.uid
   });
 }
+export async function createMemberWithInitialPayment(memberRecord, paymentRecord) {
+  const { user, role } = await currentRole();
+  requireCapability(role, "members.create");
+  const memberData = memberCreatePayload(memberRecord);
+  if (role !== "owner" && Object.prototype.hasOwnProperty.call(memberData, "planFee")) {
+    throw new Error("Only the Owner can set a member plan fee");
+  }
+  const batch = writeBatch(db);
+  const memberRef = doc(collection(db, "members"));
+  batch.set(memberRef, {
+    ...memberData, createdAt: serverTimestamp(), createdBy: user.uid,
+    updatedAt: serverTimestamp(), updatedBy: user.uid
+  });
+  if (paymentRecord && Number(paymentRecord.amount) > 0) {
+    requireCapability(role, "payments.create");
+    const paymentData = transactionPayload({ ...paymentRecord, memberId: memberRef.id, memberName: memberData.name, phone: memberData.phone || "" });
+    batch.set(doc(collection(db, "payments")), {
+      ...paymentData, createdAt: serverTimestamp(), createdBy: user.uid
+    });
+  }
+  await batch.commit();
+  return { id: memberRef.id };
+}
+
 export async function updateMember(memberId, changes) {
   const { user, role } = await currentRole();
   requireCapability(role, "members.update");
