@@ -1,5 +1,5 @@
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
-import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, createRenewal, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
+import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[];
 const today=()=>new Date().toISOString().slice(0,10);
@@ -26,9 +26,11 @@ $("renewalForm").addEventListener("submit",async e=>{
  if(!Number.isFinite(feeAmount)||feeAmount<=0||!Number.isFinite(amount)||amount<0||amount>feeAmount){out.textContent="ഫീസ് / അടച്ച തുക ശരിയല്ല.";return;}
  out.textContent="Saving renewal…";
  try{
-  await createRenewal({memberId:m.id,memberName:m.name,phone:m.phone||"",feeAmount,amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal",plan:f.get("plan"),expiryDate:f.get("expiryDate")});
-  await updateMember(m.id,{plan:f.get("plan"),planFee:feeAmount,expiryDate:f.get("expiryDate"),status:"active"});
-  if(amount>0) await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"});
+  await saveRenewalWithPayment({memberId:m.id,
+   renewal:{memberId:m.id,memberName:m.name,phone:m.phone||"",feeAmount,amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal",plan:f.get("plan"),expiryDate:f.get("expiryDate")},
+   memberChanges:{plan:f.get("plan"),planFee:feeAmount,expiryDate:f.get("expiryDate"),status:"active"},
+   payment:amount>0?{memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"}:null
+  });
   out.textContent="Renewal saved.";
   e.currentTarget.reset();e.currentTarget.elements.date.value=today();
   await refresh();await loadRenewals();
