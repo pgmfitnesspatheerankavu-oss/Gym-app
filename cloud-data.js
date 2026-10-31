@@ -47,6 +47,9 @@ export async function createMember(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "members.create");
   const data = memberCreatePayload(record);
+  if (role !== "owner" && Object.prototype.hasOwnProperty.call(data, "planFee")) {
+    throw new Error("Only the Owner can set a member plan fee");
+  }
   return addDoc(collection(db, "members"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid,
     updatedAt: serverTimestamp(), updatedBy: user.uid
