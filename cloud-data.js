@@ -60,9 +60,6 @@ export async function createMemberWithInitialPayment(memberRecord, paymentRecord
   const { user, role } = await currentRole();
   requireCapability(role, "members.create");
   const memberData = memberCreatePayload(memberRecord);
-  if (role !== "owner" && Object.prototype.hasOwnProperty.call(memberData, "planFee")) {
-    throw new Error("Only the Owner can set a member plan fee");
-  }
   const batch = writeBatch(db);
   const memberRef = doc(collection(db, "members"));
   batch.set(memberRef, {
