@@ -2,7 +2,7 @@
 // This module is intentionally separate from the legacy localStorage UI.
 // Firestore Security Rules are the final authorization boundary.
 import {
-  collection, doc, getDocs, addDoc, updateDoc,
+  collection, doc, getDoc, getDocs, addDoc, updateDoc,
   query, where, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
@@ -35,7 +35,7 @@ export async function listMembers() {
   const snapshot = await getDocs(query(collection(db, "members"), orderBy("name")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
-export async function createMember(record) {
+export async function getMember(memberId) {\n  const { role } = await currentRole();\n  requireCapability(role, "members.read");\n  if (!memberId) throw new Error("Member ID required");\n  const snapshot = await getDoc(doc(db, "members", memberId));\n  if (!snapshot.exists()) return null;\n  return { id: snapshot.id, ...snapshot.data() };\n}\nexport async function createMember(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "members.create");
   const data = memberCreatePayload(record);
