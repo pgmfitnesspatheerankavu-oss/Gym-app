@@ -29,8 +29,8 @@ test("creates stable read-only operation IDs and separates renewal payment rows"
 test("maps attendance by phone and legacy index key", () => {
   const plan = buildLegacyMigrationPlan({
     members: [
-      { name: "Phone Member", phone: "9990001111", amount: 0 },
-      { name: "Index Member", phone: "", amount: 0 }
+      { name: "Phone Member", phone: "9990001111", amount: 0, totalFee: 0 },
+      { name: "Index Member", phone: "", amount: 0, totalFee: 0 }
     ],
     expenses: [],
     attendance: [
@@ -46,7 +46,7 @@ test("maps attendance by phone and legacy index key", () => {
 
 test("skips ambiguous attendance links and reports warning", () => {
   const plan = buildLegacyMigrationPlan({
-    members: [{ name: "Same", phone: "1" }, { name: "Same", phone: "2" }],
+    members: [{ name: "Same", phone: "1", totalFee: 0 }, { name: "Same", phone: "2", totalFee: 0 }],
     expenses: [],
     attendance: [{ memberKey: "unknown", memberName: "Same", date: "2026-10-31" }]
   });
@@ -60,7 +60,7 @@ test("refuses members without names and invalid amounts", () => {
 });
 
 test("does not mutate original source data", () => {
-  const source = { members: [{ name: "A", amount: 10 }], expenses: [] };
+  const source = { members: [{ name: "A", amount: 10, totalFee: 10 }], expenses: [] };
   const before = JSON.stringify(source);
   buildLegacyMigrationPlan(source);
   assert.equal(JSON.stringify(source), before);
@@ -68,7 +68,7 @@ test("does not mutate original source data", () => {
 
 test("links legacy attendance by phone and preserves check-in time", () => {
   const plan = buildLegacyMigrationPlan({
-    members: [{ name: "Phone Member", phone: "9876543210" }],
+    members: [{ name: "Phone Member", phone: "9876543210", totalFee: 0 }],
     expenses: [],
     attendance: [{ date: "2026-10-31", memberKey: "9876543210", memberName: "Phone Member", phone: "9876543210", time: "08:15 AM" }]
   });
