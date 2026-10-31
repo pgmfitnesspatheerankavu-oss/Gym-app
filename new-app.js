@@ -1,15 +1,9 @@
+import { calculateBalanceDue } from "./balance-calculator.js";
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
 import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[], dashboardPayments=[], dashboardRenewals=[];
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
-function calculateBalanceDue(member,payments,renewals,asOf=today()){
- const fee=Number(member.planFee);if(!Number.isFinite(fee)||fee<=0)return 0;
- const ownRenewals=renewals.filter(r=>r.memberId===member.id&&r.date&&r.date<=asOf).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
- const cycleStart=ownRenewals[0]?.date||member.joinDate||"0000-01-01";
- const paid=payments.filter(p=>p.memberId===member.id&&p.date>=cycleStart&&p.date<=asOf).reduce((s,p)=>s+Math.max(0,Number(p.amount)||0),0);
- return Math.max(0,fee-paid);
-}
 function showAuth(role,user){if(role?.allowed&&role.role==="owner"){login.hidden=true;app.hidden=false;$("logout").hidden=false;refresh();}else{login.hidden=false;app.hidden=true;$("logout").hidden=true;if(user)status.textContent="ഈ അക്കൗണ്ടിന് പുതിയ App-ൽ പ്രവേശനാനുമതിയില്ല.";}}
 watchAuth(showAuth);
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);status.textContent="Signing in…";try{const role=await signIn(f.get("email"),f.get("password"));if(!role.allowed)status.textContent="Owner account required.";else showAuth(role,auth.currentUser);}catch(err){status.textContent=err.message||"Login failed";}});
