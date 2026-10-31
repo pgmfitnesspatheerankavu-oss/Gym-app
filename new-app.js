@@ -8,7 +8,7 @@ function showAuth(role,user){if(role?.allowed&&role.role==="owner"){login.hidden
 watchAuth(showAuth);
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);status.textContent="Signing in…";try{const role=await signIn(f.get("email"),f.get("password"));if(!role.allowed)status.textContent="Owner account required.";else showAuth(role,auth.currentUser);}catch(err){status.textContent=err.message||"Login failed";}});
 $("logout").addEventListener("click",signOutUser);
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(x=>x.hidden=x.id!==b.dataset.tab);if(b.dataset.tab==="payments")loadPayments();if(b.dataset.tab==="renewals")loadRenewals();if(b.dataset.tab==="attendance")loadAttendance();if(b.dataset.tab==="expenses")loadExpenses();}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(x=>x.hidden=x.id!==b.dataset.tab);if(b.dataset.tab==="payments")loadPayments();if(b.dataset.tab==="renewals")loadRenewals();if(b.dataset.tab==="attendance")loadAttendance();if(b.dataset.tab==="expenses")loadExpenses();if(b.dataset.tab==="reports")loadProfitLoss();}));
 async function refresh(){const box=$("memberList");box.textContent="Loading…";try{members=await listMembers();const [pays,renews]=await Promise.all([listAllPayments(),listAllRenewals()]);dashboardPayments=pays;dashboardRenewals=renews;const d=today();$("totalMembers").textContent=members.length;$("activeMembers").textContent=members.filter(m=>(m.status||"active")==="active"&&(!m.expiryDate||m.expiryDate>=d)).length;$("expiredMembers").textContent=members.filter(m=>m.expiryDate&&m.expiryDate<d).length;const due=members.reduce((sum,m)=>sum+calculateBalanceDue(m,dashboardPayments,dashboardRenewals,d),0);$("dueMembers").textContent="₹"+due.toFixed(2);render();populateMembers();}catch(e){box.textContent="Cloud load failed: "+e.message;}}
 function render(){const q=$("search").value.trim().toLowerCase(),box=$("memberList");box.replaceChildren();const rows=members.filter(m=>(m.name||"").toLowerCase().includes(q)||(m.phone||"").includes(q));if(!rows.length){box.textContent="No members yet. Add your first member.";return;}for(const m of rows){const card=document.createElement("article"),info=document.createElement("div"),name=document.createElement("strong"),meta=document.createElement("p"),actions=document.createElement("div");name.textContent=m.name||"Unnamed";meta.textContent=[m.phone,m.plan,m.expiryDate?"Expiry: "+m.expiryDate:""].filter(Boolean).join(" · ");info.append(name,meta);actions.className="member-actions";const edit=document.createElement("button");edit.textContent="Edit";edit.addEventListener("click",()=>openForm(m));actions.append(edit);card.append(info,actions);box.append(card);}}
 $("search").addEventListener("input",render);
@@ -52,3 +52,22 @@ async function loadAttendance(){const box=$("attendanceList");box.textContent="L
 $("expenseForm").elements.date.value=today();
 $("expenseForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),out=$("expenseStatus");out.textContent="Saving…";try{await createExpense({title:f.get("title"),amount:Number(f.get("amount")),date:f.get("date"),notes:f.get("notes")});out.textContent="Expense saved.";e.currentTarget.reset();e.currentTarget.elements.date.value=today();await loadExpenses();}catch(err){out.textContent="Expense failed: "+err.message;}});
 async function loadExpenses(){const box=$("expenseList");box.textContent="Loading…";try{const rows=await listExpenses();box.replaceChildren();rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!rows.length)box.textContent="No expenses yet.";for(const x of rows)cardLine(box,x.title||"Expense","₹"+Number(x.amount||0).toFixed(2)+" · "+x.date);}catch(e){box.textContent="Expenses unavailable: "+e.message;}}
+
+$("reportFrom").value=today().slice(0,7)+"-01";
+$("reportTo").value=today();
+$("runReport").addEventListener("click",loadProfitLoss);
+async function loadProfitLoss(){
+ const out=$("reportStatus"),from=$("reportFrom").value,to=$("reportTo").value;
+ if(!from||!to||from>to){out.textContent="ദയവായി ശരിയായ തീയതി പരിധി തിരഞ്ഞെടുക്കുക.";return;}
+ out.textContent="Report loading…";
+ try{
+  const [payments,expenses]=await Promise.all([listAllPayments(),listExpenses()]);
+  const inRange=x=>typeof x.date==="string"&&x.date>=from&&x.date<=to;
+  const income=payments.filter(inRange).reduce((sum,x)=>sum+Math.max(0,Number(x.amount)||0),0);
+  const cost=expenses.filter(inRange).reduce((sum,x)=>sum+Math.max(0,Number(x.amount)||0),0);
+  $("reportIncome").textContent="₹"+income.toFixed(2);
+  $("reportExpenses").textContent="₹"+cost.toFixed(2);
+  $("reportNet").textContent=(income-cost<0?"-₹":"₹")+Math.abs(income-cost).toFixed(2);
+  out.textContent="കാലയളവ്: "+from+" മുതൽ "+to+" വരെ · "+payments.filter(inRange).length+" payment records · "+expenses.filter(inRange).length+" expense records.";
+ }catch(err){out.textContent="P&L report ലഭ്യമല്ല: "+err.message;}
+}
