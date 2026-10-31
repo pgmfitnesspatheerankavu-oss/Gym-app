@@ -2,6 +2,7 @@
 // Additive only: never deletes local data and never overwrites an existing cloud document.
 import { buildLegacyMigrationPlan } from "./migration-plan.js";
 import { verifyMigrationPlan } from "./migration-verification.js";
+import { stableMigrationJson, buildMigrationPreflight } from "./migration-safety.js";
 export { verifyMigrationPlan } from "./migration-verification.js";
 import {
   doc, getDoc, writeBatch, serverTimestamp
@@ -14,14 +15,6 @@ const CHUNK_SIZE = 400;
 export function previewCloudMigration(rawBackup) {
   const plan = buildLegacyMigrationPlan(rawBackup);
   return { plan, verification: verifyMigrationPlan(plan) };
-}
-
-function stableJson(value) {
-  if (Array.isArray(value)) return "[" + value.map(stableJson).join(",") + "]";
-  if (value && typeof value === "object") {
-    return "{" + Object.keys(value).sort().map(k => JSON.stringify(k) + ":" + stableJson(value[k])).join(",") + "}";
-  }
-  return JSON.stringify(value);
 }
 
 export async function runOwnerMigration(rawBackup, confirmationText) {
@@ -38,22 +31,17 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
 
   // Preflight every deterministic target before writing anything. Existing documents
   // are accepted only when they are already verified copies of this same legacy row.
-  const missing = [];
-  const alreadyMigrated = [];
+  const existingByKey = new Map();
   for (const op of plan.operations) {
     const snap = await getDoc(doc(db, op.collection, op.id));
-    if (!snap.exists()) {
-      missing.push(op);
-      continue;
-    }
-    const existing = snap.data();
-    if (existing.legacySource !== "pgm_fitness_data" ||
-        existing.migrationVersion !== 1 ||
-        stableJson(existing.migrationSourceData) !== stableJson(op.data)) {
-      throw new Error("Cloud രേഖ ഇതിനകം നിലനിൽക്കുന്നു; overwrite ഒഴിവാക്കി Migration നിർത്തി: " + op.collection + "/" + op.id);
-    }
-    alreadyMigrated.push(op);
+    existingByKey.set(op.collection + "/" + op.id, snap.exists() ? snap.data() : null);
   }
+  const preflight = buildMigrationPreflight(plan.operations, existingByKey);
+  if (preflight.collisions.length) {
+    throw new Error("Cloud രേഖകൾ ഇതിനകം നിലനിൽക്കുന്നു; overwrite ഒഴിവാക്കി Migration നിർത്തി: " + preflight.collisions.join(", "));
+  }
+  const missing = preflight.write;
+  const alreadyMigrated = preflight.alreadyMigrated;
 
   // Persist a source snapshot alongside each record so retries can distinguish an
   // identical prior migration from unrelated or manually changed cloud data.
@@ -86,7 +74,7 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
     if (!snap.exists()) throw new Error("Migration verification failed: " + op.collection + "/" + op.id);
     const data = snap.data();
     if (data.legacySource !== "pgm_fitness_data" || data.migrationVersion !== 1 ||
-        stableJson(data.migrationSourceData) !== stableJson(op.data)) {
+        stableMigrationJson(data.migrationSourceData) !== stableMigrationJson(op.data)) {
       throw new Error("Migration data mismatch: " + op.collection + "/" + op.id);
     }
     readBack[op.collection]++;
