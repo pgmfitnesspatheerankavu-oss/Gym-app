@@ -41,16 +41,12 @@ export function transactionPayload(record) {
   if (!Number.isFinite(Number(data.amount)) || Number(data.amount) <= 0) {
     throw new Error("A positive transaction amount is required");
   }
-  if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(String(data.date))) {
-    throw new Error("A valid transaction date is required");
-  }
+  if (!isRealISODate(data.date)) throw new Error("A valid transaction date is required");
   return data;
 }
 export function attendancePayload(record) {
   const data = pickAllowedFields(record, ATTENDANCE_FIELDS);
-  if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(String(data.date))) {
-    throw new Error("A valid attendance date is required");
-  }
+  if (!isRealISODate(data.date)) throw new Error("A valid attendance date is required");
   if (!data.memberId && !data.memberKey && !data.phone) {
     throw new Error("Attendance member reference required");
   }
@@ -62,8 +58,6 @@ export function expensePayload(record) {
   if (!Number.isFinite(Number(data.amount)) || Number(data.amount) < 0) {
     throw new Error("A valid expense amount is required");
   }
-  if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(String(data.date))) {
-    throw new Error("A valid expense date is required");
-  }
+  if (!isRealISODate(data.date)) throw new Error("A valid expense date is required");
   return data;
 }
