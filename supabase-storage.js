@@ -6,8 +6,8 @@ const BUCKET = "member-photos";
 
 export async function uploadMemberPhoto(memberId, file) {
   if (!memberId) throw new Error("Member ID is missing.");
-  if (!(file instanceof File) || !file.type.startsWith("image/")) throw new Error("Please select an image file.");
-  if (file.size > 5 * 1024 * 1024) throw new Error("Image must be smaller than 5 MB.");
+  if (!(file instanceof File) || !["image/jpeg","image/png","image/webp"].includes(file.type)) throw new Error("JPG, PNG, അല്ലെങ്കിൽ WEBP photo മാത്രം തിരഞ്ഞെടുക്കുക.");
+  if (file.size === 0 || file.size > 5 * 1024 * 1024) throw new Error("Photo 0 bytes ആകരുത്; 5 MB-ൽ താഴെയായിരിക്കണം.");
   const safeName = "profile-" + Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = memberId + "/" + safeName;
   const endpoint = SUPABASE_URL + "/storage/v1/object/" + BUCKET + "/" + path.split("/").map(encodeURIComponent).join("/");
