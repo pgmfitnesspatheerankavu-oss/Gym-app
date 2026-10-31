@@ -1,7 +1,7 @@
 // Pure input policy shared by the Firestore adapter and Node tests.
 const MEMBER_FIELDS = new Set([
   "name", "phone", "address", "gender", "joinDate", "planStartDate", "plan",
-  "planFee", "registrationFee", "expiryDate", "status", "notes"
+  "planFee", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes"
 ]);
 const MEMBER_UPDATE_FIELDS = new Set([...MEMBER_FIELDS]);
 const TRANSACTION_FIELDS = new Set([
