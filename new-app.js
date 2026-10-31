@@ -1,14 +1,21 @@
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
 import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
-let members=[];
+let members=[], dashboardPayments=[], dashboardRenewals=[];
 const today=()=>new Date().toISOString().slice(0,10);
+function calculateBalanceDue(member,payments,renewals,asOf=today()){
+ const fee=Number(member.planFee);if(!Number.isFinite(fee)||fee<=0)return 0;
+ const ownRenewals=renewals.filter(r=>r.memberId===member.id&&r.date&&r.date<=asOf).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ const cycleStart=ownRenewals[0]?.date||member.joinDate||"0000-01-01";
+ const paid=payments.filter(p=>p.memberId===member.id&&p.date>=cycleStart&&p.date<=asOf).reduce((s,p)=>s+Math.max(0,Number(p.amount)||0),0);
+ return Math.max(0,fee-paid);
+}
 function showAuth(role,user){if(role?.allowed&&role.role==="owner"){login.hidden=true;app.hidden=false;$("logout").hidden=false;refresh();}else{login.hidden=false;app.hidden=true;$("logout").hidden=true;if(user)status.textContent="ഈ അക്കൗണ്ടിന് പുതിയ App-ൽ പ്രവേശനാനുമതിയില്ല.";}}
 watchAuth(showAuth);
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);status.textContent="Signing in…";try{const role=await signIn(f.get("email"),f.get("password"));if(!role.allowed)status.textContent="Owner account required.";else showAuth(role,auth.currentUser);}catch(err){status.textContent=err.message||"Login failed";}});
 $("logout").addEventListener("click",signOutUser);
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(x=>x.hidden=x.id!==b.dataset.tab);if(b.dataset.tab==="payments")loadPayments();if(b.dataset.tab==="renewals")loadRenewals();if(b.dataset.tab==="attendance")loadAttendance();if(b.dataset.tab==="expenses")loadExpenses();}));
-async function refresh(){const box=$("memberList");box.textContent="Loading…";try{members=await listMembers();const d=today();$("totalMembers").textContent=members.length;$("activeMembers").textContent=members.filter(m=>(m.status||"active")==="active"&&(!m.expiryDate||m.expiryDate>=d)).length;$("expiredMembers").textContent=members.filter(m=>m.expiryDate&&m.expiryDate<d).length;$("dueMembers").textContent="—";render();populateMembers();}catch(e){box.textContent="Cloud load failed: "+e.message;}}
+async function refresh(){const box=$("memberList");box.textContent="Loading…";try{members=await listMembers();const [pays,renews]=await Promise.all([listAllPayments(),listAllRenewals()]);dashboardPayments=pays;dashboardRenewals=renews;const d=today();$("totalMembers").textContent=members.length;$("activeMembers").textContent=members.filter(m=>(m.status||"active")==="active"&&(!m.expiryDate||m.expiryDate>=d)).length;$("expiredMembers").textContent=members.filter(m=>m.expiryDate&&m.expiryDate<d).length;const due=members.reduce((sum,m)=>sum+calculateBalanceDue(m,dashboardPayments,dashboardRenewals,d),0);$("dueMembers").textContent="₹"+due.toFixed(2);render();populateMembers();}catch(e){box.textContent="Cloud load failed: "+e.message;}}
 function render(){const q=$("search").value.trim().toLowerCase(),box=$("memberList");box.replaceChildren();const rows=members.filter(m=>(m.name||"").toLowerCase().includes(q)||(m.phone||"").includes(q));if(!rows.length){box.textContent="No members yet. Add your first member.";return;}for(const m of rows){const card=document.createElement("article"),info=document.createElement("div"),name=document.createElement("strong"),meta=document.createElement("p"),actions=document.createElement("div");name.textContent=m.name||"Unnamed";meta.textContent=[m.phone,m.plan,m.expiryDate?"Expiry: "+m.expiryDate:""].filter(Boolean).join(" · ");info.append(name,meta);actions.className="member-actions";const edit=document.createElement("button");edit.textContent="Edit";edit.addEventListener("click",()=>openForm(m));actions.append(edit);card.append(info,actions);box.append(card);}}
 $("search").addEventListener("input",render);
 function openForm(m={}){const form=$("memberForm");form.reset();for(const [k,v] of Object.entries(m))if(form.elements.namedItem(k))form.elements.namedItem(k).value=v??"";$("formTitle").textContent=m.id?"Edit Member":"Add Member";$("memberDialog").showModal();}
