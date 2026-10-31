@@ -1,4 +1,4 @@
-name: Migration safety tests
+name: Migration and Firestore security tests
 
 on:
   push:
@@ -16,5 +16,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install test dependencies
+        run: npm install
       - name: Run migration tests
         run: npm run test:migration
+      - name: Run Firestore rules emulator tests
+        run: npm run test:rules
