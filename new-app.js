@@ -1,7 +1,7 @@
 import { calculateBalanceDue } from "./balance-calculator.js";
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
 import { uploadMemberPhoto } from "./supabase-storage.js";
-import { listMembers, createMember, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses, listMyPayments, listMyRenewals, listStaffProfiles, saveStaffProfile } from "./cloud-data.js";
+import { listMembers, createMember, createMemberWithInitialPayment, updateMember, createPayment, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, listExpenses, listMyPayments, listMyRenewals, listStaffProfiles, saveStaffProfile } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[], dashboardPayments=[], dashboardRenewals=[], currentRole="owner";
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
@@ -37,7 +37,43 @@ $("search").addEventListener("input",render);
 function openForm(m={}){const form=$("memberForm");form.reset();for(const [k,v] of Object.entries(m))if(form.elements.namedItem(k))form.elements.namedItem(k).value=v??"";$("formTitle").textContent=m.id?"Edit Member":"Add Member";const preview=$("memberPhotoPreview");preview.src=m.photoURL||"";preview.hidden=!m.photoURL;$("memberDialog").showModal();}
 $("memberForm").elements.plan.addEventListener("change",updateMemberPlanFields);$("memberForm").elements.joinDate.addEventListener("change",updateMemberPlanFields);$("addMember").addEventListener("click",()=>openForm());$("cancelForm").addEventListener("click",()=>$("memberDialog").close());
 $("memberPhotoFile").addEventListener("change",e=>{const file=e.target.files[0],preview=$("memberPhotoPreview");if(!file){preview.hidden=true;preview.removeAttribute("src");return;}if(!file.type.startsWith("image/")||file.size>5*1024*1024){alert("5 MB-ൽ താഴെയുള്ള image file മാത്രം തിരഞ്ഞെടുക്കുക.");e.target.value="";return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
-$("memberForm").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,values=Object.fromEntries(new FormData(f));const id=values.id,photoFile=$("memberPhotoFile").files[0],oldPhotoPath=values.photoPath;delete values.id;if(currentRole==="staff")delete values.planFee;else values.planFee=values.planFee===""?undefined:Number(values.planFee);if(!id&&!values.planStartDate)values.planStartDate=values.joinDate||today();try{let memberId=id;if(id)await updateMember(id,values);else memberId=(await createMember(values)).id;if(photoFile){const uploaded=await uploadMemberPhoto(memberId,photoFile);await updateMember(memberId,{photoURL:uploaded.url,photoPath:uploaded.path});}$("memberDialog").close();await refresh();}catch(err){alert("Save failed: "+err.message);}});
+$("memberForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const f=e.currentTarget,values=Object.fromEntries(new FormData(f));
+ const id=values.id,photoFile=$("memberPhotoFile").files[0];
+ const paidNow=Number(values.initialPaid||0),paymentDate=values.joinDate||today(),payMode=values.initialPayMode||"Cash";
+ delete values.id;delete values.initialPaid;delete values.initialPayMode;
+ if(!values.joinDate)values.joinDate=today();
+ if(!values.planStartDate)values.planStartDate=values.joinDate;
+ const planPrice=PLAN_PRICES[values.plan];
+ if(planPrice===undefined){alert("Membership plan തിരഞ്ഞെടുക്കുക.");return;}
+ values.planFee=planPrice;
+ values.registrationFee=isDuoPlan(values.plan)?800:500;
+ values.expiryDate=values.expiryDate||expiryForPlan(values.planStartDate,values.plan);
+ if(!Number.isFinite(paidNow)||paidNow<0||paidNow>planPrice+values.registrationFee){alert("Paid amount ശരിയല്ല. പരമാവധി "+money(planPrice+values.registrationFee)+".");return;}
+ const saveButton=f.querySelector('button[type="submit"]');saveButton.disabled=true;saveButton.textContent="Saving…";
+ try{
+  let memberId=id;
+  if(id){
+   if(currentRole==="staff")delete values.planFee;
+   await updateMember(id,values);
+  }else{
+   const payment=paidNow>0?{amount:paidNow,date:paymentDate,payMode,type:"registration"}:null;
+   const memberData=currentRole==="staff"?{...values,planFee:undefined}:values;
+   memberId=(await createMemberWithInitialPayment(memberData,payment)).id;
+  }
+  if(photoFile){
+   try{
+    const uploaded=await uploadMemberPhoto(memberId,photoFile);
+    await updateMember(memberId,{photoURL:uploaded.url,photoPath:uploaded.path});
+   }catch(photoErr){
+    alert("അംഗത്തിന്റെ വിവരങ്ങൾ സേവ് ചെയ്തു. പക്ഷേ Photo upload ആയില്ല: "+photoErr.message);
+   }
+  }
+  $("memberDialog").close();f.reset();$("memberPhotoPreview").hidden=true;$("memberPhotoPreview").removeAttribute("src");await refresh();
+ }catch(err){alert("Save failed: "+err.message);}
+ finally{saveButton.disabled=false;saveButton.textContent="Save Member";}
+});
 function populateMembers(){for(const id of ["paymentMember","attendanceMember","renewalMember"]){const sel=$(id),current=sel.value;sel.replaceChildren();for(const m of members){const o=document.createElement("option");o.value=m.id;o.textContent=m.name+(m.phone?" · "+m.phone:"");sel.append(o);}if([...sel.options].some(o=>o.value===current))sel.value=current;}syncRenewalFee();}
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 
