@@ -3,10 +3,11 @@
 // Firestore Security Rules are the final authorization boundary.
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, writeBatch
+  query, where, orderBy, serverTimestamp, writeBatch, setDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
 import { canRole } from "./access-policy.js";
+import { staffProfilePayload } from "./staff-management-policy.js";
 import {
   memberCreatePayload, memberUpdatePayload, transactionPayload,
   attendancePayload, expensePayload
@@ -184,4 +185,19 @@ export async function createExpense(record) {
   return addDoc(collection(db, "expenses"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
   });
+}
+
+// Owner-only staff profile management. Auth accounts are created separately in Firebase Console.
+export async function listStaffProfiles() {
+  const { role } = await currentRole();
+  requireCapability(role, "staff.manage");
+  const snapshot = await getDocs(collection(db, "users"));
+  return snapshot.docs.map(item => ({ uid: item.id, ...item.data() })).filter(item => item.role === "staff");
+}
+export async function saveStaffProfile(input) {
+  const { user, role } = await currentRole();
+  requireCapability(role, "staff.manage");
+  const { uid, profile } = staffProfilePayload(input);
+  if (uid === user.uid) throw new Error("Owner account cannot be changed as Staff");
+  await setDoc(doc(db, "users", uid), { ...profile, updatedAt: serverTimestamp(), updatedBy: user.uid }, { merge: true });
 }
