@@ -9,3 +9,6 @@ window.PGM_FIREBASE_CONFIG = Object.freeze({
   appId: "1:207204433978:web:4cf0e33871c8c07f3d7503",
   measurementId: "G-NNYGQBBZ7G"
 });
+
+// Fixed Owner account UID (public identifier, not a password).
+window.PGM_OWNER_UID = "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
