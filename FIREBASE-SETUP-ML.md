@@ -14,9 +14,10 @@ Firebase project: `pgmfitness-5e107`
 - `new-app.html` and `new-app.js` are the separate Owner/Staff development app. They use Firebase Authentication and the Firestore adapter in `cloud-data.js`, with the rules in `firestore.rules`.
 - `index.html` is the legacy app entry point and must not be confused with the new cloud app.
 - Automated migration tests and Firestore emulator rules tests pass on `firebase-login-development`.
-- The new cloud app has not yet been deployed to a verified preview URL or tested end-to-end with real Owner and Staff accounts.
-- New member registration now saves the member and any initial payment together in one Firestore batch; fixed plan prices are validated for Staff by Firestore rules.
-- Member photo selection accepts JPG, PNG, and WEBP up to 5 MB; live upload still requires end-to-end testing against the Supabase bucket.
+- The new cloud app has not yet been deployed to a verified preview URL or tested end-to-end with real Owner and Staff accounts; Firebase account setup and live storage upload still require device-level verification.
+- New member registration saves the member and any initial payment together in one Firestore batch. The initial amount defaults to the full registration total but can be changed (including zero); the remaining amount is calculated as Balance Due.
+- Staff registration plan prices and matching registration fees are validated by Firestore rules. Staff cannot edit member plan or registration fee fields after creation.
+- Member photo selection accepts JPG, PNG, and WEBP up to 5 MB, displays a preview, uploads to the public `member-photos` bucket, and saves the returned URL/path on the member. Live upload still requires end-to-end testing against the Supabase bucket.
 - Legacy localStorage data has not yet been migrated/imported into the new Firestore collections.
 
 ## IMPORTANT – do not publish these rules yet
@@ -33,10 +34,10 @@ Do not publish the development Firestore rules or enter live gym data into the n
 5. Never create an Owner role from the client app. Owner access is determined by the fixed UID in the rules.
 
 ## Remaining engineering work
-- Add a login screen and Firebase Auth state handling.
+- Complete real-account login and device-level verification for Owner and Staff.
 - Migrate localStorage data model into separate member, payment, renewal, attendance and expense documents.
 - Add safe first-time import and owner-controlled backup/restore.
-- Implement multi-device cloud sync, audit information and Owner/Staff screen permissions.
+- Verify multi-device cloud sync, audit information, and Owner/Staff screen permissions with real accounts.
 - Test rules with Owner, Staff 1, Staff 2, inactive Staff and unauthenticated sessions before publishing.
 - Only after those tests, publish the rules and deploy the website. Build/update the APK separately after web release is verified.
 
