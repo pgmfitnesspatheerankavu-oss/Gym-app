@@ -23,7 +23,7 @@ service cloud.firestore {
     function validMemberCreate() {
       return request.resource.data.keys().hasOnly([
           "name", "phone", "address", "gender", "joinDate", "planStartDate",
-          "plan", "planFee", "expiryDate", "status", "notes",
+          "plan", "planFee", "registrationFee", "expiryDate", "status", "notes",
           "createdAt", "createdBy", "updatedAt", "updatedBy",
           "legacySource", "legacyIndex", "migrationVersion",
           "migrationSourceData", "migratedAt", "migratedBy"
