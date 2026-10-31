@@ -47,15 +47,17 @@ $("memberForm").addEventListener("submit",async e=>{
  if(!values.planStartDate)values.planStartDate=values.joinDate;
  const planPrice=PLAN_PRICES[values.plan];
  if(planPrice===undefined){alert("Membership plan തിരഞ്ഞെടുക്കുക.");return;}
- values.planFee=planPrice;
- values.registrationFee=isDuoPlan(values.plan)?800:500;
- values.expiryDate=values.expiryDate||expiryForPlan(values.planStartDate,values.plan);
+ if(!id){
+  values.planFee=planPrice;
+  values.registrationFee=isDuoPlan(values.plan)?800:500;
+  values.expiryDate=values.expiryDate||expiryForPlan(values.planStartDate,values.plan);
+ }
  if(!Number.isFinite(paidNow)||paidNow<0||paidNow>planPrice+values.registrationFee){alert("Paid amount ശരിയല്ല. പരമാവധി "+money(planPrice+values.registrationFee)+".");return;}
  const saveButton=f.querySelector('button[type="submit"]');saveButton.disabled=true;saveButton.textContent="Saving…";
  try{
   let memberId=id;
   if(id){
-   if(currentRole==="staff")delete values.planFee;
+   if(currentRole==="staff"){delete values.planFee;delete values.registrationFee;}
    await updateMember(id,values);
   }else{
    const payment=paidNow>0?{amount:paidNow,date:paymentDate,payMode,type:"registration"}:null;
