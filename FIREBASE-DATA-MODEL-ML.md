@@ -25,7 +25,7 @@ Owner UID rules-ൽ നിശ്ചയിച്ചതാണ്. Client-ൽ ന�
 ഓരോ തവണ പണം സ്വീകരിക്കുമ്പോഴും പുതിയ document:
 - memberId, memberNameSnapshot
 - amount, date, payMode
-- kind: "joining" | "pending_fee"
+- kind: "joining" | "pending_fee" | "renewal"
 - createdAt, createdBy
 
 ### renewals/{renewalId}
@@ -53,8 +53,9 @@ Owner UID rules-ൽ നിശ്ചയിച്ചതാണ്. Client-ൽ ന�
 
 - `members[]` → ഓരോ അംഗത്തിനും `members/{id}`.
 - അംഗത്തിലെ ആദ്യ `amount/date/payMode` → ഒരു "joining" payment document.
-- അംഗത്തിലെ `payments[]` → ഓരോ item-നും വേറെ payment document; type Renewal ആണെങ്കിൽ renewal collection-ലേക്ക് മാറ്റി പരിശോധിക്കുക.
-- അംഗത്തിലെ `renewals[]` → ഓരോ item-നും renewal document.
+- അംഗത്തിലെ `payments[]` → ലഭിച്ച ഓരോ തുകയ്ക്കും `payments`-ൽ വേറെ payment document; `type: "Renewal"` ആണെങ്കിൽ `kind: "renewal"`.
+- അംഗത്തിലെ `renewals[]` → renewal കരാറിന്റെ/പ്ലാനിന്റെ വിശദാംശങ്ങൾ `renewals`-ൽ വേറെ document.
+- Renewal-ന്റെ `paidAmount` പലപ്പോഴും `payments[]`-ലും കാണാം. `payments` യഥാർത്ഥത്തിൽ ലഭിച്ച പണത്തിന്റെ ledger ആണ്; `renewals` renewal fee/കാലാവധി വിവരമാണ്. വരുമാനം കണക്കാക്കുമ്പോൾ `renewals.paidAmount` വീണ്ടും കൂട്ടരുത്; ഇല്ലെങ്കിൽ ഒരേ പണം ഇരട്ടിയായി എണ്ണപ്പെടും.
 - `expenses[]` → expenses collection (Owner only).
 - `openingBalance` → settings/main.
 
@@ -75,7 +76,7 @@ Owner UID rules-ൽ നിശ്ചയിച്ചതാണ്. Client-ൽ ന�
 - Unknown account: deny.
 - Inactive staff: deny.
 - Staff 1 / Staff 2: അംഗ profile-ൽ അനുവദിച്ച fields മാത്രം മാറ്റാം.
-- Staff: payment/renewal create ചെയ്യാം; update/delete പാടില്ല.
+- Staff: `payments`-ൽ joining/pending_fee/renewal payment രേഖകൾ create ചെയ്യാം; `renewals`-ൽ renewal രേഖ create ചെയ്യാം; update/delete പാടില്ല.
 - Staff: expenses, settings, financialReports വായിക്കാനോ മാറ്റാനോ പാടില്ല.
 - Owner: പൂർണ്ണ access.
 - Owner-ന് മാത്രം backup/restore, staff activation/deactivation, audit review.
