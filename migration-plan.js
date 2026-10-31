@@ -84,7 +84,7 @@ export function buildLegacyMigrationPlan(rawJson) {
     const key = clean(a.memberKey);
     const byPhone = key ? memberRefs.filter(m => clean(state.members[m.index].phone) === key) : [];
     let member = byPhone.length === 1 ? byPhone[0] : null;
-    if (!member && key !== "" && /^\\d+$/.test(key)) {
+    if (!member && key !== "" && /^\d+$/.test(key)) {
       const index = Number(key);
       if (Number.isSafeInteger(index) && state.members[index]) {
         const candidate = memberRefs.find(m => m.index === index);
