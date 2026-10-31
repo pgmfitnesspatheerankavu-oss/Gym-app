@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner() {
+      return request.auth != null &&
+        request.auth.uid == "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
+    }
+    function signedIn() { return request.auth != null; }
+    function isActiveStaff() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "staff" &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+    function canUseGym() { return isOwner() || isActiveStaff(); }
+    function expectedPlanFee(plan) {
+      return plan == "1 Month" ? 650 :
+        plan == "3 Months" ? 1600 :
+        plan == "6 Months" ? 2700 :
+        plan == "12 Months" ? 4700 :
+        plan == "Couple / Duo - 3 Months" ? 3000 : -1;
+    }
+    function expectedRegistrationFee(plan) {
+      return plan == "Couple / Duo - 3 Months" ? 800 :
+        expectedPlanFee(plan) > 0 ? 500 : -1;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isOwner());
+      allow create, update, delete: if isOwner();
+    }
+
+    // Member profile only: transaction history is stored in separate collections.
+    function validMemberCreate() {
+      return request.resource.data.keys().hasOnly([
+          "name", "phone", "address", "gender", "joinDate", "planStartDate",
+          "plan", "planFee", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
+          "createdAt", "createdBy", "updatedAt", "updatedBy",
+          "legacySource", "legacyIndex", "migrationVersion",
+          "migrationSourceData", "migratedAt", "migratedBy"
+        ]) &&
+        request.resource.data.keys().hasAll(["name"]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 120 &&
+        (!("createdBy" in request.resource.data) || request.resource.data.createdBy == request.auth.uid || isOwner()) &&
+        (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
+        (!("planFee" in request.resource.data) ||
+          (request.resource.data.planFee is number &&
+           (isOwner() ||
+            (isActiveStaff() &&
+             request.resource.data.planFee == expectedPlanFee(request.resource.data.plan))))) &&
+        (!("registrationFee" in request.resource.data) ||
+          (request.resource.data.registrationFee is number &&
+           request.resource.data.registrationFee in [500, 800] &&
+           (!isActiveStaff() ||
+            request.resource.data.registrationFee == expectedRegistrationFee(request.resource.data.plan)))) &&
+        // Migration metadata is reserved for the Owner-only migration runner.
+        ((!("migrationVersion" in request.resource.data) &&
+          !("migrationSourceData" in request.resource.data) &&
+          !("migratedAt" in request.resource.data) &&
+          !("migratedBy" in request.resource.data) &&
+          !("legacySource" in request.resource.data) &&
+          !("legacyIndex" in request.resource.data)) || isOwner());
+    }
+    match /members/{memberId} {
+      allow read: if canUseGym();
+      allow create: if canUseGym() && validMemberCreate();
+      allow update: if isOwner() ||
+        (isActiveStaff() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           "name", "phone", "address", "gender", "joinDate", "planStartDate",
+           "plan", "photoURL", "photoPath", "expiryDate", "status", "notes",
+           "updatedAt", "updatedBy"
+         ]));
+      allow delete: if isOwner();
+    }
+
+    // Staff may add transactions but cannot alter or erase existing history.
+    match /payments/{paymentId} {
+      allow read: if isOwner() ||
+        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /renewals/{renewalId} {
+      allow read: if isOwner() ||
+        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /attendance/{attendanceId} {
+      allow read: if canUseGym();
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+
+    // Owner-only financial and configuration data.
+    match /expenses/{expenseId} { allow read, write: if isOwner(); }
+    match /settings/{document=**} { allow read, write: if isOwner(); }
+    match /financialReports/{document=**} { allow read, write: if isOwner(); }
+
+    // Legacy records remain owner-only until migration is complete.
+    match /gymData/{document=**} { allow read, write: if isOwner(); }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

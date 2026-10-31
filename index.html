@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PGM FITNESS</title>
   <link rel="manifest" href="manifest.json">
+  <script src="firebase-config.js"></script>
+  <script src="backup-validation.js"></script>
   <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -119,9 +121,36 @@
     #dashboardPage .card .pill.purple { background:#8a1c7c !important; color:#fff !important; }
     #dashboardPage .card .pill.red { background:#dc3545 !important; color:#fff !important; }
     .fab { box-shadow:0 4px 10px rgba(0,0,0,.2) !important; }
+  .pgm-auth-gate{position:fixed;inset:0;z-index:99999;background:#121212;display:flex;align-items:center;justify-content:center;padding:22px}
+  .pgm-auth-gate[hidden]{display:none}
+  .pgm-auth-card{width:100%;max-width:380px;background:#1e1e1e;border:1px solid #333;border-radius:18px;padding:24px}
+  .pgm-auth-card h2{font-size:22px;margin-bottom:8px}
+  .pgm-auth-card p{color:#bbb;font-size:14px;line-height:1.5;margin-bottom:18px}
+  .pgm-auth-card label{display:block;font-size:13px;color:#ddd;margin:12px 0 6px}
+  .pgm-auth-card input{width:100%;padding:13px;border-radius:9px;border:1px solid #555;background:#111;color:#fff;font-size:16px}
+  .pgm-auth-card button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:9px;background:#ffb703;color:#111;font-weight:700;font-size:16px}
+  .pgm-auth-card button:disabled{opacity:.6}
+  #pgmLoginMessage{min-height:22px;margin-top:12px;color:#ffcf70;font-size:13px}
+  .pgm-locked{overflow:hidden}
+  .pgm-owner-logout{position:fixed;right:12px;bottom:12px;z-index:5000;background:#333;color:#fff;border:1px solid #666;border-radius:20px;padding:8px 12px;font-size:12px}
   </style>
 </head>
 <body>
+  <section id="pgmAuthGate" class="pgm-auth-gate" aria-label="Owner login">
+    <div class="pgm-auth-card">
+      <h2>PGM FITNESS</h2>
+      <p>Owner login ഉപയോഗിച്ച് തുടരുക.</p>
+      <form id="pgmLoginForm">
+        <label for="pgmLoginEmail">Email</label>
+        <input id="pgmLoginEmail" type="email" autocomplete="username" required>
+        <label for="pgmLoginPassword">Password</label>
+        <input id="pgmLoginPassword" type="password" autocomplete="current-password" required>
+        <button type="submit">Login</button>
+      </form>
+      <div id="pgmLoginMessage" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+  <button id="pgmLogoutButton" class="pgm-owner-logout" type="button">Logout</button>
 
   <!-- MAIN DASHBOARD -->
   <div id="dashboardPage" class="page active">
@@ -384,63 +413,109 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // BACKUP & RESTORE
+    // BACKUP & RESTORE — validated imports and verified pre-restore safety copy.
     async function exportBackup() {
-      const dateStr = new Date().toISOString().split('T')[0];
+      const dateStr = new Date().toISOString().slice(0, 10);
       const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
-        const backupData = JSON.stringify(state, null, 2);
-        const backupBlob = new Blob([backupData], { type: 'application/json' });
-
-        // Prefer Android's native share sheet; this avoids blocked PWA downloads.
+        const backup = {
+          app: 'PGM FITNESS',
+          backupVersion: 1,
+          exportedAt: new Date().toISOString(),
+          data: state
+        };
+        const backupBlob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
         if (navigator.share && navigator.canShare && typeof File !== 'undefined') {
           const backupFile = new File([backupBlob], fileName, { type: 'application/json' });
           if (navigator.canShare({ files: [backupFile] })) {
-            await navigator.share({
-              files: [backupFile],
-              title: 'PGM Fitness Backup',
-              text: 'PGM Fitness App data backup'
-            });
+            await navigator.share({ files: [backupFile], title: 'PGM Fitness Backup', text: 'PGM Fitness data backup' });
+            alert('Backup share ചെയ്തു. Files / Drive-ൽ Save ചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാക്കുക.');
             return;
           }
         }
-
-        // Fall back to a normal file download on browsers without file sharing.
         const backupUrl = URL.createObjectURL(backupBlob);
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.href = backupUrl;
-        downloadAnchor.download = fileName;
-        downloadAnchor.style.display = 'none';
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
+        const anchor = document.createElement('a');
+        anchor.href = backupUrl;
+        anchor.download = fileName;
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
+        alert('Backup download ആരംഭിച്ചു. Downloads ഫോൾഡറിൽ ഫയൽ ഉണ്ടെന്ന് പരിശോധിക്കുക.');
       } catch (error) {
         if (error && error.name === 'AbortError') return;
         console.error('Backup export failed:', error);
-        alert('Backup Share/Download പരാജയപ്പെട്ടു. App വീണ്ടും തുറന്ന് ശ്രമിക്കുക.');
+        alert('Backup തയ്യാറാക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക.');
       }
     }
 
     function importBackup(event) {
-      const file = event.target.files[0];
+      const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
+        let previousState = state;
+        let previousRaw = null;
+        let safetyKey = null;
+        let restoreWritten = false;
         try {
-          const importedData = JSON.parse(e.target.result);
-          if (importedData && Array.isArray(importedData.members) && Array.isArray(importedData.expenses)) {
-            state = importedData;
-            if (typeof state.openingBalance !== 'number') state.openingBalance = Number(state.openingBalance) || 0;
-            saveData();
-            alert('ഡാറ്റ വിജയകരമായി Restore ചെയ്തു!');
-            showPage('dashboardPage');
-          } else {
-            alert('തെറ്റായ ഫയൽ ഫോർമാറ്റ് ആണ്!');
+          const parsed = JSON.parse(e.target.result);
+          let importedData;
+          try {
+            importedData = window.PGMBackupValidation.parseBackup(parsed);
+          } catch (validationError) {
+            alert('തെറ്റായതോ അപൂർണ്ണമായതോ ആയ Backup ഫയൽ ആണ്. നിലവിലെ ഡാറ്റ മാറ്റിയിട്ടില്ല.');
+            return;
           }
+          if (!confirm('ഇപ്പോഴുള്ള ഡാറ്റ മാറ്റി Backup-ലെ ഡാറ്റ Restore ചെയ്യട്ടേ? ആദ്യം നിലവിലെ ഡാറ്റയുടെ സുരക്ഷാ പകർപ്പ് പരിശോധിച്ച് സൂക്ഷിക്കും.')) return;
+
+          previousRaw = localStorage.getItem('pgm_fitness_data');
+          if (previousRaw !== null) {
+            safetyKey = 'pgm_fitness_pre_restore_' + new Date().toISOString().replace(/[:.]/g, '-');
+            localStorage.setItem(safetyKey, previousRaw);
+            if (localStorage.getItem(safetyKey) !== previousRaw) {
+              throw new Error('Pre-restore safety copy verification failed');
+            }
+          }
+
+          const nextState = {
+            ...importedData,
+            openingBalance: importedData.openingBalance === undefined ? 0 : importedData.openingBalance,
+            members: importedData.members,
+            expenses: importedData.expenses
+          };
+          const nextRaw = JSON.stringify(nextState);
+          localStorage.setItem('pgm_fitness_data', nextRaw);
+          restoreWritten = true;
+          if (localStorage.getItem('pgm_fitness_data') !== nextRaw) {
+            throw new Error('Restored data verification failed');
+          }
+          state = nextState;
+          updateDashboard();
+          alert('ഡാറ്റ Restore ചെയ്തു. പഴയ ഡാറ്റയുടെ സുരക്ഷാ പകർപ്പും പരിശോധിച്ച് സൂക്ഷിച്ചിട്ടുണ്ട്.');
+          showPage('dashboardPage');
         } catch (err) {
-          alert('ഫയൽ റീഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!');
+          console.error('Backup restore failed:', err);
+          if (restoreWritten) {
+            try {
+              if (previousRaw === null) localStorage.removeItem('pgm_fitness_data');
+              else localStorage.setItem('pgm_fitness_data', previousRaw);
+              state = previousState;
+              updateDashboard();
+            } catch (rollbackError) {
+              console.error('Backup restore rollback failed:', rollbackError);
+              alert('Restore പരാജയപ്പെട്ടു; പഴയ ഡാറ്റ സ്വയം തിരികെ വയ്ക്കാനും കഴിഞ്ഞില്ല. App വീണ്ടും ഉപയോഗിക്കുന്നതിന് മുമ്പ് സഹായം തേടുക.');
+              return;
+            }
+          }
+          alert('ഫയൽ വായിക്കാനോ സുരക്ഷിതമായി Restore ചെയ്യാനോ കഴിഞ്ഞില്ല. പഴയ ഡാറ്റ മാറ്റമില്ലാതെ നിലനിർത്താൻ ശ്രമിച്ചിട്ടുണ്ട്.');
+        } finally {
+          event.target.value = '';
         }
+      };
+      reader.onerror = function() {
+        alert('ഫയൽ വായിക്കാൻ കഴിഞ്ഞില്ല. നിലവിലെ ഡാറ്റ മാറ്റിയിട്ടില്ല.');
         event.target.value = '';
       };
       reader.readAsText(file);
@@ -1103,5 +1178,7 @@
       });
     }
   </script>
+  <script type="module" src="auth-gate.js"></script>
+  <script type="module" src="cloud-member-panel.js"></script>
 </body>
 </html>

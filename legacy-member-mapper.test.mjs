@@ -1,0 +1,7 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mapLegacyMemberProfile, mapLegacyMemberTransactions } from "./legacy-member-mapper.js";
+test("maps profile without embedded transaction arrays",()=>{const p=mapLegacyMemberProfile({name:" Anu ",phone:"123",date:"2026-01-02",totalFee:1200,amount:500,plan:"Monthly",expiryDate:"2026-02-02",payments:[{amount:200}]});assert.equal(p.name,"Anu");assert.equal(p.planFee,1200);assert.equal("payments" in p,false);});
+test("uses legacy amount as plan fee only if totalFee is absent",()=>assert.equal(mapLegacyMemberProfile({name:"A",amount:300}).planFee,300));
+test("keeps joining payments, later payments and renewals separate",()=>{const rows=mapLegacyMemberTransactions({name:"A",phone:"9",amount:200,totalFee:500,date:"2026-01-01",payments:[{amount:50,date:"2026-01-03"}],renewals:[{fee:600,paidAmount:300,date:"2026-02-01",expiryDate:"2026-03-01"}]},"cloud-id");assert.deepEqual(rows.map(x=>x.kind),["payment","payment","renewal"]);assert.deepEqual(rows.map(x=>x.amount),[200,50,300]);assert.equal(rows[0].feeAmount,500);assert.equal(rows[2].feeAmount,600);});
+test("rejects invalid profiles and missing cloud IDs",()=>{assert.throws(()=>mapLegacyMemberProfile({name:"A"}),/plan fee/);assert.throws(()=>mapLegacyMemberProfile({name:"A",amount:-1}),/plan fee/);assert.throws(()=>mapLegacyMemberTransactions({name:"A"},""),/required/);});
