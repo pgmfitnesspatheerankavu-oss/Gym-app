@@ -15,6 +15,8 @@ Firebase project: `pgmfitness-5e107`
 - `index.html` is the legacy app entry point and must not be confused with the new cloud app.
 - Automated migration tests and Firestore emulator rules tests pass on `firebase-login-development`.
 - The new cloud app has not yet been deployed to a verified preview URL or tested end-to-end with real Owner and Staff accounts.
+- New member registration now saves the member and any initial payment together in one Firestore batch; fixed plan prices are validated for Staff by Firestore rules.
+- Member photo selection accepts JPG, PNG, and WEBP up to 5 MB; live upload still requires end-to-end testing against the Supabase bucket.
 - Legacy localStorage data has not yet been migrated/imported into the new Firestore collections.
 
 ## IMPORTANT – do not publish these rules yet
