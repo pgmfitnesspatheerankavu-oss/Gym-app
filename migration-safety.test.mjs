@@ -24,7 +24,7 @@ test("identical prior migration is recognized for safe retry", () => {
 });
 
 test("unrelated or modified target is a collision, never an overwrite", () => {
-  assert.equal(classifyMigrationTarget(op, { ...migrated, name: "Changed" }), "already-migrated");
+  assert.equal(classifyMigrationTarget(op, { ...migrated, name: "Changed" }), "collision");
   assert.equal(classifyMigrationTarget(op, { name: "Other member" }), "collision");
   assert.equal(classifyMigrationTarget(op, { ...migrated, migrationSourceData: { name: "Other" } }), "collision");
 });
