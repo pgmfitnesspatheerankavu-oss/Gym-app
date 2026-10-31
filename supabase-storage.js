@@ -15,7 +15,6 @@ export async function uploadMemberPhoto(memberId, file) {
     method: "POST",
     headers: {
       apikey: SUPABASE_PUBLISHABLE_KEY,
-      Authorization: "Bearer " + SUPABASE_PUBLISHABLE_KEY,
       "Content-Type": file.type,
       "x-upsert": "true"
     },
