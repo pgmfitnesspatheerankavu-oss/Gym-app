@@ -70,6 +70,14 @@ export async function listAttendanceForDate(date) {
   ));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
+export async function listMyPayments() {
+  const { user, role } = await currentRole();
+  requireCapability(role, "payments.read.own");
+  const snapshot = await getDocs(query(
+    collection(db, "payments"), where("createdBy", "==", user.uid)
+  ));
+  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+}
 export async function createPayment(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "payments.create");
@@ -77,6 +85,14 @@ export async function createPayment(record) {
   return addDoc(collection(db, "payments"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
   });
+}
+export async function listMyRenewals() {
+  const { user, role } = await currentRole();
+  requireCapability(role, "renewals.read.own");
+  const snapshot = await getDocs(query(
+    collection(db, "renewals"), where("createdBy", "==", user.uid)
+  ));
+  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 export async function createRenewal(record) {
   const { user, role } = await currentRole();
