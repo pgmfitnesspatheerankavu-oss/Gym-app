@@ -3,7 +3,7 @@
 // Firestore Security Rules are the final authorization boundary.
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, writeBatch, writeBatch
+  query, where, orderBy, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
 import { canRole } from "./access-policy.js";
