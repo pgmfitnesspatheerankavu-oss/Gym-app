@@ -27,10 +27,13 @@ export function buildLegacyMigrationPlan(rawJson) {
     // Index-based IDs remain stable for repeat runs of the same unchanged backup.
     const memberId = `legacy_m_${i + 1}`;
     memberRefs.push({ index: i, id: memberId, name: clean(m.name) });
+    if (m.totalFee === undefined || m.totalFee === null || m.totalFee === "") {
+      throw new Error(`അംഗം #${i + 1}-ന് Total Fee ലഭ്യമല്ല. Paid Amount-നെ Plan Fee ആയി തെറ്റായി മാറ്റാതിരിക്കാൻ Migration നിർത്തി.`);
+    }
     const profile = {
       name: clean(m.name), phone: clean(m.phone), address: clean(m.address),
       gender: clean(m.gender), joinDate: clean(m.joinDate || m.date),
-      plan: clean(m.plan), planFee: amount(m.totalFee ?? m.amount ?? 0),
+      plan: clean(m.plan), planFee: amount(m.totalFee),
       expiryDate: clean(m.expiryDate), status: clean(m.status || "active"),
       notes: clean(m.notes), legacySource: "pgm_fitness_data",
       legacyIndex: i
