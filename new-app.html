@@ -2,15 +2,15 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f7fb"><title>PGM FITNESS — New App</title><link rel="stylesheet" href="new-app.css"><script src="firebase-config.js"></script></head>
 <body><main class="shell"><header><div><small>PGM FITNESS</small><h1>Management</h1></div><button id="logout" class="quiet" hidden>Sign out</button></header>
 <section id="login" class="panel login"><h2>Owner Login</h2><p>പുതിയ Cloud App — Development preview</p><form id="loginForm"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button>Login</button></form><p id="loginStatus" role="status"></p></section>
-<section id="app" hidden><nav><button class="tab active" data-tab="overview">Overview</button><button class="tab" data-tab="members">Members</button><button class="tab" data-tab="payments">Payments</button><button class="tab" data-tab="renewals">Renewals</button><button class="tab" data-tab="attendance">Attendance</button><button class="tab" data-tab="expenses">Expenses</button><button class="tab owner-only" data-tab="reports">P&amp;L</button><button class="tab owner-only" data-tab="staff">Staff</button></nav>
+<section id="app" hidden><nav><button class="tab active" data-tab="overview">Overview</button><button class="tab" data-tab="members">Members</button><button class="tab" data-tab="payments">Payments</button><button class="tab" data-tab="renewals">Renewals</button><button class="tab" data-tab="attendance">Attendance</button><button class="tab owner-only" data-tab="expenses">Expenses</button><button class="tab owner-only" data-tab="reports">P&amp;L</button><button class="tab owner-only" data-tab="staff">Staff</button></nav>
 <section id="overview" class="view">
 <h2>Members Overview</h2><div class="stats">
 <article><span>Total Members</span><strong id="totalMembers">—</strong></article><article><span>Active</span><strong id="activeMembers">—</strong></article><article><span>Expired</span><strong id="expiredMembers">—</strong></article><article><span>Balance Due</span><strong id="dueMembers">—</strong></article>
 </div>
-<h2 style="margin-top:22px">Collection</h2><div class="stats">
+<h2 class="owner-only" style="margin-top:22px">Collection</h2><div class="stats">
 <article><span>Today</span><strong id="collectionToday">₹0</strong></article><article><span>This Week</span><strong id="collectionWeek">₹0</strong></article><article><span>This Month</span><strong id="collectionMonth">₹0</strong></article><article><span>Total Collection</span><strong id="collectionTotal">₹0</strong></article>
 </div>
-<h2 style="margin-top:22px">Expenses</h2><div class="stats">
+<h2 class="owner-only" style="margin-top:22px">Expenses</h2><div class="stats">
 <article><span>Today</span><strong id="expenseToday">₹0</strong></article><article><span>This Week</span><strong id="expenseWeek">₹0</strong></article><article><span>This Month</span><strong id="expenseMonth">₹0</strong></article><article><span>Total Expenses</span><strong id="expenseTotal">₹0</strong></article>
 </div>
 <h2 style="margin-top:22px">Members Expiring</h2><div id="expiringList"></div>
