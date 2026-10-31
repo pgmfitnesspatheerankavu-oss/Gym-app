@@ -2,7 +2,7 @@
 // This module is intentionally separate from the legacy localStorage UI.
 // Firestore Security Rules are the final authorization boundary.
 import {
-  collection, doc, getDoc, getDocs, addDoc, updateDoc,
+  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
@@ -64,6 +64,13 @@ export async function updateMember(memberId, changes) {
     ...data, updatedAt: serverTimestamp(), updatedBy: user.uid
   });
 }
+export async function deleteMember(memberId) {
+  const { role } = await currentRole();
+  requireCapability(role, "members.delete");
+  if (!memberId) throw new Error("Member ID required");
+  await deleteDoc(doc(db, "members", memberId));
+}
+
 export async function recordAttendance(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "attendance.create");
