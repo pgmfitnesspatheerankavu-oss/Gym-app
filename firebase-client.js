@@ -3,6 +3,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { decideAccess } from "./auth-policy.js";
 
 const firebaseConfig = window.PGM_FIREBASE_CONFIG;
 const OWNER_UID = window.PGM_OWNER_UID;
@@ -13,14 +14,10 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export async function resolveRole(user) {
-  if (!user) return { allowed: false, reason: "signed-out" };
-  if (user.uid === OWNER_UID) return { allowed: true, role: "owner", uid: user.uid };
+  if (!user) return decideAccess(null, OWNER_UID);
+  if (user.uid === OWNER_UID) return decideAccess(user, OWNER_UID);
   const profile = await getDoc(doc(db, "users", user.uid));
-  if (!profile.exists()) return { allowed: false, reason: "not-provisioned" };
-  const data = profile.data();
-  if (data.role !== "staff" || data.active !== true) return { allowed: false, reason: "inactive-or-invalid-role" };
-  // Do not grant Staff access to the legacy localStorage app.
-  return { allowed: false, reason: "staff-cloud-migration-pending", role: "staff" };
+  return decideAccess(user, OWNER_UID, profile.exists() ? profile.data() : null);
 }
 
 export async function signIn(email, password) {
