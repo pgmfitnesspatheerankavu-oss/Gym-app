@@ -385,23 +385,38 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // BACKUP & RESTORE
-    function exportBackup() {
+    async function exportBackup() {
+      const dateStr = new Date().toISOString().split('T')[0];
+      const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
         const backupData = JSON.stringify(state, null, 2);
-        const backupBlob = new Blob([backupData], { type: 'application/json;charset=utf-8' });
+        const backupBlob = new Blob([backupData], { type: 'application/json' });
+        const backupFile = new File([backupBlob], fileName, { type: 'application/json' });
+
+        // Prefer Android's native share sheet so the installed app can save/share the file.
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [backupFile] })) {
+          await navigator.share({
+            files: [backupFile],
+            title: 'PGM Fitness Backup',
+            text: 'PGM Fitness App data backup'
+          });
+          return;
+        }
+
+        // Fall back to the browser download when file sharing is unavailable.
         const backupUrl = URL.createObjectURL(backupBlob);
         const downloadAnchor = document.createElement('a');
-        const dateStr = new Date().toISOString().split('T')[0];
         downloadAnchor.href = backupUrl;
-        downloadAnchor.download = `pgm_fitness_backup_${dateStr}.json`;
+        downloadAnchor.download = fileName;
         downloadAnchor.style.display = 'none';
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
         setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
       } catch (error) {
-        console.error('Backup download failed:', error);
-        alert('Backup download failed. Chrome-ൽ വീണ്ടും ശ്രമിക്കുക.');
+        if (error && error.name === 'AbortError') return;
+        console.error('Backup export failed:', error);
+        alert('Backup Share/Download പരാജയപ്പെട്ടു. Chrome-ൽ തുറന്ന് വീണ്ടും ശ്രമിക്കുക.');
       }
     }
 
