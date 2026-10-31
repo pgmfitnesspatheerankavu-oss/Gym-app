@@ -35,7 +35,15 @@ export async function listMembers() {
   const snapshot = await getDocs(query(collection(db, "members"), orderBy("name")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
-export async function getMember(memberId) {\n  const { role } = await currentRole();\n  requireCapability(role, "members.read");\n  if (!memberId) throw new Error("Member ID required");\n  const snapshot = await getDoc(doc(db, "members", memberId));\n  if (!snapshot.exists()) return null;\n  return { id: snapshot.id, ...snapshot.data() };\n}\nexport async function createMember(record) {
+export async function getMember(memberId) {
+  const { role } = await currentRole();
+  requireCapability(role, "members.read");
+  if (!memberId) throw new Error("Member ID required");
+  const snapshot = await getDoc(doc(db, "members", memberId));
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() };
+}
+export async function createMember(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "members.create");
   const data = memberCreatePayload(record);
