@@ -111,6 +111,12 @@ export async function createPayment(record) {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
   });
 }
+export async function listAllRenewals() {
+  const { role } = await currentRole();
+  requireCapability(role, "renewals.read.all");
+  const snapshot = await getDocs(query(collection(db, "renewals"), orderBy("date", "desc")));
+  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+}
 export async function listMyRenewals() {
   const { user, role } = await currentRole();
   requireCapability(role, "renewals.read.own");
