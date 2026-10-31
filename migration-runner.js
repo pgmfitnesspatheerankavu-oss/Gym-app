@@ -1,11 +1,10 @@
-// PGM FITNESS — owner-confirmed, additive legacy migration runner.
-// This module never deletes or modifies localStorage. It writes deterministic IDs
-// in batches and requires an explicit owner confirmation before the first write.
+// PGM FITNESS — owner-confirmed, collision-safe legacy migration.
+// Additive only: never deletes local data and never overwrites an existing cloud document.
 import { buildLegacyMigrationPlan } from "./migration-plan.js";
 import { verifyMigrationPlan } from "./migration-verification.js";
 export { verifyMigrationPlan } from "./migration-verification.js";
 import {
-  collection, doc, getDoc, getDocs, limit, query, writeBatch, serverTimestamp
+  doc, getDoc, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
 
@@ -17,6 +16,14 @@ export function previewCloudMigration(rawBackup) {
   return { plan, verification: verifyMigrationPlan(plan) };
 }
 
+function stableJson(value) {
+  if (Array.isArray(value)) return "[" + value.map(stableJson).join(",") + "]";
+  if (value && typeof value === "object") {
+    return "{" + Object.keys(value).sort().map(k => JSON.stringify(k) + ":" + stableJson(value[k])).join(",") + "}";
+  }
+  return JSON.stringify(value);
+}
+
 export async function runOwnerMigration(rawBackup, confirmationText) {
   if (confirmationText !== CONFIRMATION) throw new Error("ഉടമയുടെ വ്യക്തമായ confirmation ആവശ്യമാണ്.");
   const user = auth.currentUser;
@@ -25,49 +32,62 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
   if (!role.allowed || role.role !== "owner") throw new Error("ഈ Migration Owner-ന് മാത്രം അനുവദിച്ചിരിക്കുന്നു.");
 
   const { plan, verification } = previewCloudMigration(rawBackup);
-  if (plan.warnings.some(w => w.includes("തെറ്റായ") || w.includes("അസാധുവായ") || w.includes("പേര് ഇല്ല"))) {
-    throw new Error("Backup warnings പരിഹരിച്ചശേഷം മാത്രം Migration നടത്താം.");
+  if (plan.warnings.length) {
+    throw new Error("Backup-ൽ മുന്നറിയിപ്പുകളുണ്ട്. ആദ്യം Preview പരിശോധിച്ച് അവ പരിഹരിക്കണം.");
   }
 
-  // Refuse to mix with an existing non-legacy cloud dataset.
-  const existing = await getDocs(query(collection(db, "members"), limit(1)));
-  if (!existing.empty) {
-    const first = existing.docs[0];
-    if (first.data().legacySource !== "pgm_fitness_data") {
-      throw new Error("Cloud members collection ഇതിനകം ഉപയോഗത്തിലുണ്ട്. സുരക്ഷിത reconciliation ആവശ്യമാണ്.");
+  // Preflight every deterministic target before writing anything. Existing documents
+  // are accepted only when they are already verified copies of this same legacy row.
+  const missing = [];
+  const alreadyMigrated = [];
+  for (const op of plan.operations) {
+    const snap = await getDoc(doc(db, op.collection, op.id));
+    if (!snap.exists()) {
+      missing.push(op);
+      continue;
     }
+    const existing = snap.data();
+    if (existing.legacySource !== "pgm_fitness_data" ||
+        existing.migrationVersion !== 1 ||
+        stableJson(existing.migrationSourceData) !== stableJson(op.data)) {
+      throw new Error("Cloud രേഖ ഇതിനകം നിലനിൽക്കുന്നു; overwrite ഒഴിവാക്കി Migration നിർത്തി: " + op.collection + "/" + op.id);
+    }
+    alreadyMigrated.push(op);
   }
 
-  const operations = plan.operations;
+  // Persist a source snapshot alongside each record so retries can distinguish an
+  // identical prior migration from unrelated or manually changed cloud data.
   let written = 0;
-  for (let offset = 0; offset < operations.length; offset += CHUNK_SIZE) {
+  for (let offset = 0; offset < missing.length; offset += CHUNK_SIZE) {
     const batch = writeBatch(db);
-    const chunk = operations.slice(offset, offset + CHUNK_SIZE);
+    const chunk = missing.slice(offset, offset + CHUNK_SIZE);
     for (const op of chunk) {
       const ref = doc(db, op.collection, op.id);
-      const data = {
+      batch.set(ref, {
         ...op.data,
         ...(op.collection === "payments" || op.collection === "renewals" || op.collection === "attendance"
           ? { createdBy: user.uid } : {}),
+        legacySource: "pgm_fitness_data",
         migrationVersion: 1,
+        migrationSourceData: op.data,
         migratedAt: serverTimestamp(),
         migratedBy: user.uid
-      };
-      batch.set(ref, data, { merge: false });
+      }, { merge: false });
     }
     await batch.commit();
     written += chunk.length;
   }
 
-  // Read-back verification checks every expected deterministic document.
+  // Read-back verifies both the source snapshot and migration marker for every row.
   const readBack = {};
-  for (const name of Object.keys(verification.collectionCounts)) {
-    readBack[name] = 0;
-  }
-  for (const op of operations) {
+  for (const name of Object.keys(verification.collectionCounts)) readBack[name] = 0;
+  for (const op of plan.operations) {
     const snap = await getDoc(doc(db, op.collection, op.id));
-    if (!snap.exists() || snap.data().legacySource !== "pgm_fitness_data") {
-      throw new Error("Migration verification failed at " + op.collection + "/" + op.id);
+    if (!snap.exists()) throw new Error("Migration verification failed: " + op.collection + "/" + op.id);
+    const data = snap.data();
+    if (data.legacySource !== "pgm_fitness_data" || data.migrationVersion !== 1 ||
+        stableJson(data.migrationSourceData) !== stableJson(op.data)) {
+      throw new Error("Migration data mismatch: " + op.collection + "/" + op.id);
     }
     readBack[op.collection]++;
   }
@@ -75,11 +95,8 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
     if (readBack[name] !== expected) throw new Error("Read-back count mismatch: " + name);
   }
   return {
-    success: true,
-    written,
-    expected: verification.collectionCounts,
-    verified: readBack,
-    totals: verification,
-    localDataPreserved: true
+    success: true, written, alreadyMigrated: alreadyMigrated.length,
+    expected: verification.collectionCounts, verified: readBack,
+    totals: verification, localDataPreserved: true, overwroteExistingCloudData: false
   };
 }
