@@ -32,6 +32,8 @@ service cloud.firestore {
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
+        (!("createdBy" in request.resource.data) || request.resource.data.createdBy == request.auth.uid || isOwner()) &&
+        (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
         (!("planFee" in request.resource.data) ||
           (isOwner() && request.resource.data.planFee is number)) &&
         // Migration metadata is reserved for the Owner-only migration runner.
