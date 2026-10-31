@@ -36,6 +36,9 @@ service cloud.firestore {
         (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
         (!("planFee" in request.resource.data) ||
           (isOwner() && request.resource.data.planFee is number)) &&
+        (!("registrationFee" in request.resource.data) ||
+          (request.resource.data.registrationFee is number &&
+           request.resource.data.registrationFee in [500, 800])) &&
         // Migration metadata is reserved for the Owner-only migration runner.
         ((!("migrationVersion" in request.resource.data) &&
           !("migrationSourceData" in request.resource.data) &&
