@@ -7,5 +7,5 @@ export function decideAccess(user, ownerUid, staffProfile = null) {
     return { allowed: false, reason: "inactive-or-invalid-role" };
   }
   // Staff must not enter the legacy localStorage dashboard.
-  return { allowed: false, reason: "staff-cloud-migration-pending", role: "staff" };
+  return { allowed: true, role: "staff", uid: user.uid, displayName: staffProfile.displayName || "" };
 }
