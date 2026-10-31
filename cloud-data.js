@@ -3,7 +3,7 @@
 // Firestore Security Rules are the final authorization boundary.
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, writeBatch
+  query, where, orderBy, serverTimestamp, writeBatch, writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { auth, db, resolveRole } from "./firebase-client.js";
 import { canRole } from "./access-policy.js";
@@ -141,6 +141,26 @@ export async function saveRenewalBundle(memberId, renewalRecord, memberChanges, 
     batch.set(doc(collection(db, "payments")), { ...payment, createdAt: serverTimestamp(), createdBy: user.uid });
   }
   await batch.commit();
+}
+export async function saveRenewalWithPayment({ memberId, renewal, memberChanges, payment }) {
+  const { user, role } = await currentRole();
+  requireCapability(role, "renewals.create");
+  requireCapability(role, "members.update");
+  if (payment) requireCapability(role, "payments.create");
+  if (!memberId) throw new Error("Member ID required");
+  const renewalData = transactionPayload(renewal);
+  const batch = writeBatch(db);
+  const memberRef = doc(db, "members", memberId);
+  const renewalRef = doc(collection(db, "renewals"));
+  batch.set(renewalRef, { ...renewalData, createdAt: serverTimestamp(), createdBy: user.uid });
+  batch.update(memberRef, { ...memberUpdatePayload(memberChanges), updatedAt: serverTimestamp(), updatedBy: user.uid });
+  if (payment) {
+    const paymentData = transactionPayload(payment);
+    const paymentRef = doc(collection(db, "payments"));
+    batch.set(paymentRef, { ...paymentData, createdAt: serverTimestamp(), createdBy: user.uid });
+  }
+  await batch.commit();
+  return { renewalId: renewalRef.id };
 }
 export async function createRenewal(record) {
   const { user, role } = await currentRole();
