@@ -120,9 +120,36 @@
     #dashboardPage .card .pill.purple { background:#8a1c7c !important; color:#fff !important; }
     #dashboardPage .card .pill.red { background:#dc3545 !important; color:#fff !important; }
     .fab { box-shadow:0 4px 10px rgba(0,0,0,.2) !important; }
+  .pgm-auth-gate{position:fixed;inset:0;z-index:99999;background:#121212;display:flex;align-items:center;justify-content:center;padding:22px}
+  .pgm-auth-gate[hidden]{display:none}
+  .pgm-auth-card{width:100%;max-width:380px;background:#1e1e1e;border:1px solid #333;border-radius:18px;padding:24px}
+  .pgm-auth-card h2{font-size:22px;margin-bottom:8px}
+  .pgm-auth-card p{color:#bbb;font-size:14px;line-height:1.5;margin-bottom:18px}
+  .pgm-auth-card label{display:block;font-size:13px;color:#ddd;margin:12px 0 6px}
+  .pgm-auth-card input{width:100%;padding:13px;border-radius:9px;border:1px solid #555;background:#111;color:#fff;font-size:16px}
+  .pgm-auth-card button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:9px;background:#ffb703;color:#111;font-weight:700;font-size:16px}
+  .pgm-auth-card button:disabled{opacity:.6}
+  #pgmLoginMessage{min-height:22px;margin-top:12px;color:#ffcf70;font-size:13px}
+  .pgm-locked{overflow:hidden}
+  .pgm-owner-logout{position:fixed;right:12px;bottom:12px;z-index:5000;background:#333;color:#fff;border:1px solid #666;border-radius:20px;padding:8px 12px;font-size:12px}
   </style>
 </head>
 <body>
+  <section id="pgmAuthGate" class="pgm-auth-gate" aria-label="Owner login">
+    <div class="pgm-auth-card">
+      <h2>PGM FITNESS</h2>
+      <p>Owner login ഉപയോഗിച്ച് തുടരുക.</p>
+      <form id="pgmLoginForm">
+        <label for="pgmLoginEmail">Email</label>
+        <input id="pgmLoginEmail" type="email" autocomplete="username" required>
+        <label for="pgmLoginPassword">Password</label>
+        <input id="pgmLoginPassword" type="password" autocomplete="current-password" required>
+        <button type="submit">Login</button>
+      </form>
+      <div id="pgmLoginMessage" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+  <button id="pgmLogoutButton" class="pgm-owner-logout" type="button">Logout</button>
 
   <!-- MAIN DASHBOARD -->
   <div id="dashboardPage" class="page active">
@@ -1121,5 +1148,6 @@
       });
     }
   </script>
+  <script type="module" src="auth-gate.js"></script>
 </body>
 </html>
