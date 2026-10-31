@@ -16,6 +16,29 @@ $("addMember").addEventListener("click",()=>openForm());$("cancelForm").addEvent
 $("memberForm").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,values=Object.fromEntries(new FormData(f));const id=values.id;delete values.id;values.planFee=values.planFee===""?undefined:Number(values.planFee);try{if(id)await updateMember(id,values);else await createMember(values);$("memberDialog").close();await refresh();}catch(err){alert("Save failed: "+err.message);}});
 function populateMembers(){for(const id of ["paymentMember","attendanceMember","renewalMember"]){const sel=$(id),current=sel.value;sel.replaceChildren();for(const m of members){const o=document.createElement("option");o.value=m.id;o.textContent=m.name+(m.phone?" · "+m.phone:"");sel.append(o);}if([...sel.options].some(o=>o.value===current))sel.value=current;}}
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
+
+$("renewalForm").elements.date.value=today();
+$("renewalForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId")),out=$("renewalStatus");
+ if(!m)return;
+ const feeAmount=Number(f.get("feeAmount")),amount=Number(f.get("amount"));
+ if(!Number.isFinite(feeAmount)||feeAmount<=0||!Number.isFinite(amount)||amount<0||amount>feeAmount){out.textContent="ഫീസ് / അടച്ച തുക ശരിയല്ല.";return;}
+ out.textContent="Saving renewal…";
+ try{
+  await createRenewal({memberId:m.id,memberName:m.name,phone:m.phone||"",feeAmount,amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal",plan:f.get("plan"),expiryDate:f.get("expiryDate")});
+  await updateMember(m.id,{plan:f.get("plan"),planFee:feeAmount,expiryDate:f.get("expiryDate"),status:"active"});
+  if(amount>0) await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"});
+  out.textContent="Renewal saved.";
+  e.currentTarget.reset();e.currentTarget.elements.date.value=today();
+  await refresh();await loadRenewals();
+ }catch(err){out.textContent="Renewal save incomplete/failed: "+err.message+" — രേഖകൾ പരിശോധിച്ച് മാത്രം വീണ്ടും ശ്രമിക്കുക.";}
+});
+async function loadRenewals(){
+ const box=$("renewalList");box.textContent="Loading…";
+ try{const rows=await listAllRenewals();box.replaceChildren();if(!rows.length)box.textContent="No renewals yet.";for(const r of rows)cardLine(box,(r.memberName||"Member")+" — ₹"+Number(r.feeAmount||0).toFixed(2),[r.date,r.plan,"Paid ₹"+Number(r.amount||0).toFixed(2),"Expiry "+(r.expiryDate||"")].filter(Boolean).join(" · "));}
+ catch(e){box.textContent="Renewals unavailable: "+e.message;}
+}
 $("paymentForm").elements.date.value=today();
 $("paymentForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId"));if(!m)return;const out=$("paymentStatus");out.textContent="Saving…";try{await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount:Number(f.get("amount")),date:f.get("date"),payMode:f.get("payMode"),type:"payment"});out.textContent="Payment saved.";e.currentTarget.reset();e.currentTarget.elements.date.value=today();await loadPayments();}catch(err){out.textContent="Payment failed: "+err.message;}});
 async function loadPayments(){const box=$("paymentList");box.textContent="Loading…";try{const rows=await listAllPayments();box.replaceChildren();rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!rows.length)box.textContent="No payments yet.";for(const p of rows)cardLine(box,(p.memberName||"Member")+" — ₹"+Number(p.amount||0).toFixed(2),[p.date,p.payMode,p.type].filter(Boolean).join(" · "));}catch(e){box.textContent="Payments unavailable: "+e.message;}}
