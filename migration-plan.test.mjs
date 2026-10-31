@@ -77,3 +77,10 @@ test("links legacy attendance by phone and preserves check-in time", () => {
   assert.equal(attendance.data.memberId, "legacy_m_1");
   assert.equal(attendance.data.checkInAt, "08:15 AM");
 });
+
+test("refuses to treat paid amount as plan fee when totalFee is missing", () => {
+  assert.throws(
+    () => buildLegacyMigrationPlan({ members: [{ name: "Legacy Member", amount: 500 }], expenses: [] }),
+    /Paid Amount-നെ Plan Fee ആയി/
+  );
+});
