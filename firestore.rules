@@ -1,32 +1,68 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // The owner identity is pinned to the Firebase Auth UID supplied by the owner.
     function isOwner() {
       return request.auth != null &&
         request.auth.uid == "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
     }
-
     function signedIn() { return request.auth != null; }
+    function isActiveStaff() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "staff" &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+    function canUseGym() { return isOwner() || isActiveStaff(); }
 
-    // Staff accounts are provisioned by the owner in Firebase Console.
-    // A user cannot grant themselves a role or edit another user's role.
     match /users/{userId} {
-      allow read: if signedIn() &&
-        (request.auth.uid == userId || isOwner());
+      allow read: if signedIn() && (request.auth.uid == userId || isOwner());
       allow create, update, delete: if isOwner();
     }
 
-    // Until payment/renewal history is moved into append-only subcollections,
-    // keep all gym records owner-only. This prevents staff from rewriting
-    // embedded historical payment arrays in the current localStorage schema.
-    match /gymData/{document=**} {
-      allow read, write: if isOwner();
+    // Member profile only: transaction history is stored in separate collections.
+    match /members/{memberId} {
+      allow read: if canUseGym();
+      allow create: if canUseGym();
+      allow update: if isOwner() ||
+        (isActiveStaff() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           "name", "phone", "address", "gender", "joinDate",
+           "plan", "planFee", "expiryDate", "status", "notes",
+           "updatedAt", "updatedBy"
+         ]));
+      allow delete: if isOwner();
     }
 
-    // Default deny for every collection not explicitly opened above.
-    match /{document=**} {
-      allow read, write: if false;
+    // Staff may add transactions but cannot alter or erase existing history.
+    match /payments/{paymentId} {
+      allow read: if isOwner() ||
+        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
     }
+    match /renewals/{renewalId} {
+      allow read: if isOwner() ||
+        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /attendance/{attendanceId} {
+      allow read: if canUseGym();
+      allow create: if canUseGym() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+
+    // Owner-only financial and configuration data.
+    match /expenses/{expenseId} { allow read, write: if isOwner(); }
+    match /settings/{document=**} { allow read, write: if isOwner(); }
+    match /financialReports/{document=**} { allow read, write: if isOwner(); }
+
+    // Legacy records remain owner-only until migration is complete.
+    match /gymData/{document=**} { allow read, write: if isOwner(); }
+
+    match /{document=**} { allow read, write: if false; }
   }
 }
