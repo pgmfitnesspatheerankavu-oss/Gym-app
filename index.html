@@ -384,63 +384,80 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // BACKUP & RESTORE
+    // BACKUP & RESTORE — versioned export, legacy import, and pre-restore safety copy.
     async function exportBackup() {
-      const dateStr = new Date().toISOString().split('T')[0];
+      const dateStr = new Date().toISOString().slice(0, 10);
       const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
-        const backupData = JSON.stringify(state, null, 2);
-        const backupBlob = new Blob([backupData], { type: 'application/json' });
-
-        // Prefer Android's native share sheet; this avoids blocked PWA downloads.
+        const backup = {
+          app: 'PGM FITNESS',
+          backupVersion: 1,
+          exportedAt: new Date().toISOString(),
+          data: state
+        };
+        const backupBlob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
         if (navigator.share && navigator.canShare && typeof File !== 'undefined') {
           const backupFile = new File([backupBlob], fileName, { type: 'application/json' });
           if (navigator.canShare({ files: [backupFile] })) {
-            await navigator.share({
-              files: [backupFile],
-              title: 'PGM Fitness Backup',
-              text: 'PGM Fitness App data backup'
-            });
+            await navigator.share({ files: [backupFile], title: 'PGM Fitness Backup', text: 'PGM Fitness data backup' });
+            alert('Backup share ചെയ്തു. Files / Drive-ൽ Save ചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാക്കുക.');
             return;
           }
         }
-
-        // Fall back to a normal file download on browsers without file sharing.
         const backupUrl = URL.createObjectURL(backupBlob);
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.href = backupUrl;
-        downloadAnchor.download = fileName;
-        downloadAnchor.style.display = 'none';
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
+        const anchor = document.createElement('a');
+        anchor.href = backupUrl;
+        anchor.download = fileName;
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(backupUrl), 60000);
+        alert('Backup download ആരംഭിച്ചു. Downloads ഫോൾഡറിൽ ഫയൽ ഉണ്ടെന്ന് പരിശോധിക്കുക.');
       } catch (error) {
         if (error && error.name === 'AbortError') return;
         console.error('Backup export failed:', error);
-        alert('Backup Share/Download പരാജയപ്പെട്ടു. App വീണ്ടും തുറന്ന് ശ്രമിക്കുക.');
+        alert('Backup തയ്യാറാക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക.');
       }
     }
 
     function importBackup(event) {
-      const file = event.target.files[0];
+      const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const importedData = JSON.parse(e.target.result);
-          if (importedData && Array.isArray(importedData.members) && Array.isArray(importedData.expenses)) {
-            state = importedData;
-            if (typeof state.openingBalance !== 'number') state.openingBalance = Number(state.openingBalance) || 0;
-            saveData();
-            alert('ഡാറ്റ വിജയകരമായി Restore ചെയ്തു!');
-            showPage('dashboardPage');
-          } else {
-            alert('തെറ്റായ ഫയൽ ഫോർമാറ്റ് ആണ്!');
+          const parsed = JSON.parse(e.target.result);
+          const importedData = parsed && parsed.app === 'PGM FITNESS' && parsed.data ? parsed.data : parsed;
+          if (!importedData || !Array.isArray(importedData.members) || !Array.isArray(importedData.expenses)) {
+            alert('തെറ്റായ Backup ഫയൽ ആണ്. നിലവിലെ ഡാറ്റ മാറ്റിയിട്ടില്ല.');
+            return;
           }
+          if (!confirm('ഇപ്പോഴുള്ള ഡാറ്റ മാറ്റി Backup-ലെ ഡാറ്റ Restore ചെയ്യട്ടേ? Restore-ന് മുമ്പ് നിലവിലെ ഡാറ്റയുടെ സുരക്ഷാ പകർപ്പ് ഈ ഫോണിൽ സൂക്ഷിക്കും.')) return;
+          const currentRaw = localStorage.getItem('pgm_fitness_data');
+          if (currentRaw !== null) {
+            const safetyKey = 'pgm_fitness_pre_restore_' + new Date().toISOString().replace(/[:.]/g, '-');
+            localStorage.setItem(safetyKey, currentRaw);
+          }
+          const nextState = {
+            ...importedData,
+            openingBalance: Number(importedData.openingBalance) || 0,
+            members: importedData.members,
+            expenses: importedData.expenses
+          };
+          state = nextState;
+          saveData();
+          alert('ഡാറ്റ Restore ചെയ്തു. പഴയ ഡാറ്റയുടെ സുരക്ഷാ പകർപ്പ് ഈ ഫോണിൽ സൂക്ഷിച്ചിട്ടുണ്ട്.');
+          showPage('dashboardPage');
         } catch (err) {
-          alert('ഫയൽ റീഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!');
+          console.error('Backup restore failed:', err);
+          alert('ഫയൽ വായിക്കാനോ Restore ചെയ്യാനോ കഴിഞ്ഞില്ല. നിലവിലെ ഡാറ്റ മാറ്റിയിട്ടില്ല.');
+        } finally {
+          event.target.value = '';
         }
+      };
+      reader.onerror = function() {
+        alert('ഫയൽ വായിക്കാൻ കഴിഞ്ഞില്ല. നിലവിലെ ഡാറ്റ മാറ്റിയിട്ടില്ല.');
         event.target.value = '';
       };
       reader.readAsText(file);
