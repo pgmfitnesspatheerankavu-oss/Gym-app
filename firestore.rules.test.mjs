@@ -39,6 +39,15 @@ test("staff cannot change protected member fields", async () => {
   await assertFails(updateDoc(doc(db, "members", "m3"), { planFee: 9000 }));
   await assertSucceeds(updateDoc(doc(db, "members", "m3"), { name: "Updated Name" }));
 });
+test("staff can update renewal dates but cannot change plan fee", async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), "members", "m-renew"), { name: "Renewal Member", planFee: 1200 });
+  });
+  const db = env.authenticatedContext(staffUid).firestore();
+  await assertSucceeds(updateDoc(doc(db, "members", "m-renew"), { planStartDate: "2026-11-01", expiryDate: "2026-12-01", plan: "Monthly" }));
+  await assertFails(updateDoc(doc(db, "members", "m-renew"), { planFee: 2500 }));
+});
+
 test("staff cannot read or write owner-only expenses", async () => {
   const db = env.authenticatedContext(staffUid).firestore();
   await assertFails(setDoc(doc(db, "expenses", "e1"), { title: "Rent", amount: 1000, date: "2026-10-31" }));
