@@ -26,6 +26,34 @@ test("creates stable read-only operation IDs and separates renewal payment rows"
   assert.equal(first.operations.find(x => x.id === "legacy_m_1_payment_2").data.kind, "renewal");
 });
 
+test("maps attendance by phone and legacy index key", () => {
+  const plan = buildLegacyMigrationPlan({
+    members: [
+      { name: "Phone Member", phone: "9990001111", amount: 0 },
+      { name: "Index Member", phone: "", amount: 0 }
+    ],
+    expenses: [],
+    attendance: [
+      { date: "2026-10-31", memberKey: "9990001111", memberName: "Phone Member", time: "08:00" },
+      { date: "2026-10-31", memberKey: "1", memberName: "Index Member", time: "08:05" }
+    ]
+  });
+  const attendance = plan.operations.filter(x => x.collection === "attendance");
+  assert.equal(attendance.length, 2);
+  assert.equal(attendance[0].data.memberId, "legacy_m_1");
+  assert.equal(attendance[1].data.memberId, "legacy_m_2");
+});
+
+test("skips ambiguous attendance links and reports warning", () => {
+  const plan = buildLegacyMigrationPlan({
+    members: [{ name: "Same", phone: "1" }, { name: "Same", phone: "2" }],
+    expenses: [],
+    attendance: [{ memberKey: "unknown", memberName: "Same", date: "2026-10-31" }]
+  });
+  assert.equal(plan.operations.filter(x => x.collection === "attendance").length, 0);
+  assert.ok(plan.warnings.some(w => w.includes("Attendance #1")));
+});
+
 test("refuses members without names and invalid amounts", () => {
   assert.throws(() => buildLegacyMigrationPlan({ members: [{ name: "" }], expenses: [] }));
   assert.throws(() => buildLegacyMigrationPlan({ members: [{ name: "A", amount: -1 }], expenses: [] }));
