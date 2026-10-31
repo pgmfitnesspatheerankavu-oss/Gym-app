@@ -23,7 +23,7 @@ service cloud.firestore {
     function validMemberCreate() {
       return request.resource.data.keys().hasOnly([
           "name", "phone", "address", "gender", "joinDate", "planStartDate",
-          "plan", "planFee", "registrationFee", "expiryDate", "status", "notes",
+          "plan", "planFee", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
           "createdAt", "createdBy", "updatedAt", "updatedBy",
           "legacySource", "legacyIndex", "migrationVersion",
           "migrationSourceData", "migratedAt", "migratedBy"
@@ -54,7 +54,7 @@ service cloud.firestore {
         (isActiveStaff() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
            "name", "phone", "address", "gender", "joinDate", "planStartDate",
-           "plan", "expiryDate", "status", "notes",
+           "plan", "photoURL", "photoPath", "expiryDate", "status", "notes",
            "updatedAt", "updatedBy"
          ]));
       allow delete: if isOwner();
