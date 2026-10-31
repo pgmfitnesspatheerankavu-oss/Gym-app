@@ -7,7 +7,7 @@ export function staffProfilePayload(input) {
   }
   const uid = String(input.uid || "").trim();
   const displayName = String(input.displayName || "").trim();
-  if (!uid || uid.length > 128 || /[\\s/]/.test(uid)) {
+  if (!uid || uid.length > 128 || /[\s/]/.test(uid)) {
     throw new Error("A valid Firebase Auth UID is required");
   }
   if (!displayName || displayName.length > 80) {
