@@ -16,10 +16,12 @@ test("transaction payload validates amount/date and strips ownership fields", ()
   assert.deepEqual(transactionPayload({amount:250,date:"2026-10-30",createdBy:"fake",memberId:"m1"}), {memberId:"m1",amount:250,date:"2026-10-30"});
   assert.throws(() => transactionPayload({amount:-1,date:"2026-10-30"}), /positive/);
   assert.throws(() => transactionPayload({amount:5,date:"30-10-2026"}), /date/);
+  assert.throws(() => transactionPayload({amount:5,date:"2026-02-30"}), /date/);
 });
 test("attendance requires a date and member reference", () => {
   assert.deepEqual(attendancePayload({date:"2026-10-30",memberKey:"123",createdBy:"fake"}), {date:"2026-10-30",memberKey:"123"});
   assert.throws(() => attendancePayload({date:"2026-10-30"}), /reference/);
+  assert.throws(() => attendancePayload({date:"2026-13-01",memberKey:"m"}), /date/);
 });
 test("expense validates required fields and strips untrusted metadata", () => {
   assert.deepEqual(expensePayload({title:"Rent",amount:100,date:"2026-10-30",createdBy:"fake"}), {title:"Rent",amount:100,date:"2026-10-30"});
