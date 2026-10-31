@@ -1,7 +1,7 @@
 import { listMembers, getMember, createMember, updateMember } from "./cloud-data.js";
 
 const style = document.createElement("style");
-style.textContent = `.pgm-cloud-members{position:fixed;inset:0;background:#0008;z-index:8000;display:none;align-items:center;justify-content:center;padding:14px}.pgm-cloud-members.open{display:flex}.pgm-cloud-panel{background:#fff;color:#222;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:14px;padding:16px}.pgm-cloud-row{padding:11px;border:1px solid #ddd;border-radius:8px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}.pgm-cloud-row button{padding:8px 10px;border:0;border-radius:6px;background:#1976d2;color:white}.pgm-cloud-detail{white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:8px;margin-top:10px;font-size:13px}.pgm-cloud-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pgm-cloud-actions button{padding:9px 12px;border:0;border-radius:7px;background:#1976d2;color:white}.pgm-cloud-note{font-size:12px;color:#666;margin:8px 0}`;
+style.textContent = `.pgm-cloud-members{position:fixed;inset:0;background:#0008;z-index:8000;display:none;align-items:center;justify-content:center;padding:14px}.pgm-cloud-members.open{display:flex}.pgm-cloud-panel{background:#fff;color:#222;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:14px;padding:16px}.pgm-cloud-row{padding:11px;border:1px solid #ddd;border-radius:8px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}.pgm-cloud-row button{padding:8px 10px;border:0;border-radius:6px;background:#1976d2;color:white}.pgm-cloud-detail{white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:8px;margin-top:10px;font-size:13px}.pgm-cloud-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pgm-cloud-actions button{padding:9px 12px;border:0;border-radius:7px;background:#1976d2;color:white}.pgm-cloud-note{font-size:12px;color:#666;margin:8px 0}.pgm-cloud-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pgm-cloud-field{display:flex;flex-direction:column;gap:4px;font-size:13px}.pgm-cloud-field input,.pgm-cloud-field textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:7px;font:inherit}.pgm-cloud-field.full{grid-column:1/-1}.pgm-cloud-form-actions{display:flex;gap:8px;grid-column:1/-1}.pgm-cloud-form-actions button{flex:1;padding:11px;border:0;border-radius:7px;background:#1976d2;color:white}.pgm-cloud-form-actions .cancel{background:#666}@media(max-width:420px){.pgm-cloud-form{grid-template-columns:1fr}}`);
 document.head.append(style);
 const trigger=document.createElement("button");
 trigger.type="button"; trigger.textContent="Cloud Members";
@@ -20,11 +20,29 @@ async function view(id){detail.textContent="Details load ചെയ്യുന�
 async function editForm(id){
   let m={};
   if(id){try{m=await getMember(id)||{};}catch(e){status.textContent="Member ലഭിച്ചില്ല: "+(e?.message||"Error");return;}}
-  const fields=[["name","Name"],["phone","Phone"],["address","Address"],["plan","Plan"],["planFee","Plan fee"],["joinDate","Join date (YYYY-MM-DD)"],["expiryDate","Expiry date (YYYY-MM-DD)"],["status","Status"],["notes","Notes"]];
-  const values={};
-  for(const [key,label] of fields){const v=window.prompt(label, String(m[key]??""));if(v===null)return;values[key]=key==="planFee"?(v.trim()===""?undefined:Number(v)):v.trim();}
-  if(!values.name){status.textContent="Name is required.";return;}
-  if(values.planFee!==undefined&&(!Number.isFinite(values.planFee)||values.planFee<0)){status.textContent="Plan fee must be a valid non-negative number.";return;}
-  for(const key of ["joinDate","expiryDate"]){if(values[key]&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(values[key])){status.textContent=key+" must use YYYY-MM-DD.";return;}}
-  try{status.textContent=id?"Updating member…":"Adding member…";if(id)await updateMember(id,values);else await createMember(values);status.textContent="Cloud member saved.";await load();}catch(e){status.textContent="Save failed: "+(e?.message||"Error");}
+  detail.replaceChildren();
+  const heading=document.createElement("h4");heading.textContent=id?"Edit Cloud Member":"Add Cloud Member";detail.append(heading);
+  const form=document.createElement("form");form.className="pgm-cloud-form";
+  const fields=[["name","Name","text",true],["phone","Phone","tel"],["address","Address","text"],["plan","Plan","text"],["planFee","Plan fee","number"],["joinDate","Join date","date"],["expiryDate","Expiry date","date"],["status","Status","text"],["notes","Notes","text"]];
+  for(const [key,label,type,required] of fields){
+    const wrap=document.createElement("label");wrap.className="pgm-cloud-field"+(["address","notes"].includes(key)?" full":"");wrap.append(document.createTextNode(label));
+    const input=key==="notes"?document.createElement("textarea"):document.createElement("input");
+    if(key!=="notes")input.type=type;
+    input.name=key;input.value=String(m[key]??"");if(required)input.required=true;
+    if(key==="planFee"){input.min="0";input.step="0.01";}
+    wrap.append(input);form.append(wrap);
+  }
+  const actions=document.createElement("div");actions.className="pgm-cloud-form-actions";
+  const save=document.createElement("button");save.type="submit";save.textContent=id?"Save changes":"Add member";
+  const cancel=document.createElement("button");cancel.type="button";cancel.className="cancel";cancel.textContent="Cancel";cancel.addEventListener("click",()=>form.remove());
+  actions.append(save,cancel);form.append(actions);detail.append(form);
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();if(!form.reportValidity())return;
+    const values=Object.fromEntries(fields.map(([key])=>[key,form.elements.namedItem(key).value.trim()]));
+    if(values.planFee==="")delete values.planFee;else values.planFee=Number(values.planFee);
+    if(values.planFee!==undefined&&(!Number.isFinite(values.planFee)||values.planFee<0)){status.textContent="Plan fee must be a valid non-negative number.";return;}
+    save.disabled=true;status.textContent=id?"Updating member…":"Adding member…";
+    try{if(id)await updateMember(id,values);else await createMember(values);status.textContent="Cloud member saved.";await load();}
+    catch(e){status.textContent="Save failed: "+(e?.message||"Error");save.disabled=false;}
+  });
 }
