@@ -64,7 +64,7 @@ export async function recordAttendance(record) {
 export async function listAttendanceForDate(date) {
   const { role } = await currentRole();
   requireCapability(role, "attendance.read");
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(date))) throw new Error("Invalid date");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) throw new Error("Invalid date");
   const snapshot = await getDocs(query(
     collection(db, "attendance"), where("date", "==", date), orderBy("date")
   ));
