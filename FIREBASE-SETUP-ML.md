@@ -10,8 +10,15 @@ Firebase project: `pgmfitness-5e107`
 - Expenses, settings, financial reports, and legacy `gymData` remain Owner-only.
 - Default access is denied.
 
+## Current development status (2026-10-31)
+- `new-app.html` and `new-app.js` are the separate Owner/Staff development app. They use Firebase Authentication and the Firestore adapter in `cloud-data.js`, with the rules in `firestore.rules`.
+- `index.html` is the legacy app entry point and must not be confused with the new cloud app.
+- Automated migration tests and Firestore emulator rules tests pass on `firebase-login-development`.
+- The new cloud app has not yet been deployed to a verified preview URL or tested end-to-end with real Owner and Staff accounts.
+- Legacy localStorage data has not yet been migrated/imported into the new Firestore collections.
+
 ## IMPORTANT – do not publish these rules yet
-The app has not yet been connected to Firebase. The current app stores all records in browser localStorage, and payment/renewal history is embedded inside member objects. The new collection rules are a target for the migration, not a finished live configuration. Do not publish the rules or enter live gym data into the new collections until the app migration and tests are complete.
+Do not publish the development Firestore rules or enter live gym data into the new collections until migration, account-level testing, and deployment review are complete. Keep the existing Live App and installed APK untouched.
 
 ## Firebase account setup (when the app integration is ready)
 1. Keep the existing Owner account. Do not delete it.
