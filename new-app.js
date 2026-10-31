@@ -1,5 +1,5 @@
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
-import { listMembers, createMember, updateMember, createPayment, listMyPayments, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
+import { listMembers, createMember, updateMember, createPayment, listAllPayments, recordAttendance, listAttendanceForDate, createExpense, listExpenses } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[];
 const today=()=>new Date().toISOString().slice(0,10);
@@ -18,7 +18,7 @@ function populateMembers(){for(const id of ["paymentMember","attendanceMember"])
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 $("paymentForm").elements.date.value=today();
 $("paymentForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId"));if(!m)return;const out=$("paymentStatus");out.textContent="Saving…";try{await createPayment({memberId:m.id,memberName:m.name,phone:m.phone||"",amount:Number(f.get("amount")),date:f.get("date"),payMode:f.get("payMode"),type:"payment"});out.textContent="Payment saved.";e.currentTarget.reset();e.currentTarget.elements.date.value=today();await loadPayments();}catch(err){out.textContent="Payment failed: "+err.message;}});
-async function loadPayments(){const box=$("paymentList");box.textContent="Loading…";try{const rows=await listMyPayments();box.replaceChildren();rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!rows.length)box.textContent="No payments yet.";for(const p of rows)cardLine(box,(p.memberName||"Member")+" — ₹"+Number(p.amount||0).toFixed(2),[p.date,p.payMode,p.type].filter(Boolean).join(" · "));}catch(e){box.textContent="Payments unavailable: "+e.message;}}
+async function loadPayments(){const box=$("paymentList");box.textContent="Loading…";try{const rows=await listAllPayments();box.replaceChildren();rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!rows.length)box.textContent="No payments yet.";for(const p of rows)cardLine(box,(p.memberName||"Member")+" — ₹"+Number(p.amount||0).toFixed(2),[p.date,p.payMode,p.type].filter(Boolean).join(" · "));}catch(e){box.textContent="Payments unavailable: "+e.message;}}
 $("attendanceDate").value=today();
 $("attendanceDate").addEventListener("change",loadAttendance);
 $("attendanceForm").addEventListener("submit",async e=>{e.preventDefault();const id=new FormData(e.currentTarget).get("memberId"),m=members.find(x=>x.id===id);if(!m)return;const out=$("attendanceStatus");out.textContent="Saving…";try{await recordAttendance({date:$("attendanceDate").value,memberId:m.id,memberName:m.name,phone:m.phone||"",time:new Date().toTimeString().slice(0,5)});out.textContent="Attendance marked.";await loadAttendance();}catch(err){out.textContent="Attendance failed: "+err.message;}});
