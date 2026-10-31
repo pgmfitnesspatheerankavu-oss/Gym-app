@@ -20,6 +20,10 @@ service cloud.firestore {
         plan == "12 Months" ? 4700 :
         plan == "Couple / Duo - 3 Months" ? 3000 : -1;
     }
+    function expectedRegistrationFee(plan) {
+      return plan == "Couple / Duo - 3 Months" ? 800 :
+        expectedPlanFee(plan) > 0 ? 500 : -1;
+    }
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isOwner());
@@ -48,7 +52,9 @@ service cloud.firestore {
              request.resource.data.planFee == expectedPlanFee(request.resource.data.plan))))) &&
         (!("registrationFee" in request.resource.data) ||
           (request.resource.data.registrationFee is number &&
-           request.resource.data.registrationFee in [500, 800])) &&
+           request.resource.data.registrationFee in [500, 800] &&
+           (!isActiveStaff() ||
+            request.resource.data.registrationFee == expectedRegistrationFee(request.resource.data.plan)))) &&
         // Migration metadata is reserved for the Owner-only migration runner.
         ((!("migrationVersion" in request.resource.data) &&
           !("migrationSourceData" in request.resource.data) &&
