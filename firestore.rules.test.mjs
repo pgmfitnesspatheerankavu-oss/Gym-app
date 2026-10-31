@@ -25,7 +25,8 @@ beforeEach(async () => {
 test("active staff can create a clean member profile", async () => {
   const db = env.authenticatedContext(staffUid).firestore();
   await assertSucceeds(setDoc(doc(db, "members", "m1"), { name: "Test Member", phone: "9999999999" }));
-  await assertFails(setDoc(doc(db, "members", "m1-with-fee"), { name: "Test Member", planFee: 1200 }));
+  await assertSucceeds(setDoc(doc(db, "members", "m1-with-approved-fee"), { name: "Test Member", plan: "1 Month", planFee: 650, registrationFee: 500 }));
+  await assertFails(setDoc(doc(db, "members", "m1-with-invalid-fee"), { name: "Test Member", plan: "1 Month", planFee: 1200 }));
 });
 test("staff cannot inject financial or ownership fields into member", async () => {
   const db = env.authenticatedContext(staffUid).firestore();
