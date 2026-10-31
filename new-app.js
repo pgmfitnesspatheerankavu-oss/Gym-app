@@ -61,7 +61,7 @@ $("memberForm").addEventListener("submit",async e=>{
    await updateMember(id,values);
   }else{
    const payment=paidNow>0?{amount:paidNow,date:paymentDate,payMode,type:"registration"}:null;
-   const memberData=currentRole==="staff"?{...values,planFee:undefined}:values;
+   const memberData={...values};
    memberId=(await createMemberWithInitialPayment(memberData,payment)).id;
   }
   if(photoFile){
