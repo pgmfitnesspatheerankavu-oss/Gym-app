@@ -6,3 +6,5 @@ input,select,textarea{pointer-events:auto;user-select:text;-webkit-user-select:t
 dialog,dialog form{pointer-events:auto;}
 input,textarea{font-size:16px;}
 .cloud-status{margin:12px 0;padding:10px 12px;border-radius:10px;background:#eef3ff;color:#24324a;font-size:13px;overflow-wrap:anywhere;}
+
+.member-photo-preview{display:block;width:112px;height:112px;object-fit:cover;border-radius:14px;border:1px solid #d7deea;margin:8px 0}.member-avatar{width:64px;height:64px;object-fit:cover;border-radius:50%;flex:0 0 64px;border:1px solid #d7deea}.fee-summary{padding:10px 12px;border-radius:10px;background:#eef3ff;color:#24324a;font-weight:650;font-size:14px}
