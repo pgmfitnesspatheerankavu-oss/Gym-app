@@ -59,3 +59,20 @@ test("owner retains access to owner-only expenses", async () => {
   const db = env.authenticatedContext(ownerUid).firestore();
   await assertSucceeds(setDoc(doc(db, "expenses", "owner-e1"), { title: "Rent", amount: 1000, date: "2026-10-31" }));
 });
+
+test("staff cannot create or inject owner-only migration metadata", async () => {
+  const db = env.authenticatedContext(staffUid).firestore();
+  await assertFails(setDoc(doc(db, "members", "staff-migration"), {
+    name: "Test Member", legacySource: "pgm_fitness_data",
+    legacyIndex: 0, migrationVersion: 1, migratedBy: staffUid
+  }));
+});
+test("owner can create a migrated member with verification metadata", async () => {
+  const db = env.authenticatedContext(ownerUid).firestore();
+  await assertSucceeds(setDoc(doc(db, "members", "owner-migration"), {
+    name: "Migrated Member", planFee: 1200,
+    legacySource: "pgm_fitness_data", legacyIndex: 0,
+    migrationVersion: 1, migrationSourceData: { name: "Migrated Member" },
+    migratedBy: ownerUid
+  }));
+});
