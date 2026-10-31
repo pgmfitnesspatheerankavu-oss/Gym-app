@@ -42,7 +42,10 @@ function populateMembers(){for(const id of ["paymentMember","attendanceMember","
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 
 $("renewalForm").elements.date.value=today();
-function syncRenewalFee(){const member=members.find(x=>x.id===$("renewalMember").value),plan=$("renewalForm").elements.plan.value||member?.plan,price=PLAN_PRICES[plan];if(price!==undefined){$("renewalForm").elements.plan.value=plan;$("renewalForm").elements.feeAmount.value=price;}}
+function syncRenewalFee(){const form=$("renewalForm"),member=members.find(x=>x.id===form.elements.memberId.value),plan=form.elements.plan.value||member?.plan,price=PLAN_PRICES[plan];if(price!==undefined){form.elements.plan.value=plan;form.elements.feeAmount.value=price;}syncRenewalExpiry();}
+function syncRenewalExpiry(){const form=$("renewalForm"),plan=form.elements.plan.value,date=form.elements.date.value;if(!date||!PLAN_PRICES[plan])return;const months=plan==="1 Month"?1:plan==="3 Months"||isDuoPlan(plan)?3:plan==="6 Months"?6:12;const start=new Date(date+"T12:00:00");start.setMonth(start.getMonth()+months);start.setDate(start.getDate()-1);form.elements.expiryDate.value=[start.getFullYear(),String(start.getMonth()+1).padStart(2,"0"),String(start.getDate()).padStart(2,"0")].join("-");}
+$("renewalForm").elements.date.addEventListener("change",syncRenewalExpiry);
+$("renewalForm").elements.plan.addEventListener("change",syncRenewalExpiry);
 $("renewalMember").addEventListener("change",syncRenewalFee);$("renewalForm").elements.plan.addEventListener("change",syncRenewalFee);
 $("renewalForm").addEventListener("submit",async e=>{
  e.preventDefault();
