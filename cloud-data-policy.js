@@ -38,8 +38,8 @@ export function memberUpdatePayload(record) {
 }
 export function transactionPayload(record) {
   const data = pickAllowedFields(record, TRANSACTION_FIELDS);
-  if (!Number.isFinite(Number(data.amount)) || Number(data.amount) <= 0) {
-    throw new Error("A positive transaction amount is required");
+  if (!Number.isFinite(Number(data.amount)) || Number(data.amount) < 0 || (Number(data.amount) === 0 && data.type !== "renewal")) {
+    throw new Error("A positive payment amount is required; renewal records may have zero paid");
   }
   if (!isRealISODate(data.date)) throw new Error("A valid transaction date is required");
   return data;
