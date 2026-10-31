@@ -24,14 +24,23 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           "name", "phone", "address", "gender", "joinDate",
           "plan", "planFee", "expiryDate", "status", "notes",
-          "createdAt", "createdBy", "updatedAt", "updatedBy"
+          "createdAt", "createdBy", "updatedAt", "updatedBy",
+          "legacySource", "legacyIndex", "migrationVersion",
+          "migrationSourceData", "migratedAt", "migratedBy"
         ]) &&
         request.resource.data.keys().hasAll(["name"]) &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
         (!("planFee" in request.resource.data) ||
-          request.resource.data.planFee is number);
+          request.resource.data.planFee is number) &&
+        // Migration metadata is reserved for the Owner-only migration runner.
+        ((!("migrationVersion" in request.resource.data) &&
+          !("migrationSourceData" in request.resource.data) &&
+          !("migratedAt" in request.resource.data) &&
+          !("migratedBy" in request.resource.data) &&
+          !("legacySource" in request.resource.data) &&
+          !("legacyIndex" in request.resource.data)) || isOwner());
     }
     match /members/{memberId} {
       allow read: if canUseGym();
