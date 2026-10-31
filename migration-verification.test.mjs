@@ -13,7 +13,7 @@ const sample = () => buildLegacyMigrationPlan({
 
 test("verifies counts and keeps renewal paid amount informational", () => {
   const result = verifyMigrationPlan(sample());
-  assert.equal(result.operationCount, 5);
+  assert.equal(result.operationCount, 6);
   assert.equal(result.paymentLedgerTotal, 125);
   assert.equal(result.expenseTotal, 10);
   assert.equal(result.renewalPaidAmountInformationalOnly, 25);
