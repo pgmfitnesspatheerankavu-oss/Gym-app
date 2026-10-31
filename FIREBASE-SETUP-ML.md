@@ -1,31 +1,38 @@
 # PGM FITNESS – Firebase setup (development branch)
 
-Project: `pgmfitness-5e107`
+Firebase project: `pgmfitness-5e107`
 
-## What this commit prepares
-- Firestore rules pin the owner to the Firebase Auth UID supplied for this project.
-- Only the owner can create/update/delete staff role documents under `users/{uid}`.
-- Unrecognized users have no database access.
-- Gym data remains owner-only for now. This is intentional: the current app stores payments and renewals inside member records, so allowing staff to edit a member document would also let them rewrite payment history.
+## Prepared in this development branch
+- Firestore rules identify the Owner by a fixed Firebase Auth UID.
+- Only the Owner can manage documents under `users/{uid}`, so Staff cannot promote themselves.
+- The rules define a future normalized schema: `members`, `payments`, `renewals`, `attendance`, `expenses`, `settings`, and `financialReports`.
+- Staff transaction records are append-only: Staff can create their own payment/renewal records but cannot edit or delete them.
+- Expenses, settings, financial reports, and legacy `gymData` remain Owner-only.
+- Default access is denied.
 
-## Before enabling cloud sync
-1. In Firebase Console → Authentication → Sign-in method, enable Email/Password.
-2. Keep the existing Owner account. Do not delete it.
-3. In Firestore → Rules, publish the contents of `firestore.rules` from this branch.
-4. Do not switch to test mode or publish permissive rules.
-5. Create two Staff users in Authentication → Users → Add user. Use unique email addresses and temporary passwords; give each staff member their own credentials.
-6. For each Staff Auth UID, create `users/{UID}` in Firestore with fields:
+## IMPORTANT – do not publish these rules yet
+The app has not yet been connected to Firebase. The current app stores all records in browser localStorage, and payment/renewal history is embedded inside member objects. The new collection rules are a target for the migration, not a finished live configuration. Do not publish the rules or enter live gym data into the new collections until the app migration and tests are complete.
+
+## Firebase account setup (when the app integration is ready)
+1. Keep the existing Owner account. Do not delete it.
+2. Authentication → Sign-in method → enable Email/Password.
+3. Create two separate Staff accounts in Authentication → Users → Add user. Use unique email addresses and temporary passwords.
+4. For each Staff Auth UID, the Owner creates `users/{UID}` in Firestore with:
    - `role`: string `staff`
    - `active`: boolean `true`
-   - `displayName`: string (staff member's name)
-   The owner UID is recognized directly by the rules; do not create a client-editable owner role.
-7. Do not put member or payment data into Firestore yet.
+   - `displayName`: string
+5. Never create an Owner role from the client app. Owner access is determined by the fixed UID in the rules.
 
-## Important limitation / next engineering step
-The existing app is a single-page localStorage app. It does not yet authenticate users or sync data. Its payment and renewal history is embedded in member objects. Before staff can safely add members and record payments, the app must be migrated to separate member, payment, and renewal documents with rules that allow staff to create new records but never edit/delete historical transactions. Owner-only financial reports and audit logs must be implemented against that schema.
+## Remaining engineering work
+- Add a login screen and Firebase Auth state handling.
+- Migrate localStorage data model into separate member, payment, renewal, attendance and expense documents.
+- Add safe first-time import and owner-controlled backup/restore.
+- Implement multi-device cloud sync, audit information and Owner/Staff screen permissions.
+- Test rules with Owner, Staff 1, Staff 2, inactive Staff and unauthenticated sessions before publishing.
+- Only after those tests, publish the rules and deploy the website. Build/update the APK separately after web release is verified.
 
 ## Safety
-- This branch is development-only. It does not change the live site or installed APK.
+- This branch is development-only; it does not change the live site or installed APK.
 - Never paste service-account private keys into the website or GitHub.
 - Firebase web configuration values are public client identifiers, not server credentials.
-- Do not delete app data, clear storage, or uninstall the existing APK during development.
+- Do not uninstall the existing APK, clear its storage, or delete existing data during development.
