@@ -40,7 +40,7 @@ service cloud.firestore {
         (isActiveStaff() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
            "name", "phone", "address", "gender", "joinDate",
-           "plan", "planFee", "expiryDate", "status", "notes",
+           "plan", "expiryDate", "status", "notes",
            "updatedAt", "updatedBy"
          ]));
       allow delete: if isOwner();
