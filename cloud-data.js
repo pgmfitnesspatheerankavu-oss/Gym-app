@@ -88,7 +88,7 @@ export async function listAttendanceForDate(date) {
   ));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
-export async function listMyPayments() {
+export async function listAllPayments() {\n  const { role } = await currentRole();\n  requireCapability(role, "payments.read.all");\n  const snapshot = await getDocs(query(collection(db, "payments"), orderBy("date", "desc")));\n  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));\n}\n\nexport async function listMyPayments() {
   const { user, role } = await currentRole();
   requireCapability(role, "payments.read.own");
   const snapshot = await getDocs(query(
