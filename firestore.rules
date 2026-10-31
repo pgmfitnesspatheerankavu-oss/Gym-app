@@ -20,9 +20,22 @@ service cloud.firestore {
     }
 
     // Member profile only: transaction history is stored in separate collections.
+    function validMemberCreate() {
+      return request.resource.data.keys().hasOnly([
+          "name", "phone", "address", "gender", "joinDate",
+          "plan", "planFee", "expiryDate", "status", "notes",
+          "createdAt", "createdBy", "updatedAt", "updatedBy"
+        ]) &&
+        request.resource.data.keys().hasAll(["name"]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 120 &&
+        (!("planFee" in request.resource.data) ||
+          request.resource.data.planFee is number);
+    }
     match /members/{memberId} {
       allow read: if canUseGym();
-      allow create: if canUseGym();
+      allow create: if canUseGym() && validMemberCreate();
       allow update: if isOwner() ||
         (isActiveStaff() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
