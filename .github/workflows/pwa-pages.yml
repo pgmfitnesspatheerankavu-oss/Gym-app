@@ -41,6 +41,7 @@ jobs:
         run: |
           mkdir -p _site/icons
           cp new-app.html _site/index.html
+          cp logo.png _site/logo.png
           cp new-app.css new-app.js firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js manifest.webmanifest service-worker.js _site/
           cp icons/icon.svg _site/icons/
           cp logo.png _site/
