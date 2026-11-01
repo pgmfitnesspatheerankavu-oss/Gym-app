@@ -208,7 +208,8 @@ $("openingBalanceForm").addEventListener("submit",async e=>{
  catch(err){$("openingBalanceStatus").textContent="Save failed: "+err.message;}
  finally{button.disabled=false;}
 });
-\n// Owner-only full legacy backup export and collision-safe Firestore migration.
+
+// Owner-only full legacy backup export and collision-safe Firestore migration.
 let pendingMigrationData = null;
 function unwrapLegacyBackup(value) {
  const parsed = typeof value === "string" ? JSON.parse(value) : value;
