@@ -24,6 +24,7 @@ on:
       - 'manifest.webmanifest'
       - 'service-worker.js'
       - 'icons/**'
+      - 'logo.png'
       - '.github/workflows/pwa-pages.yml'
   workflow_dispatch:
 permissions:
@@ -42,6 +43,7 @@ jobs:
           cp new-app.html _site/index.html
           cp new-app.css new-app.js firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js manifest.webmanifest service-worker.js _site/
           cp icons/icon.svg _site/icons/
+          cp logo.png _site/
       - name: Upload preview artifact (does not publish or replace the live website)
         uses: actions/upload-artifact@v4
         with:
