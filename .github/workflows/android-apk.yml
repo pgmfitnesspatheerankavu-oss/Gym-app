@@ -63,6 +63,8 @@ jobs:
         run: npm install
       - name: Add Android platform
         run: npx cap add android
+      - name: Install icon image tool
+        run: python3 -m pip install Pillow
       - name: Apply PGM Fitness launcher icon
         run: |
           python3 - <<'PY'
