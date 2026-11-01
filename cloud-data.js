@@ -13,15 +13,15 @@ import {
   attendancePayload, expensePayload
 } from "./cloud-data-policy.js";
 
-function requireCapability(role, capability) {
-  if (!canRole(role, capability)) throw new Error("Permission denied: " + capability);
+function requireCapability(role, capability, permissions = []) {
+  if (!canRole(role, capability, permissions)) throw new Error("Permission denied: " + capability);
 }
 async function currentRole() {
   const user = auth.currentUser;
   if (!user) throw new Error("Login required");
   const result = await resolveRole(user);
   if (!result.allowed) throw new Error("Account is not enabled for cloud records");
-  return { user, role: result.role };
+  return { user, role: result.role, permissions: result.permissions || [] };
 }
 function cleanRecord(record) {
   if (!record || typeof record !== "object" || Array.isArray(record)) {
@@ -31,22 +31,22 @@ function cleanRecord(record) {
 }
 
 export async function listMembers() {
-  const { role } = await currentRole();
-  requireCapability(role, "members.read");
+  const { role, permissions } = await currentRole();
+  requireCapability(role, "members.read", permissions);
   const snapshot = await getDocs(query(collection(db, "members"), orderBy("name")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 export async function getMember(memberId) {
   const { role } = await currentRole();
-  requireCapability(role, "members.read");
+  requireCapability(role, "members.read", permissions);
   if (!memberId) throw new Error("Member ID required");
   const snapshot = await getDoc(doc(db, "members", memberId));
   if (!snapshot.exists()) return null;
   return { id: snapshot.id, ...snapshot.data() };
 }
 export async function createMember(record) {
-  const { user, role } = await currentRole();
-  requireCapability(role, "members.create");
+  const { user, role, permissions } = await currentRole();
+  requireCapability(role, "members.create", permissions);
   const data = memberCreatePayload(record);
   if (role !== "owner" && Object.prototype.hasOwnProperty.call(data, "planFee")) {
     throw new Error("Only the Owner can set a member plan fee");
@@ -58,7 +58,7 @@ export async function createMember(record) {
 }
 export async function createMemberWithInitialPayment(memberRecord, paymentRecord) {
   const { user, role } = await currentRole();
-  requireCapability(role, "members.create");
+  requireCapability(role, "members.create", permissions);
   const memberData = memberCreatePayload(memberRecord);
   const batch = writeBatch(db);
   const memberRef = doc(collection(db, "members"));
@@ -67,7 +67,7 @@ export async function createMemberWithInitialPayment(memberRecord, paymentRecord
     updatedAt: serverTimestamp(), updatedBy: user.uid
   });
   if (paymentRecord && Number(paymentRecord.amount) > 0) {
-    requireCapability(role, "payments.create");
+    requireCapability(role, "payments.create", permissions);
     const paymentData = transactionPayload({ ...paymentRecord, memberId: memberRef.id, memberName: memberData.name, phone: memberData.phone || "" });
     batch.set(doc(collection(db, "payments")), {
       ...paymentData, createdAt: serverTimestamp(), createdBy: user.uid
@@ -79,7 +79,7 @@ export async function createMemberWithInitialPayment(memberRecord, paymentRecord
 
 export async function updateMember(memberId, changes) {
   const { user, role } = await currentRole();
-  requireCapability(role, "members.update");
+  requireCapability(role, "members.update", permissions);
   if (!memberId) throw new Error("Member ID required");
   const data = memberUpdatePayload(changes);
   return updateDoc(doc(db, "members", memberId), {
@@ -88,14 +88,14 @@ export async function updateMember(memberId, changes) {
 }
 export async function deleteMember(memberId) {
   const { role } = await currentRole();
-  requireCapability(role, "members.delete");
+  requireCapability(role, "members.delete", permissions);
   if (!memberId) throw new Error("Member ID required");
   await deleteDoc(doc(db, "members", memberId));
 }
 
 export async function recordAttendance(record) {
   const { user, role } = await currentRole();
-  requireCapability(role, "attendance.create");
+  requireCapability(role, "attendance.create", permissions);
   const data = attendancePayload(record);
   return addDoc(collection(db, "attendance"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
@@ -103,7 +103,7 @@ export async function recordAttendance(record) {
 }
 export async function listAttendanceForDate(date) {
   const { role } = await currentRole();
-  requireCapability(role, "attendance.read");
+  requireCapability(role, "attendance.read", permissions);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) throw new Error("Invalid date");
   const snapshot = await getDocs(query(
     collection(db, "attendance"), where("date", "==", date), orderBy("date")
@@ -112,14 +112,14 @@ export async function listAttendanceForDate(date) {
 }
 export async function listAllPayments() {
   const { role } = await currentRole();
-  requireCapability(role, "payments.read.all");
+  requireCapability(role, "payments.read.all", permissions);
   const snapshot = await getDocs(query(collection(db, "payments"), orderBy("date", "desc")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 
 export async function listMyPayments() {
   const { user, role } = await currentRole();
-  requireCapability(role, "payments.read.own");
+  requireCapability(role, "payments.read.own", permissions);
   const snapshot = await getDocs(query(
     collection(db, "payments"), where("createdBy", "==", user.uid)
   ));
@@ -127,13 +127,13 @@ export async function listMyPayments() {
 }
 export async function deletePayment(paymentId) {
   const { role } = await currentRole();
-  requireCapability(role, "payments.delete");
+  requireCapability(role, "payments.delete", permissions);
   if (!paymentId) throw new Error("Payment ID required");
   await deleteDoc(doc(db, "payments", paymentId));
 }
 export async function createPayment(record) {
   const { user, role } = await currentRole();
-  requireCapability(role, "payments.create");
+  requireCapability(role, "payments.create", permissions);
   const data = transactionPayload(record);
   return addDoc(collection(db, "payments"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
@@ -141,13 +141,13 @@ export async function createPayment(record) {
 }
 export async function listAllRenewals() {
   const { role } = await currentRole();
-  requireCapability(role, "renewals.read.all");
+  requireCapability(role, "renewals.read.all", permissions);
   const snapshot = await getDocs(query(collection(db, "renewals"), orderBy("date", "desc")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 export async function listMyRenewals() {
   const { user, role } = await currentRole();
-  requireCapability(role, "renewals.read.own");
+  requireCapability(role, "renewals.read.own", permissions);
   const snapshot = await getDocs(query(
     collection(db, "renewals"), where("createdBy", "==", user.uid)
   ));
@@ -155,15 +155,15 @@ export async function listMyRenewals() {
 }
 export async function deleteRenewal(renewalId) {
   const { role } = await currentRole();
-  requireCapability(role, "renewals.delete");
+  requireCapability(role, "renewals.delete", permissions);
   if (!renewalId) throw new Error("Renewal ID required");
   await deleteDoc(doc(db, "renewals", renewalId));
 }
 export async function saveRenewalBundle(memberId, renewalRecord, memberChanges, paymentRecord) {
   const { user, role } = await currentRole();
-  requireCapability(role, "renewals.create");
-  requireCapability(role, "members.update");
-  if (paymentRecord) requireCapability(role, "payments.create");
+  requireCapability(role, "renewals.create", permissions);
+  requireCapability(role, "members.update", permissions);
+  if (paymentRecord) requireCapability(role, "payments.create", permissions);
   if (!memberId) throw new Error("Member ID required");
   const renewal = transactionPayload(renewalRecord);
   const changes = memberUpdatePayload(memberChanges);
@@ -178,9 +178,9 @@ export async function saveRenewalBundle(memberId, renewalRecord, memberChanges, 
 }
 export async function saveRenewalWithPayment({ memberId, renewal, memberChanges, payment }) {
   const { user, role } = await currentRole();
-  requireCapability(role, "renewals.create");
-  requireCapability(role, "members.update");
-  if (payment) requireCapability(role, "payments.create");
+  requireCapability(role, "renewals.create", permissions);
+  requireCapability(role, "members.update", permissions);
+  if (payment) requireCapability(role, "payments.create", permissions);
   if (!memberId) throw new Error("Member ID required");
   const renewalData = transactionPayload(renewal);
   const batch = writeBatch(db);
@@ -198,7 +198,7 @@ export async function saveRenewalWithPayment({ memberId, renewal, memberChanges,
 }
 export async function createRenewal(record) {
   const { user, role } = await currentRole();
-  requireCapability(role, "renewals.create");
+  requireCapability(role, "renewals.create", permissions);
   const data = transactionPayload(record);
   return addDoc(collection(db, "renewals"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
@@ -207,13 +207,13 @@ export async function createRenewal(record) {
 // Financial collections are deliberately owner-only.
 export async function listExpenses() {
   const { role } = await currentRole();
-  requireCapability(role, "expenses.read");
+  requireCapability(role, "expenses.read", permissions);
   const snapshot = await getDocs(query(collection(db, "expenses"), orderBy("date", "desc")));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 export async function createExpense(record) {
   const { user, role } = await currentRole();
-  requireCapability(role, "expenses.create");
+  requireCapability(role, "expenses.create", permissions);
   const data = expensePayload(record);
   return addDoc(collection(db, "expenses"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
@@ -221,14 +221,14 @@ export async function createExpense(record) {
 }
 export async function updateExpense(expenseId, changes) {
   const { user, role } = await currentRole();
-  requireCapability(role, "expenses.update");
+  requireCapability(role, "expenses.update", permissions);
   if (!expenseId) throw new Error("Expense ID required");
   const data = expensePayload(changes);
   await updateDoc(doc(db, "expenses", expenseId), { ...data, updatedAt: serverTimestamp(), updatedBy: user.uid });
 }
 export async function deleteExpense(expenseId) {
   const { role } = await currentRole();
-  requireCapability(role, "expenses.delete");
+  requireCapability(role, "expenses.delete", permissions);
   if (!expenseId) throw new Error("Expense ID required");
   await deleteDoc(doc(db, "expenses", expenseId));
 }
@@ -236,13 +236,13 @@ export async function deleteExpense(expenseId) {
 // Owner-only staff profile management. Auth accounts are created separately in Firebase Console.
 export async function listStaffProfiles() {
   const { role } = await currentRole();
-  requireCapability(role, "staff.manage");
+  requireCapability(role, "staff.manage", permissions);
   const snapshot = await getDocs(collection(db, "users"));
   return snapshot.docs.map(item => ({ uid: item.id, ...item.data() })).filter(item => item.role === "staff");
 }
 export async function saveStaffProfile(input) {
   const { user, role } = await currentRole();
-  requireCapability(role, "staff.manage");
+  requireCapability(role, "staff.manage", permissions);
   const { uid, profile } = staffProfilePayload(input);
   if (uid === user.uid) throw new Error("Owner account cannot be changed as Staff");
   await setDoc(doc(db, "users", uid), { ...profile, updatedAt: serverTimestamp(), updatedBy: user.uid }, { merge: true });
