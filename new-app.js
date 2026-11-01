@@ -85,6 +85,45 @@ $("memberForm").addEventListener("submit",async e=>{
  }catch(err){alert("Save failed: "+err.message);}
  finally{saveButton.disabled=false;saveButton.textContent="Save Member";}
 });
+
+$("syncLocalMembers").addEventListener("click",async()=>{
+ if(currentRole!=="owner"){alert("Owner account മാത്രം ഈ sync നടത്താം.");return;}
+ let legacy;
+ try{legacy=JSON.parse(localStorage.getItem("pgm_fitness_data")||"null");}catch(e){alert("Local backup data വായിക്കാനായില്ല.");return;}
+ if(!legacy||!Array.isArray(legacy.members)||!legacy.members.length){alert("ഈ browser-ൽ പഴയ local member records കണ്ടെത്തിയില്ല.");return;}
+ const rows=legacy.members;
+ if(!confirm(rows.length+" പഴയ local member record(s) പരിശോധിച്ച് Firestore-ൽ ഇല്ലാത്തവ മാത്രം ചേർക്കട്ടേ? ഒന്നും delete ചെയ്യില്ല."))return;
+ const btn=$("syncLocalMembers"),oldText=btn.textContent;btn.disabled=true;btn.textContent="Syncing…";
+ let linked=0,created=0,skipped=0;const errors=[];
+ const keyOf=m=>String(m.name||"").trim().toLowerCase()+"|"+String(m.phone||"").replace(/[^0-9]/g,"");
+ try{
+  const cloud=await listMembers(),byKey=new Map();
+  for(const m of cloud){const k=keyOf(m);if(!byKey.has(k))byKey.set(k,[]);byKey.get(k).push(m);}
+  const usedIds=new Set();
+  for(const m of rows){
+   if(m.cloudMemberId){skipped++;continue;}
+   if(!m.cloudSyncKey)m.cloudSyncKey="pgm-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+   const matches=byKey.get(keyOf(m))||[];
+   if(matches.length===1&&!usedIds.has(matches[0].id)){
+    m.cloudMemberId=matches[0].id;usedIds.add(matches[0].id);linked++;continue;
+   }
+   if(matches.length>0){skipped++;errors.push((m.name||"Member")+": duplicate cloud match; skipped safely");continue;}
+   try{
+    const joinDate=/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(m.date||"")?m.date:today();
+    const record={name:String(m.name||"").trim(),phone:String(m.phone||""),address:String(m.address||""),plan:String(m.plan||""),planFee:Number(m.totalFee||0),registrationFee:0,joinDate,planStartDate:joinDate,expiryDate:String(m.expiryDate||""),status:"active",notes:""};
+    if(!record.name||!Number.isFinite(record.planFee)||record.planFee<0)throw new Error("Invalid member details");
+    const paid=Number(m.amount||0),payment=paid>0?{amount:paid,feeAmount:record.planFee,date:joinDate,payMode:String(m.payMode||"Cash"),type:"registration",plan:record.plan,expiryDate:record.expiryDate}:null;
+    const stableId="pgm_"+String(m.cloudSyncKey).replace(/[^a-zA-Z0-9_-]/g,"_");
+    const result=await createMemberWithInitialPayment(record,payment,stableId);
+    m.cloudMemberId=result.id;created++;
+   }catch(err){errors.push((m.name||"Member")+": "+(err.message||"Firestore error"));}
+  }
+  localStorage.setItem("pgm_fitness_data",JSON.stringify(legacy));
+  await refresh();
+  alert("Sync complete. Linked: "+linked+", added: "+created+", skipped: "+skipped+(errors.length?" Details: "+errors.join("; "):""));
+ }catch(err){alert("Sync failed: "+(err.message||"Firestore error"));}
+ finally{btn.disabled=false;btn.textContent=oldText;}
+});
 function populateMembers(){for(const id of ["paymentMember","attendanceMember","renewalMember"]){const sel=$(id),current=sel.value;sel.replaceChildren();for(const m of members){const o=document.createElement("option");o.value=m.id;o.textContent=m.name+(m.phone?" · "+m.phone:"");sel.append(o);}if([...sel.options].some(o=>o.value===current))sel.value=current;}syncRenewalFee();}
 function cardLine(parent,title,meta){const el=document.createElement("article"),a=document.createElement("strong"),b=document.createElement("p");a.textContent=title;b.textContent=meta;el.append(a,b);parent.append(el);}
 
