@@ -18,6 +18,8 @@ jobs:
           node-version: 20
       - name: Install test dependencies
         run: npm install
+      - name: Check application JavaScript syntax
+        run: node --check new-app.js && node --check cloud-data.js && node --check migration-runner.js && node --check migration-plan.js
       - name: Run migration tests
         run: npm run test:migration
       - name: Run Firestore rules emulator tests
