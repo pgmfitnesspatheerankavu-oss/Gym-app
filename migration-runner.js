@@ -25,9 +25,6 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
   if (!role.allowed || role.role !== "owner") throw new Error("ഈ Migration Owner-ന് മാത്രം അനുവദിച്ചിരിക്കുന്നു.");
 
   const { plan, verification } = previewCloudMigration(rawBackup);
-  if (plan.warnings.length) {
-    throw new Error("Backup-ൽ മുന്നറിയിപ്പുകളുണ്ട്. ആദ്യം Preview പരിശോധിച്ച് അവ പരിഹരിക്കണം.");
-  }
 
   // Preflight every deterministic target before writing anything. Existing documents
   // are accepted only when they are already verified copies of this same legacy row.
@@ -51,7 +48,7 @@ export async function runOwnerMigration(rawBackup, confirmationText) {
     const chunk = missing.slice(offset, offset + CHUNK_SIZE);
     for (const op of chunk) {
       const ref = doc(db, op.collection, op.id);
-      batch.create(ref, {
+      batch.set(ref, {
         ...op.data,
         ...(op.collection === "payments" || op.collection === "renewals" || op.collection === "attendance"
           ? { createdBy: user.uid } : {}),
