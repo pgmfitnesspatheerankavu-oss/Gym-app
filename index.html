@@ -625,24 +625,42 @@
           document.getElementById('mPaidAmount').value !== '' &&
           totalFee >= 0 && paidAmount >= 0 && expiryDate) {
         const processMemberData = (photoUrl) => {
+          const existingMember = index === -1 ? null : state.members[index];
+          if (index !== -1 && !existingMember) return;
           const memberData = {
             name, phone, amount: paidAmount, totalFee,
             plan: document.getElementById('mPlan').value || '',
             dueAmount: totalFee - paidAmount,
-            payMode, date: index === -1 ? date : (state.members[index]?.date || date),
+            payMode, date: index === -1 ? date : (existingMember?.date || date),
             expiryDate,
-            photo: photoUrl || ''
+            photo: photoUrl || '',
+            cloudMemberId: existingMember?.cloudMemberId || '',
+            cloudSyncKey: existingMember?.cloudSyncKey || ('pgm-' + Date.now() + '-' + Math.random().toString(36).slice(2))
           };
 
           if (index === -1) {
             state.members.unshift(memberData);
           } else {
-            if (!state.members[index]) return;
-            if (!photoUrl) memberData.photo = state.members[index].photo || '';
-            memberData.payments = Array.isArray(state.members[index].payments) ? state.members[index].payments : [];
+            if (!photoUrl) memberData.photo = existingMember.photo || '';
+            memberData.payments = Array.isArray(existingMember.payments) ? existingMember.payments : [];
             state.members[index] = memberData;
           }
           saveData();
+          // Keep the existing local backup/dashboard, and also write this member to Firestore.
+          // A stable key lets the async cloud response update the correct local record.
+          window.dispatchEvent(new CustomEvent('pgm:member-saved', {
+            detail: {
+              member: { ...memberData },
+              localSyncKey: memberData.cloudSyncKey,
+              isUpdate: Boolean(index !== -1 && memberData.cloudMemberId),
+              cloudMemberId: memberData.cloudMemberId || '',
+              onSuccess: (cloudMemberId) => {
+                const saved = state.members.find(item => item.cloudSyncKey === memberData.cloudSyncKey);
+                if (saved) { saved.cloudMemberId = cloudMemberId; saveData(); }
+              },
+              onError: (message) => alert('Member ആപ്പിൽ save ആയി; പക്ഷേ Firestore-ൽ save ആയില്ല.\n' + message + '\nInternet / Firebase Rules പരിശോധിച്ച് വീണ്ടും Save ചെയ്യുക.')
+            }
+          }));
           closeModal('addMemberModal');
           openListView(currentListViewType);
         };
@@ -1180,5 +1198,6 @@
   </script>
   <script type="module" src="auth-gate.js"></script>
   <script type="module" src="cloud-member-panel.js"></script>
+  <script type="module" src="legacy-member-firestore-sync.js"></script>
 </body>
 </html>
