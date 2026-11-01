@@ -55,6 +55,7 @@ jobs:
           cp new-app.html www/index.html
           cp manifest.webmanifest service-worker.js www/
           cp icons/icon.svg www/icons/
+          cp logo.png www/
           cp new-app.js new-app.css firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js www/
       - name: Install dependencies
         run: npm install
