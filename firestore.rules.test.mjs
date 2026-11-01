@@ -18,7 +18,7 @@ after(async () => { await env?.cleanup(); });
 beforeEach(async () => {
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async context => {
-    await setDoc(doc(context.firestore(), "users", staffUid), { role: "staff", active: true });
+    await setDoc(doc(context.firestore(), "users", staffUid), { role: "staff", active: true, permissions: ["members.read","members.create","members.update","payments.read.own","payments.create","renewals.read.own","renewals.create","attendance.read","attendance.create"] });
   });
 });
 
