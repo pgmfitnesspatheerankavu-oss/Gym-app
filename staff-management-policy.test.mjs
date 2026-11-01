@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { staffProfilePayload } from "./staff-management-policy.js";
+import { defaultStaffPermissions } from "./access-policy.js";
 
 test("accepts a named active Staff profile without creating credentials", () => {
   assert.deepEqual(staffProfilePayload({ uid: "firebase-auth-uid-1", displayName: "Staff One" }), {
     uid: "firebase-auth-uid-1",
-    profile: { role: "staff", active: true, displayName: "Staff One" }
+    profile: { role: "staff", active: true, displayName: "Staff One", permissions: defaultStaffPermissions() }
   });
 });
 test("allows Owner to deactivate a Staff profile", () => {
@@ -18,7 +19,7 @@ test("rejects missing UID, invalid UID, and empty display name", () => {
 });
 test("never accepts a caller-supplied role or credential fields", () => {
   const result = staffProfilePayload({ uid: "staff-uid", displayName: "Staff", role: "owner", password: "secret" });
-  assert.deepEqual(result.profile, { role: "staff", active: true, displayName: "Staff" });
+  assert.deepEqual(result.profile, { role: "staff", active: true, displayName: "Staff", permissions: defaultStaffPermissions() });
 });
 test("rejects non-boolean active values", () => {
   assert.throws(() => staffProfilePayload({ uid: "staff-uid", displayName: "Staff", active: "yes" }));
