@@ -1,0 +1,59 @@
+name: Build Android APK
+on:
+  push:
+    branches:
+      - firebase-login-development
+    paths:
+      - 'new-app.html'
+      - 'new-app.js'
+      - 'new-app.css'
+      - 'firebase-config.js'
+      - 'firebase-client.js'
+      - 'cloud-data.js'
+      - 'balance-calculator.js'
+      - 'supabase-storage.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: firebase-login-development
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Prepare bundled app
+        run: |
+          mkdir -p www
+          cp new-app.html www/index.html
+          cp new-app.js new-app.css firebase-config.js firebase-client.js cloud-data.js balance-calculator.js supabase-storage.js www/
+      - name: Install dependencies
+        run: npm install
+      - name: Add Android platform
+        run: npx cap add android
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pgm-fitness-android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
