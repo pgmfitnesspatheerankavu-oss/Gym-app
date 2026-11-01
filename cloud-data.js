@@ -240,6 +240,26 @@ export async function deleteExpense(expenseId) {
   await deleteDoc(doc(db, "expenses", expenseId));
 }
 
+// Owner-only gym settings, including opening balance.
+export async function getGymSettings() {
+  const { role, permissions } = await currentRole();
+  requireCapability(role, "settings.read", permissions);
+  const snapshot = await getDoc(doc(db, "settings", "main"));
+  return snapshot.exists() ? snapshot.data() : { openingBalance: 0 };
+}
+export async function saveGymSettings(changes) {
+  const { user, role, permissions } = await currentRole();
+  requireCapability(role, "settings.update", permissions);
+  const openingBalance = Number(changes?.openingBalance);
+  if (!Number.isFinite(openingBalance) || openingBalance < 0) {
+    throw new Error("Opening balance must be a valid non-negative amount");
+  }
+  await setDoc(doc(db, "settings", "main"), {
+    openingBalance, updatedAt: serverTimestamp(), updatedBy: user.uid
+  }, { merge: true });
+  return { openingBalance };
+}
+
 // Owner-only staff profile management. Auth accounts are created separately in Firebase Console.
 export async function listStaffProfiles() {
   const { role, permissions } = await currentRole();
