@@ -13,6 +13,11 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
     }
     function canUseGym() { return isOwner() || isActiveStaff(); }
+    function staffHas(permission) {
+      return isActiveStaff() &&
+        ("permissions" in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
+        permission in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions;
+    }
     function expectedPlanFee(plan) {
       return plan == "1 Month" ? 650 :
         plan == "3 Months" ? 1600 :
@@ -64,42 +69,49 @@ service cloud.firestore {
           !("legacyIndex" in request.resource.data)) || isOwner());
     }
     match /members/{memberId} {
-      allow read: if canUseGym();
-      allow create: if canUseGym() && validMemberCreate();
+      allow read: if isOwner() || staffHas("members.read");
+      allow create: if (isOwner() || staffHas("members.create")) && validMemberCreate();
       allow update: if isOwner() ||
-        (isActiveStaff() &&
+        (staffHas("members.update") &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
            "name", "phone", "address", "gender", "joinDate", "planStartDate",
            "plan", "photoURL", "photoPath", "expiryDate", "status", "notes",
            "updatedAt", "updatedBy"
          ]));
-      allow delete: if isOwner();
+      allow delete: if isOwner() || staffHas("members.delete");
     }
 
-    // Staff may add transactions but cannot alter or erase existing history.
+    // Staff transaction permissions but cannot alter or erase existing history.
     match /payments/{paymentId} {
-      allow read: if isOwner() ||
-        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
-      allow create: if canUseGym() &&
+      allow read: if isOwner() || staffHas("payments.read.all") ||
+        (staffHas("payments.read.own") && resource.data.createdBy == request.auth.uid);
+      allow create: if (isOwner() || staffHas("payments.create")) &&
         request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if isOwner();
+      allow update: if isOwner();
+      allow delete: if isOwner() || staffHas("payments.delete");
     }
     match /renewals/{renewalId} {
-      allow read: if isOwner() ||
-        (isActiveStaff() && resource.data.createdBy == request.auth.uid);
-      allow create: if canUseGym() &&
+      allow read: if isOwner() || staffHas("renewals.read.all") ||
+        (staffHas("renewals.read.own") && resource.data.createdBy == request.auth.uid);
+      allow create: if (isOwner() || staffHas("renewals.create")) &&
         request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if isOwner();
+      allow update: if isOwner();
+      allow delete: if isOwner() || staffHas("renewals.delete");
     }
     match /attendance/{attendanceId} {
-      allow read: if canUseGym();
-      allow create: if canUseGym() &&
+      allow read: if isOwner() || staffHas("attendance.read");
+      allow create: if (isOwner() || staffHas("attendance.create")) &&
         request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if isOwner();
+      allow update: if isOwner();
+      allow delete: if isOwner() || staffHas("attendance.delete");
     }
 
-    // Owner-only financial and configuration data.
-    match /expenses/{expenseId} { allow read, write: if isOwner(); }
+    match /expenses/{expenseId} {
+      allow read: if isOwner() || staffHas("expenses.read");
+      allow create: if isOwner() || staffHas("expenses.create");
+      allow update: if isOwner() || staffHas("expenses.update");
+      allow delete: if isOwner() || staffHas("expenses.delete");
+    }
     match /settings/{document=**} { allow read, write: if isOwner(); }
     match /financialReports/{document=**} { allow read, write: if isOwner(); }
 
