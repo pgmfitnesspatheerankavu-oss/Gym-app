@@ -404,6 +404,26 @@
       updateDashboard();
     }
 
+    // Read/update helpers for the one-time, duplicate-aware Firestore sync.
+    window.PGMPrepareLegacyMemberSync = function() {
+      let changed = false;
+      state.members.forEach(member => {
+        if (!member.cloudSyncKey) {
+          member.cloudSyncKey = 'pgm-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+          changed = true;
+        }
+      });
+      if (changed) saveData();
+      return state.members.map(member => ({ ...member }));
+    };
+    window.PGMUpdateLegacyMemberSync = function(syncKey, cloudMemberId) {
+      const member = state.members.find(item => item.cloudSyncKey === syncKey);
+      if (!member) return false;
+      member.cloudMemberId = cloudMemberId;
+      saveData();
+      return true;
+    };
+
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
