@@ -1,0 +1,58 @@
+name: Publish PGM FITNESS PWA
+on:
+  push:
+    branches:
+      - firebase-login-development
+    paths:
+      - 'new-app.html'
+      - 'new-app.js'
+      - 'new-app.css'
+      - 'firebase-config.js'
+      - 'firebase-client.js'
+      - 'auth-policy.js'
+      - 'cloud-data.js'
+      - 'access-policy.js'
+      - 'staff-management-policy.js'
+      - 'cloud-data-policy.js'
+      - 'balance-calculator.js'
+      - 'supabase-storage.js'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'icons/**'
+      - '.github/workflows/pwa-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: firebase-login-development
+      - name: Prepare PWA site
+        run: |
+          mkdir -p _site/icons
+          cp new-app.html _site/index.html
+          cp new-app.css new-app.js firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js manifest.webmanifest service-worker.js _site/
+          cp icons/icon.svg _site/icons/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
