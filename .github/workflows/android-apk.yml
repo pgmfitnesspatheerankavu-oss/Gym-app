@@ -8,6 +8,7 @@ on:
       - 'service-worker.js'
       - 'icons/**'
       - '.github/workflows/pwa-pages.yml'
+      - 'logo.png'
       - 'new-app.html'
       - 'new-app.js'
       - 'new-app.css'
@@ -53,6 +54,7 @@ jobs:
           mkdir -p www
           mkdir -p www/icons
           cp new-app.html www/index.html
+          cp logo.png www/logo.png
           cp manifest.webmanifest service-worker.js www/
           cp icons/icon.svg www/icons/
           cp logo.png www/
