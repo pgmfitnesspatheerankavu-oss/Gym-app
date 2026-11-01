@@ -8,7 +8,7 @@ test("signed-out sessions are denied", () => {
 
 test("only the exact configured UID receives Owner role", () => {
   assert.deepEqual(decideAccess({ uid: "owner-uid" }, "owner-uid"), {
-    allowed: true, role: "owner", uid: "owner-uid"
+    allowed: true, role: "owner", uid: "owner-uid", permissions: []
   });
   assert.equal(decideAccess({ uid: "other" }, "owner-uid").allowed, false);
 });
@@ -21,6 +21,6 @@ test("unprovisioned, inactive and invalid profiles are denied", () => {
 
 test("active staff receive limited Staff role access", () => {
   assert.deepEqual(decideAccess({ uid: "staff" }, "owner-uid", { role: "staff", active: true, displayName: "Trainer" }), {
-    allowed: true, role: "staff", uid: "staff", displayName: "Trainer"
+    allowed: true, role: "staff", uid: "staff", displayName: "Trainer", permissions: ["members.read","members.create","members.update","payments.read.own","payments.create","renewals.read.own","renewals.create","attendance.read","attendance.create"]
   });
 });
