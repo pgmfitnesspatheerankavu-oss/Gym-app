@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canRole, visibleCapabilities } from "./access-policy.js";
+import { canRole, visibleCapabilities, defaultStaffPermissions } from "./access-policy.js";
 
 test("owner has every administrative capability", () => {
   for (const capability of [
@@ -14,7 +14,7 @@ test("staff can handle routine member, payment, renewal and attendance work", ()
   for (const capability of [
     "members.read", "members.create", "members.update",
     "payments.create", "payments.read.own", "renewals.create", "renewals.read.own", "attendance.read", "attendance.create"
-  ]) assert.equal(canRole("staff", capability), true, capability);
+  ]) assert.equal(canRole("staff", capability, defaultStaffPermissions()), true, capability);
 });
 
 test("staff cannot access owner-only financial and administrative actions", () => {
@@ -28,6 +28,6 @@ test("staff cannot access owner-only financial and administrative actions", () =
 
 test("unknown roles and unknown capabilities are denied", () => {
   assert.equal(canRole("guest", "members.read"), false);
-  assert.equal(canRole("staff", "anything.unlisted"), false);
+  assert.equal(canRole("staff", "anything.unlisted", defaultStaffPermissions()), false);
   assert.deepEqual(visibleCapabilities("guest"), []);
 });
