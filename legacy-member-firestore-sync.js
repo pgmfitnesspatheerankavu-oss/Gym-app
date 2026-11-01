@@ -83,7 +83,7 @@ document.body.append(recoveryButton);
 
 function memberMatchKey(member) {
   const name = String(member.name || "").trim().toLocaleLowerCase();
-  const phone = String(member.phone || "").replace(/\\D/g, "");
+  const phone = String(member.phone || "").replace(/\D/g, "");
   return name + "|" + phone;
 }
 
@@ -157,7 +157,7 @@ async function syncExistingLocalMembers() {
 
     const summary = "Local members sync complete. Linked: " + linked +
       ", newly added: " + created + ", skipped: " + skipped +
-      (errors.length ? "\\nDetails:\\n" + errors.join("\\n") : "");
+      (errors.length ? "\nDetails:\n" + errors.join("\n") : "");
     alert(summary);
   } catch (error) {
     alert("Local member sync failed: " + (error?.message || "Firestore error"));
