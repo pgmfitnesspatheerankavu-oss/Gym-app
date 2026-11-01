@@ -57,9 +57,10 @@ service cloud.firestore {
              request.resource.data.planFee == expectedPlanFee(request.resource.data.plan))))) &&
         (!("registrationFee" in request.resource.data) ||
           (request.resource.data.registrationFee is number &&
-           request.resource.data.registrationFee in [500, 800] &&
+           request.resource.data.registrationFee >= 0 &&
            (!isActiveStaff() ||
-            request.resource.data.registrationFee == expectedRegistrationFee(request.resource.data.plan)))) &&
+            (request.resource.data.registrationFee in [500, 800] &&
+             request.resource.data.registrationFee == expectedRegistrationFee(request.resource.data.plan)))) ) &&
         // Migration metadata is reserved for the Owner-only migration runner.
         ((!("migrationVersion" in request.resource.data) &&
           !("migrationSourceData" in request.resource.data) &&
