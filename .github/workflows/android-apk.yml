@@ -9,7 +9,11 @@ on:
       - 'new-app.css'
       - 'firebase-config.js'
       - 'firebase-client.js'
+      - 'auth-policy.js'
       - 'cloud-data.js'
+      - 'access-policy.js'
+      - 'staff-management-policy.js'
+      - 'cloud-data-policy.js'
       - 'balance-calculator.js'
       - 'supabase-storage.js'
       - 'capacitor.config.json'
@@ -39,7 +43,7 @@ jobs:
         run: |
           mkdir -p www
           cp new-app.html www/index.html
-          cp new-app.js new-app.css firebase-config.js firebase-client.js cloud-data.js balance-calculator.js supabase-storage.js www/
+          cp new-app.js new-app.css firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js www/
       - name: Install dependencies
         run: npm install
       - name: Add Android platform
