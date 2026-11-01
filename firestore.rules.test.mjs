@@ -67,6 +67,17 @@ test("inactive staff cannot access member records", async () => {
   const db = env.authenticatedContext("inactive-staff").firestore();
   await assertFails(getDoc(doc(db, "members", "m1")));
 });
+
+test("owner can set custom or zero registration fee", async () => {
+  const db = env.authenticatedContext(ownerUid).firestore();
+  await assertSucceeds(setDoc(doc(db, "members", "owner-no-registration-fee"), {
+    name: "No Registration Fee", plan: "1 Month", planFee: 650, registrationFee: 0
+  }));
+  await assertSucceeds(setDoc(doc(db, "members", "owner-custom-registration-fee"), {
+    name: "Custom Registration Fee", plan: "1 Month", planFee: 650, registrationFee: 275
+  }));
+});
+
 test("owner retains access to owner-only expenses", async () => {
   const db = env.authenticatedContext(ownerUid).firestore();
   await assertSucceeds(setDoc(doc(db, "expenses", "owner-e1"), { title: "Rent", amount: 1000, date: "2026-10-31" }));
