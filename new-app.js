@@ -2,6 +2,7 @@ import { calculateBalanceDue } from "./balance-calculator.js";
 import { STAFF_CAPABILITIES, STAFF_CAPABILITY_LABELS } from "./access-policy.js";
 import { signIn, signOutUser, watchAuth, auth } from "./firebase-client.js";
 import { uploadMemberPhoto } from "./supabase-storage.js";
+import { previewCloudMigration, runOwnerMigration } from "./migration-runner.js";
 import { listMembers, createMember, createMemberWithInitialPayment, updateMember, deleteMember, createPayment, deletePayment, deleteRenewal, listAllPayments, listAllRenewals, saveRenewalWithPayment, recordAttendance, listAttendanceForDate, createExpense, updateExpense, deleteExpense, listExpenses, listMyPayments, listMyRenewals, listStaffProfiles, saveStaffProfile } from "./cloud-data.js";
 const $=id=>document.getElementById(id), login=$("login"), app=$("app"), status=$("loginStatus");
 let members=[], dashboardPayments=[], dashboardRenewals=[], currentRole="owner", currentPermissions=[];
@@ -194,3 +195,73 @@ async function loadProfitLoss(){
 // Owner-only staff administration: Firebase Auth user must exist before profile activation.
 $("staffForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),out=$("staffStatus");out.textContent="Saving staff access…";try{await saveStaffProfile({uid:f.get("uid"),displayName:f.get("displayName"),active:true});out.textContent="Staff access enabled.";e.currentTarget.reset();await loadStaff();}catch(err){out.textContent="Staff access failed: "+err.message;}});
 async function loadStaff(){const box=$("staffList"),out=$("staffStatus");box.textContent="Loading…";try{const rows=await listStaffProfiles();box.replaceChildren();if(!rows.length){box.textContent="No staff profiles yet.";return;}for(const staff of rows){const card=document.createElement("article"),name=document.createElement("strong"),meta=document.createElement("p"),toggle=document.createElement("button"),permissionBox=document.createElement("div"),save=document.createElement("button");name.textContent=staff.displayName||"Staff";meta.textContent=staff.uid+" · "+(staff.active?"Active":"Inactive");toggle.textContent=staff.active?"Deactivate":"Activate";toggle.addEventListener("click",async()=>{toggle.disabled=true;try{await saveStaffProfile({uid:staff.uid,displayName:staff.displayName||"Staff",active:!staff.active,permissions:staff.permissions});await loadStaff();}catch(err){out.textContent=err.message;toggle.disabled=false;}});permissionBox.className="staff-permissions";const selected=new Set(Array.isArray(staff.permissions)?staff.permissions:["members.read","members.create","members.update","payments.read.own","payments.create","renewals.read.own","renewals.create","attendance.read","attendance.create"]);for(const capability of STAFF_CAPABILITIES){const label=document.createElement("label"),input=document.createElement("input");input.type="checkbox";input.value=capability;input.checked=selected.has(capability);label.append(input,document.createTextNode(" "+STAFF_CAPABILITY_LABELS[capability]));permissionBox.append(label);}save.textContent="Save permissions";save.addEventListener("click",async()=>{save.disabled=true;const permissions=[...permissionBox.querySelectorAll('input:checked')].map(x=>x.value);try{await saveStaffProfile({uid:staff.uid,displayName:staff.displayName||"Staff",active:staff.active!==false,permissions});out.textContent="Permissions saved for "+(staff.displayName||"Staff")+". Changes apply on next login/refresh.";await loadStaff();}catch(err){out.textContent="Permission save failed: "+err.message;save.disabled=false;}});card.append(name,meta,toggle,permissionBox,save);box.append(card);}}catch(err){box.textContent="Staff list unavailable: "+err.message;}}\n
+
+// Owner-only full legacy backup export and collision-safe Firestore migration.
+let pendingMigrationData = null;
+function unwrapLegacyBackup(value) {
+ const parsed = typeof value === "string" ? JSON.parse(value) : value;
+ if (parsed && parsed.app !== undefined) {
+  if (parsed.app !== "PGM FITNESS" || parsed.backupVersion !== 1 || !parsed.data) {
+   throw new Error("Unsupported PGM FITNESS backup format.");
+  }
+  return parsed.data;
+ }
+ return parsed;
+}
+function showMigrationPreview(raw) {
+ const preview = previewCloudMigration(raw);
+ pendingMigrationData = raw;
+ const v = preview.verification;
+ const counts = Object.entries(v.collectionCounts).map(([name,count])=>name+": "+count).join("\\n");
+ const warnings = preview.plan.warnings.length ? "\\nWarnings:\\n- "+preview.plan.warnings.join("\\n- ") : "\\nWarnings: none";
+ $("migrationPreview").textContent =
+  "Records to import: "+v.operationCount+"\\n"+counts+
+  "\\nPayments total: ₹"+v.paymentLedgerTotal.toFixed(2)+
+  "\\nExpenses total: ₹"+v.expenseTotal.toFixed(2)+
+  "\\nRenewal paid amount (informational; not added to income): ₹"+v.renewalPaidAmountInformationalOnly.toFixed(2)+warnings;
+ $("runMigration").disabled = false;
+ $("migrationStatus").textContent = "Preview complete. Source data remains unchanged.";
+}
+$("exportLocalBackup").addEventListener("click",()=>{
+ if(currentRole!=="owner"){alert("Owner account മാത്രം.");return;}
+ const raw=localStorage.getItem("pgm_fitness_data");
+ if(!raw){$("migrationStatus").textContent="ഈ browser-ൽ പഴയ local backup കണ്ടെത്തിയില്ല. പഴയ app-ൽ നിന്ന് backup JSON export ചെയ്ത് ഇവിടെ select ചെയ്യുക.";return;}
+ try{
+  const data=unwrapLegacyBackup(raw);
+  const envelope={app:"PGM FITNESS",backupVersion:1,exportedAt:new Date().toISOString(),data};
+  const blob=new Blob([JSON.stringify(envelope,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="pgm-fitness-backup-"+today()+".json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  $("migrationStatus").textContent="Backup exported. Keep this file safely before migration.";
+ }catch(err){$("migrationStatus").textContent="Backup export failed: "+err.message;}
+});
+$("loadLocalBackup").addEventListener("click",()=>{
+ if(currentRole!=="owner"){alert("Owner account മാത്രം.");return;}
+ const raw=localStorage.getItem("pgm_fitness_data");
+ if(!raw){$("migrationStatus").textContent="ഈ browser-ൽ pgm_fitness_data കണ്ടെത്തിയില്ല. പഴയ app-ൽ നിന്ന് JSON backup export ചെയ്യുക.";return;}
+ try{showMigrationPreview(unwrapLegacyBackup(raw));}
+ catch(err){$("migrationStatus").textContent="Local backup preview failed: "+err.message;}
+});
+$("previewMigration").addEventListener("click",async()=>{
+ if(currentRole!=="owner"){alert("Owner account മാത്രം.");return;}
+ const file=$("migrationFile").files[0];
+ if(!file){$("migrationStatus").textContent="ആദ്യം backup JSON file തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ ഈ device-ലെ പഴയ data load ചെയ്യുക.";return;}
+ $("migrationStatus").textContent="Reading backup…";
+ try{showMigrationPreview(unwrapLegacyBackup(await file.text()));}
+ catch(err){pendingMigrationData=null;$("runMigration").disabled=true;$("migrationPreview").textContent="Preview failed: "+err.message;$("migrationStatus").textContent="Backup പരിശോധിക്കാൻ കഴിഞ്ഞില്ല.";}
+});
+$("migrationFile").addEventListener("change",()=>{
+ pendingMigrationData=null;$("runMigration").disabled=true;$("migrationPreview").textContent="New backup selected. Preview it before importing.";
+});
+$("runMigration").addEventListener("click",async()=>{
+ if(currentRole!=="owner"||!pendingMigrationData){$("migrationStatus").textContent="Owner login-ൽ backup preview ചെയ്യുക.";return;}
+ if($("migrationConfirm").value.trim()!=="MIGRATE PGM FITNESS"){$("migrationStatus").textContent="Confirmation text ശരിയല്ല.";return;}
+ if(!confirm("Preview-ൽ കാണിച്ച രേഖകൾ മാത്രം Cloud-ലേക്ക് ചേർക്കട്ടേ? പഴയ local data delete ചെയ്യില്ല."))return;
+ const button=$("runMigration");button.disabled=true;$("migrationStatus").textContent="Importing and verifying…";
+ try{
+  const result=await runOwnerMigration(pendingMigrationData,$("migrationConfirm").value.trim());
+  $("migrationStatus").textContent="Migration verified. Written: "+result.written+", already imported: "+result.alreadyMigrated+". Local data preserved: "+result.localDataPreserved+". Cloud overwrite: "+result.overwroteExistingCloudData+".";
+  await refresh();
+ }catch(err){$("migrationStatus").textContent="Migration stopped safely: "+(err.message||"Unknown error");button.disabled=false;}
+});
