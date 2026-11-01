@@ -24,6 +24,11 @@ test("creates stable read-only operation IDs and separates renewal payment rows"
   assert.equal(first.collectionCounts.expenses, 1);
   assert.equal(first.collectionCounts.settings, 1);
   assert.equal(first.operations.find(x => x.id === "legacy_m_1_payment_2").data.kind, "renewal");
+  const renewal = first.operations.find(x => x.collection === "renewals").data;
+  assert.equal(renewal.feeAmount, 400);
+  assert.equal(renewal.amount, 200);
+  assert.equal(renewal.date, "2026-02-01");
+  assert.equal(first.operations.find(x => x.id === "legacy_m_1_initial").data.type, "registration");
 });
 
 test("maps attendance by phone and legacy index key", () => {
@@ -41,6 +46,7 @@ test("maps attendance by phone and legacy index key", () => {
   const attendance = plan.operations.filter(x => x.collection === "attendance");
   assert.equal(attendance.length, 2);
   assert.equal(attendance[0].data.memberId, "legacy_m_1");
+  assert.equal(attendance[0].data.time, "08:00");
   assert.equal(attendance[1].data.memberId, "legacy_m_2");
 });
 
