@@ -58,9 +58,7 @@ service cloud.firestore {
         (!("registrationFee" in request.resource.data) ||
           (request.resource.data.registrationFee is number &&
            request.resource.data.registrationFee >= 0 &&
-           (!isActiveStaff() ||
-            (request.resource.data.registrationFee in [500, 800] &&
-             request.resource.data.registrationFee == expectedRegistrationFee(request.resource.data.plan)))) ) &&
+           request.resource.data.registrationFee <= 100000)) &&
         // Migration metadata is reserved for the Owner-only migration runner.
         ((!("migrationVersion" in request.resource.data) &&
           !("migrationSourceData" in request.resource.data) &&
@@ -76,7 +74,7 @@ service cloud.firestore {
         (staffHas("members.update") &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
            "name", "phone", "address", "gender", "joinDate", "planStartDate",
-           "plan", "photoURL", "photoPath", "expiryDate", "status", "notes",
+           "plan", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
            "updatedAt", "updatedBy"
          ]));
       allow delete: if isOwner() || staffHas("members.delete");
