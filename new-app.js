@@ -71,6 +71,8 @@ $("memberForm").addEventListener("submit",async e=>{
   }else{
    const payment=paidNow>0?{amount:paidNow,date:paymentDate,payMode,type:"registration"}:null;
    const memberData={...values};
+   // Staff can create member profiles, but plan and registration fees remain owner-controlled.
+   if(currentRole==="staff"){delete memberData.planFee;delete memberData.registrationFee;}
    memberId=(await createMemberWithInitialPayment(memberData,payment)).id;
   }
   if(photoFile){
