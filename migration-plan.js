@@ -45,7 +45,8 @@ export function buildLegacyMigrationPlan(rawJson) {
       operations.push({
         collection: "payments", id: `legacy_m_${i + 1}_initial`,
         data: { memberId, memberNameSnapshot: clean(m.name), amount: amount(m.amount),
-          date: clean(m.date), payMode: clean(m.payMode), kind: "joining",
+          feeAmount: amount(m.totalFee), date: clean(m.date), payMode: clean(m.payMode),
+          type: "registration", kind: "joining",
           legacySource: "pgm_fitness_data", legacyIndex: i }
       });
     }
@@ -55,7 +56,8 @@ export function buildLegacyMigrationPlan(rawJson) {
       operations.push({
         collection: "payments", id: `legacy_m_${i + 1}_payment_${j + 1}`,
         data: { memberId, memberNameSnapshot: clean(m.name), amount: amount(p.amount),
-          date: clean(p.date), payMode: clean(p.payMode),
+          feeAmount: amount(m.totalFee), date: clean(p.date), payMode: clean(p.payMode),
+          type: isRenewalPayment ? "renewal-payment" : "payment",
           kind: isRenewalPayment ? "renewal" : "pending_fee",
           legacySource: "pgm_fitness_data", legacyIndex: i, legacyItemIndex: j }
       });
@@ -64,9 +66,10 @@ export function buildLegacyMigrationPlan(rawJson) {
     (Array.isArray(m.renewals) ? m.renewals : []).forEach((r, j) => {
       operations.push({
         collection: "renewals", id: `legacy_m_${i + 1}_renewal_${j + 1}`,
-        data: { memberId, memberNameSnapshot: clean(m.name), plan: clean(r.plan),
-          amount: amount(r.fee), paidAmount: amount(r.paidAmount),
-          startDate: clean(r.date), expiryDate: clean(r.expiryDate),
+        data: { memberId, memberName: clean(m.name), memberNameSnapshot: clean(m.name),
+          plan: clean(r.plan), feeAmount: amount(r.fee),
+          amount: amount(r.paidAmount), paidAmount: amount(r.paidAmount),
+          date: clean(r.date), startDate: clean(r.date), expiryDate: clean(r.expiryDate),
           payMode: clean(r.payMode), legacySource: "pgm_fitness_data",
           legacyIndex: i, legacyItemIndex: j }
       });
@@ -105,8 +108,9 @@ export function buildLegacyMigrationPlan(rawJson) {
     }
     operations.push({
       collection: "attendance", id: `legacy_attendance_${i + 1}`,
-      data: { memberId: member.id, memberNameSnapshot: clean(a.memberName || member.name),
-        phone: clean(a.phone), date: clean(a.date), checkInAt: clean(a.time),
+      data: { memberId: member.id, memberName: clean(a.memberName || member.name),
+        memberNameSnapshot: clean(a.memberName || member.name), phone: clean(a.phone),
+        date: clean(a.date), time: clean(a.time), checkInAt: clean(a.time),
         legacySource: "pgm_fitness_data", legacyIndex: i }
     });
   });
