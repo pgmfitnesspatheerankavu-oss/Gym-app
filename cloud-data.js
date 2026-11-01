@@ -219,6 +219,19 @@ export async function createExpense(record) {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
   });
 }
+export async function updateExpense(expenseId, changes) {
+  const { user, role } = await currentRole();
+  requireCapability(role, "expenses.update");
+  if (!expenseId) throw new Error("Expense ID required");
+  const data = expensePayload(changes);
+  await updateDoc(doc(db, "expenses", expenseId), { ...data, updatedAt: serverTimestamp(), updatedBy: user.uid });
+}
+export async function deleteExpense(expenseId) {
+  const { role } = await currentRole();
+  requireCapability(role, "expenses.delete");
+  if (!expenseId) throw new Error("Expense ID required");
+  await deleteDoc(doc(db, "expenses", expenseId));
+}
 
 // Owner-only staff profile management. Auth accounts are created separately in Firebase Console.
 export async function listStaffProfiles() {
