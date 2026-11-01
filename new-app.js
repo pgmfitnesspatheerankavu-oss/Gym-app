@@ -57,7 +57,8 @@ $("memberForm").addEventListener("submit",async e=>{
   values.registrationFee=Number(values.registrationFee||0);
   values.expiryDate=values.expiryDate||expiryForPlan(values.planStartDate,values.plan);
  }
- if(!Number.isFinite(values.registrationFee)||values.registrationFee<0||values.registrationFee>100000){alert("Registration fee ₹0 മുതൽ ₹1,00,000 വരെ നൽകാം.");return;}\n if(!Number.isFinite(paidNow)||paidNow<0||paidNow>planPrice+values.registrationFee){alert("Paid amount ശരിയല്ല. പരമാവധി "+money(planPrice+values.registrationFee)+".");return;}
+ if(!Number.isFinite(values.registrationFee)||values.registrationFee<0||values.registrationFee>100000){alert("Registration fee ₹0 മുതൽ ₹1,00,000 വരെ നൽകാം.");return;}
+ if(!Number.isFinite(paidNow)||paidNow<0||paidNow>planPrice+values.registrationFee){alert("Paid amount ശരിയല്ല. പരമാവധി "+money(planPrice+values.registrationFee)+".");return;}
  const saveButton=f.querySelector('button[type="submit"]');saveButton.disabled=true;saveButton.textContent="Saving…";
  try{
   let memberId=id;
