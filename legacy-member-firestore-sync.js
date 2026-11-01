@@ -6,7 +6,7 @@ import {
 } from "./cloud-data.js";
 
 function toCloudMember(member) {
-  const joinDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(member.date || "")
+  const joinDate = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(member.date || "")
     ? member.date
     : new Date().toISOString().slice(0, 10);
   const data = {
@@ -45,7 +45,7 @@ window.addEventListener("pgm:member-saved", async (event) => {
       const payment = paid > 0 ? {
         amount: paid,
         feeAmount: Number(member.totalFee || 0),
-        date: /^\\d{4}-\\d{2}-\\d{2}$/.test(member.date || "")
+        date: /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(member.date || "")
           ? member.date
           : new Date().toISOString().slice(0, 10),
         payMode: String(member.payMode || "Cash"),
