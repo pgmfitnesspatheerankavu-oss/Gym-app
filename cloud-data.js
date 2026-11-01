@@ -125,6 +125,12 @@ export async function listMyPayments() {
   ));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
 }
+export async function deletePayment(paymentId) {
+  const { role } = await currentRole();
+  requireCapability(role, "payments.delete");
+  if (!paymentId) throw new Error("Payment ID required");
+  await deleteDoc(doc(db, "payments", paymentId));
+}
 export async function createPayment(record) {
   const { user, role } = await currentRole();
   requireCapability(role, "payments.create");
@@ -146,6 +152,12 @@ export async function listMyRenewals() {
     collection(db, "renewals"), where("createdBy", "==", user.uid)
   ));
   return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+}
+export async function deleteRenewal(renewalId) {
+  const { role } = await currentRole();
+  requireCapability(role, "renewals.delete");
+  if (!renewalId) throw new Error("Renewal ID required");
+  await deleteDoc(doc(db, "renewals", renewalId));
 }
 export async function saveRenewalBundle(memberId, renewalRecord, memberChanges, paymentRecord) {
   const { user, role } = await currentRole();
