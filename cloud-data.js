@@ -56,12 +56,16 @@ export async function createMember(record) {
     updatedAt: serverTimestamp(), updatedBy: user.uid
   });
 }
-export async function createMemberWithInitialPayment(memberRecord, paymentRecord) {
+export async function createMemberWithInitialPayment(memberRecord, paymentRecord, stableMemberId = null) {
   const { user, role, permissions } = await currentRole();
   requireCapability(role, "members.create", permissions);
   const memberData = memberCreatePayload(memberRecord);
   const batch = writeBatch(db);
-  const memberRef = doc(collection(db, "members"));
+  // A stable ID makes a retry of the same local save idempotent instead of
+  // creating another member document.
+  const memberRef = stableMemberId
+    ? doc(db, "members", String(stableMemberId))
+    : doc(collection(db, "members"));
   batch.set(memberRef, {
     ...memberData, createdAt: serverTimestamp(), createdBy: user.uid,
     updatedAt: serverTimestamp(), updatedBy: user.uid
@@ -69,7 +73,10 @@ export async function createMemberWithInitialPayment(memberRecord, paymentRecord
   if (paymentRecord && Number(paymentRecord.amount) > 0) {
     requireCapability(role, "payments.create", permissions);
     const paymentData = transactionPayload({ ...paymentRecord, memberId: memberRef.id, memberName: memberData.name, phone: memberData.phone || "" });
-    batch.set(doc(collection(db, "payments")), {
+    const paymentRef = stableMemberId
+      ? doc(db, "payments", "initial_" + String(stableMemberId))
+      : doc(collection(db, "payments"));
+    batch.set(paymentRef, {
       ...paymentData, createdAt: serverTimestamp(), createdBy: user.uid
     });
   }
