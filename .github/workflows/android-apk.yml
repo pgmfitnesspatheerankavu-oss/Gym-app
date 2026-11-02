@@ -99,7 +99,42 @@ jobs:
           values.mkdir(parents=True, exist_ok=True)
           (values/"ic_launcher_background.xml").write_text('''<resources><color name="ic_launcher_background">#FFFFFF</color></resources>''')
           PY
+      - name: Configure persistent APK signing
+        env:
+          PGM_KEYSTORE_BASE64: ${{ secrets.PGM_KEYSTORE_BASE64 }}
+          PGM_KEYSTORE_PASSWORD: ${{ secrets.PGM_KEYSTORE_PASSWORD }}
+          PGM_KEY_ALIAS: ${{ secrets.PGM_KEY_ALIAS }}
+          PGM_KEY_PASSWORD: ${{ secrets.PGM_KEY_PASSWORD }}
+        run: |
+          test -n "$PGM_KEYSTORE_BASE64" || (echo "Missing PGM_KEYSTORE_BASE64 repository secret" && exit 1)
+          test -n "$PGM_KEYSTORE_PASSWORD" || (echo "Missing PGM_KEYSTORE_PASSWORD repository secret" && exit 1)
+          test -n "$PGM_KEY_ALIAS" || (echo "Missing PGM_KEY_ALIAS repository secret" && exit 1)
+          test -n "$PGM_KEY_PASSWORD" || (echo "Missing PGM_KEY_PASSWORD repository secret" && exit 1)
+          echo "$PGM_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/pgm-fitness-upload.jks"
+          echo "PGM_KEYSTORE_PATH=$RUNNER_TEMP/pgm-fitness-upload.jks" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          from pathlib import Path
+          gradle = Path("android/app/build.gradle")
+          text = gradle.read_text()
+          signing = """
+          android {
+              signingConfigs {
+                  debug {
+                      storeFile file(System.getenv("PGM_KEYSTORE_PATH"))
+                      storePassword System.getenv("PGM_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("PGM_KEY_ALIAS")
+                      keyPassword System.getenv("PGM_KEY_PASSWORD")
+                  }
+              }
+          }
+          """
+          gradle.write_text(text + "\\n" + signing)
+          PY
       - name: Build debug APK
+        env:
+          PGM_KEYSTORE_PASSWORD: ${{ secrets.PGM_KEYSTORE_PASSWORD }}
+          PGM_KEY_ALIAS: ${{ secrets.PGM_KEY_ALIAS }}
+          PGM_KEY_PASSWORD: ${{ secrets.PGM_KEY_PASSWORD }}
         run: |
           cd android
           chmod +x gradlew
