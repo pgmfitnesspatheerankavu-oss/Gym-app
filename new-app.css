@@ -16,3 +16,22 @@ nav{flex-wrap:wrap;overflow:visible} .member-actions{flex-wrap:wrap;max-width:10
 
 /* Restore supplied PGM logo and prevent mobile page drifting */
 .brand{display:flex;align-items:center;gap:12px;min-width:0}.app-logo{display:block;width:60px;height:60px;object-fit:contain;flex:0 0 60px;border-radius:50%}header{min-width:0;max-width:100%}body{overflow-x:hidden}nav{display:flex;flex-wrap:wrap;gap:8px;max-width:100%;overflow:visible}.tab{flex:0 1 auto;white-space:nowrap;max-width:100%}.view{min-width:0;max-width:100%}#memberList article,.view article{min-width:0;max-width:100%;flex-wrap:wrap}.member-actions{display:flex;flex-wrap:wrap;max-width:100%}.member-actions button{flex:0 1 auto;min-width:0}@media(max-width:620px){.shell{width:100%;max-width:100%;padding:12px}header{align-items:center}.app-logo{width:52px;height:52px;flex-basis:52px}h1{font-size:23px}}
+
+
+/* Member cards inspired by the supplied membership-management screen */
+.member-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.member-filter{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:88px;padding:10px 8px;background:#fff;color:#263247;border:1px solid #e1e6ef;border-radius:15px;white-space:normal;font-size:13px}
+.member-filter strong{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#30343b;color:#fff;font-size:14px}
+.member-filter.active{background:#30343b;color:#fff}.member-filter.active strong{background:#fff;color:#30343b}
+#memberList article.member-card{display:block;padding:15px;margin:12px 0;border-radius:18px;box-shadow:0 3px 12px #1b2c4510}
+.member-card-top{display:flex;align-items:center;gap:13px;min-width:0}
+.member-avatar-large{width:76px;height:76px;flex:0 0 76px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#e7edf8;color:#2459d3;font-size:30px;font-weight:700}
+.member-avatar-large img{width:100%;height:100%;object-fit:cover}
+.member-main{flex:1;min-width:0}.member-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.member-heading strong{font-size:17px;overflow-wrap:anywhere}
+.member-main p{margin:5px 0 0!important;font-size:13px!important;overflow-wrap:anywhere}
+.member-status{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;font-weight:700;background:#e7f6ed;color:#217346}
+.member-status.expired{background:#fdecec;color:#b42318}.member-status.soon{background:#fff4db;color:#946200}.member-status.inactive{background:#edf0f5;color:#667085}
+.member-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;margin:16px 0 12px;padding:12px 0;border-top:1px solid #edf0f4;border-bottom:1px solid #edf0f4}
+.member-detail{display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}.member-detail span{color:#7a8495;font-size:12px}.member-detail strong{font-size:13px;text-align:right;overflow-wrap:anywhere}.member-detail .due-value{color:#d04444}
+#memberList .member-actions{display:flex;gap:7px;flex-wrap:wrap}#memberList .member-actions button{flex:1 1 auto;padding:9px 10px;font-size:12px}
+@media(max-width:420px){.member-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.member-filter{min-height:76px}.member-details{gap:10px 8px}.member-detail span{font-size:11px}.member-detail strong{font-size:12px}.member-avatar-large{width:62px;height:62px;flex-basis:62px}}
