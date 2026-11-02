@@ -138,7 +138,8 @@ $("renewalForm").elements.plan.addEventListener("change",syncRenewalExpiry);
 $("renewalMember").addEventListener("change",syncRenewalFee);$("renewalForm").elements.plan.addEventListener("change",syncRenewalFee);
 $("renewalForm").addEventListener("submit",async e=>{
  e.preventDefault();
- const f=new FormData(e.currentTarget),m=members.find(x=>x.id===f.get("memberId")),out=$("renewalStatus");
+ const form=e.currentTarget;
+ const f=new FormData(form),m=members.find(x=>x.id===f.get("memberId")),out=$("renewalStatus");
  if(!m)return;
  const feeAmount=Number(f.get("feeAmount")),amount=Number(f.get("amount"));
  if(!Number.isFinite(feeAmount)||feeAmount<=0||!Number.isFinite(amount)||amount<0||amount>feeAmount){out.textContent="ഫീസ് / അടച്ച തുക ശരിയല്ല.";return;}
@@ -150,7 +151,7 @@ $("renewalForm").addEventListener("submit",async e=>{
    payment:amount>0?{memberId:m.id,memberName:m.name,phone:m.phone||"",amount,date:f.get("date"),payMode:f.get("payMode"),type:"renewal-payment"}:null
   });
   out.textContent="Renewal saved.";
-  e.currentTarget.reset();e.currentTarget.elements.date.value=today();
+  form.reset();form.elements.date.value=today();
   await refresh();await loadRenewals();
  }catch(err){out.textContent="Renewal save incomplete/failed: "+err.message+" — രേഖകൾ പരിശോധിച്ച് മാത്രം വീണ്ടും ശ്രമിക്കുക.";}
 });
