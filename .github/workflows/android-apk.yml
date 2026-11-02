@@ -128,7 +128,7 @@ jobs:
               }
           }
           """
-          gradle.write_text(text + "\\n" + signing)
+          gradle.write_text(text + "\n" + signing)
           PY
       - name: Build debug APK
         env:
