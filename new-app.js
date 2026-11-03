@@ -24,7 +24,7 @@ function formatDate(value){
  const raw=String(value||"").trim();
  const match=raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
  if(!match)return value||"—";
- return match[3]+match[2]+match[1].slice(-2);
+ return match[3]+"-"+match[2]+"-"+match[1];
 }
 function dateOffset(date,days){const d=new Date(date+"T12:00:00");d.setDate(d.getDate()+days);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
 function dashboardTotals(payments,expenses){
