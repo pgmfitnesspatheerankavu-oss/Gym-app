@@ -29,6 +29,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  pages: write
+  id-token: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,10 +47,10 @@ jobs:
           cp new-app.css new-app.js firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js manifest.webmanifest service-worker.js _site/
           cp icons/icon.svg _site/icons/
           cp logo.png _site/
-      - name: Upload preview artifact (does not publish or replace the live website)
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: pgm-fitness-cloud-app-preview
           path: _site
-          if-no-files-found: error
-          retention-days: 30
+      - name: Deploy PGM FITNESS live app
+        id: deployment
+        uses: actions/deploy-pages@v4
