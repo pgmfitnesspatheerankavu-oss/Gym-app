@@ -23,6 +23,17 @@ async function currentRole() {
   if (!result.allowed) throw new Error("Account is not enabled for cloud records");
   return { user, role: result.role, permissions: result.permissions || [] };
 }
+async function collectorDetails(user, role) {
+  let displayName = String(user.displayName || "").trim();
+  if (!displayName) {
+    try {
+      const profile = await getDoc(doc(db, "users", user.uid));
+      if (profile.exists()) displayName = String(profile.data().displayName || "").trim();
+    } catch (_) {}
+  }
+  return { collectedBy: displayName || (role === "owner" ? "Owner" : user.email || "Staff"), collectedByUid: user.uid };
+}
+
 function cleanRecord(record) {
   if (!record || typeof record !== "object" || Array.isArray(record)) {
     throw new Error("Invalid record");
@@ -72,7 +83,7 @@ export async function createMemberWithInitialPayment(memberRecord, paymentRecord
   });
   if (paymentRecord && Number(paymentRecord.amount) > 0) {
     requireCapability(role, "payments.create", permissions);
-    const paymentData = transactionPayload({ ...paymentRecord, memberId: memberRef.id, memberName: memberData.name, phone: memberData.phone || "" });
+    const paymentData = transactionPayload({ ...paymentRecord, memberId: memberRef.id, memberName: memberData.name, phone: memberData.phone || "", ...await collectorDetails(user, role) });
     const paymentRef = stableMemberId
       ? doc(db, "payments", "initial_" + String(stableMemberId))
       : doc(collection(db, "payments"));
@@ -141,7 +152,7 @@ export async function deletePayment(paymentId) {
 export async function createPayment(record) {
   const { user, role, permissions } = await currentRole();
   requireCapability(role, "payments.create", permissions);
-  const data = transactionPayload(record);
+  const data = transactionPayload({ ...record, ...await collectorDetails(user, role) });
   return addDoc(collection(db, "payments"), {
     ...data, createdAt: serverTimestamp(), createdBy: user.uid
   });
@@ -178,7 +189,7 @@ export async function saveRenewalBundle(memberId, renewalRecord, memberChanges, 
   batch.set(doc(collection(db, "renewals")), { ...renewal, createdAt: serverTimestamp(), createdBy: user.uid });
   batch.update(doc(db, "members", memberId), { ...changes, updatedAt: serverTimestamp(), updatedBy: user.uid });
   if (paymentRecord) {
-    const payment = transactionPayload(paymentRecord);
+    const payment = transactionPayload({ ...paymentRecord, ...await collectorDetails(user, role) });
     batch.set(doc(collection(db, "payments")), { ...payment, createdAt: serverTimestamp(), createdBy: user.uid });
   }
   await batch.commit();
@@ -196,7 +207,7 @@ export async function saveRenewalWithPayment({ memberId, renewal, memberChanges,
   batch.set(renewalRef, { ...renewalData, createdAt: serverTimestamp(), createdBy: user.uid });
   batch.update(memberRef, { ...memberUpdatePayload(memberChanges), updatedAt: serverTimestamp(), updatedBy: user.uid });
   if (payment) {
-    const paymentData = transactionPayload(payment);
+    const paymentData = transactionPayload({ ...payment, ...await collectorDetails(user, role) });
     const paymentRef = doc(collection(db, "payments"));
     batch.set(paymentRef, { ...paymentData, createdAt: serverTimestamp(), createdBy: user.uid });
   }
