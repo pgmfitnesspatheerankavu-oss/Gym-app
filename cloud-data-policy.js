@@ -5,7 +5,7 @@ const MEMBER_FIELDS = new Set([
 ]);
 const MEMBER_UPDATE_FIELDS = new Set([...MEMBER_FIELDS]);
 const TRANSACTION_FIELDS = new Set([
-  "memberId", "memberName", "phone", "amount", "feeAmount",
+  "memberId", "memberName", "phone", "amount", "feeAmount", "collectedBy", "collectedByUid",
   "date", "payMode", "type", "plan", "expiryDate", "notes"
 ]);
 const ATTENDANCE_FIELDS = new Set([
