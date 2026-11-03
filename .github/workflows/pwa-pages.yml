@@ -1,0 +1,56 @@
+name: Build PGM FITNESS Cloud App Preview
+on:
+  push:
+    branches:
+      - firebase-login-development
+    paths:
+      - 'new-app.html'
+      - 'new-app.js'
+      - 'new-app.css'
+      - 'firebase-config.js'
+      - 'firebase-client.js'
+      - 'auth-policy.js'
+      - 'cloud-data.js'
+      - 'access-policy.js'
+      - 'staff-management-policy.js'
+      - 'cloud-data-policy.js'
+      - 'balance-calculator.js'
+      - 'supabase-storage.js'
+      - 'migration-runner.js'
+      - 'migration-plan.js'
+      - 'migration-preview.js'
+      - 'migration-safety.js'
+      - 'migration-verification.js'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'icons/**'
+      - 'logo.png'
+      - '.github/workflows/pwa-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: firebase-login-development
+      - name: Prepare isolated preview
+        run: |
+          mkdir -p _site/icons
+          cp new-app.html _site/index.html
+          cp logo.png _site/logo.png
+          cp new-app.css new-app.js firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js manifest.webmanifest service-worker.js _site/
+          cp icons/icon.svg _site/icons/
+          cp logo.png _site/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy PGM FITNESS live app
+        id: deployment
+        uses: actions/deploy-pages@v4

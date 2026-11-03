@@ -1,0 +1,6 @@
+{
+  "appId": "com.pgmfitness.management.app",
+  "appName": "PGM FITNESS",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
