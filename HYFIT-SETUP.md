@@ -23,9 +23,14 @@ https://console.firebase.google.com/ and complete these steps:
 5. Firestore Database → Create database. Start in production mode. Deploy the
    rules in `firestore.rules` only after replacing
    `HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY` with the HYFIT Owner UID.
-6. Storage → Get started. Deploy `storage.rules` from this branch. Use the
-   HYFIT project's own default Storage bucket.
-7. In Firebase Project settings, confirm the Web app config and Storage bucket
+6. Storage → Get started. Use the HYFIT project's own default Storage bucket.
+   Replace `HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY` in **both** `firestore.rules`
+   and `storage.rules` with the HYFIT Owner UID (never a PGM UID).
+7. In a trusted terminal, install Firebase CLI, sign in to the same Google
+   account, then deploy only the HYFIT project's rules:
+   `firebase login`
+   `firebase deploy --only firestore:rules,storage --project YOUR_HYFIT_PROJECT_ID`
+8. In Firebase Project settings, confirm the Web app config and Storage bucket
    both belong to the new HYFIT project.
 
 ### GitHub Actions secrets
