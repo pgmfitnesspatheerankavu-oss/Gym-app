@@ -234,8 +234,8 @@ let pendingMigrationData = null;
 function unwrapLegacyBackup(value) {
  const parsed = typeof value === "string" ? JSON.parse(value) : value;
  if (parsed && parsed.app !== undefined) {
-  if (parsed.app !== "PGM FITNESS" || parsed.backupVersion !== 1 || !parsed.data) {
-   throw new Error("Unsupported PGM FITNESS backup format.");
+  if (parsed.app !== "HYFIT" || parsed.backupVersion !== 1 || !parsed.data) {
+   throw new Error("Unsupported HYFIT backup format.");
   }
   return parsed.data;
  }
@@ -261,7 +261,7 @@ $("exportLocalBackup").addEventListener("click",()=>{
  if(!raw){$("migrationStatus").textContent="ഈ browser-ൽ പഴയ local backup കണ്ടെത്തിയില്ല. പഴയ app-ൽ നിന്ന് backup JSON export ചെയ്ത് ഇവിടെ select ചെയ്യുക.";return;}
  try{
   const data=unwrapLegacyBackup(raw);
-  const envelope={app:"PGM FITNESS",backupVersion:1,exportedAt:new Date().toISOString(),data};
+  const envelope={app:"HYFIT",backupVersion:1,exportedAt:new Date().toISOString(),data};
   const blob=new Blob([JSON.stringify(envelope,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download="pgm-fitness-backup-"+today()+".json";a.click();
@@ -289,7 +289,7 @@ $("migrationFile").addEventListener("change",()=>{
 });
 $("runMigration").addEventListener("click",async()=>{
  if(currentRole!=="owner"||!pendingMigrationData){$("migrationStatus").textContent="Owner login-ൽ backup preview ചെയ്യുക.";return;}
- if($("migrationConfirm").value.trim()!=="MIGRATE PGM FITNESS"){$("migrationStatus").textContent="Confirmation text ശരിയല്ല.";return;}
+ if($("migrationConfirm").value.trim()!=="MIGRATE HYFIT"){$("migrationStatus").textContent="Confirmation text ശരിയല്ല.";return;}
  if(!confirm("Preview-ൽ കാണിച്ച രേഖകൾ മാത്രം Cloud-ലേക്ക് ചേർക്കട്ടേ? പഴയ local data delete ചെയ്യില്ല."))return;
  const button=$("runMigration");button.disabled=true;$("migrationStatus").textContent="Importing and verifying…";
  try{
