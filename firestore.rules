@@ -1,9 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // The HYFIT build/deployment owner must replace this marker with the
+    // first HYFIT Owner account UID. Never use a PGM FITNESS UID here.
     function isOwner() {
       return request.auth != null &&
-        request.auth.uid == "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
+        request.auth.uid == "HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY";
     }
     function signedIn() { return request.auth != null; }
     function isActiveStaff() {
@@ -25,47 +27,37 @@ service cloud.firestore {
         plan == "12 Months" ? 4700 :
         plan == "Couple / Duo - 3 Months" ? 3000 : -1;
     }
-    function expectedRegistrationFee(plan) {
-      return plan == "Couple / Duo - 3 Months" ? 800 :
-        expectedPlanFee(plan) > 0 ? 500 : -1;
-    }
-
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isOwner());
       allow create, update, delete: if isOwner();
     }
-
-    // Member profile only: transaction history is stored in separate collections.
     function validMemberCreate() {
       return request.resource.data.keys().hasOnly([
-          "name", "phone", "address", "gender", "joinDate", "planStartDate",
-          "plan", "planFee", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
-          "createdAt", "createdBy", "updatedAt", "updatedBy",
-          "legacySource", "legacyIndex", "migrationVersion",
-          "migrationSourceData", "migratedAt", "migratedBy"
-        ]) &&
-        request.resource.data.keys().hasAll(["name"]) &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() <= 120 &&
-        (!("createdBy" in request.resource.data) || request.resource.data.createdBy == request.auth.uid || isOwner()) &&
-        (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
-        (!("planFee" in request.resource.data) ||
-          (request.resource.data.planFee is number &&
-           (isOwner() ||
-            (isActiveStaff() &&
-             request.resource.data.planFee == expectedPlanFee(request.resource.data.plan))))) &&
-        (!("registrationFee" in request.resource.data) ||
-          (request.resource.data.registrationFee is number &&
-           request.resource.data.registrationFee >= 0 &&
-           request.resource.data.registrationFee <= 100000)) &&
-        // Migration metadata is reserved for the Owner-only migration runner.
-        ((!("migrationVersion" in request.resource.data) &&
-          !("migrationSourceData" in request.resource.data) &&
-          !("migratedAt" in request.resource.data) &&
-          !("migratedBy" in request.resource.data) &&
-          !("legacySource" in request.resource.data) &&
-          !("legacyIndex" in request.resource.data)) || isOwner());
+        "name", "phone", "address", "gender", "joinDate", "planStartDate",
+        "plan", "planFee", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
+        "createdAt", "createdBy", "updatedAt", "updatedBy",
+        "legacySource", "legacyIndex", "migrationVersion",
+        "migrationSourceData", "migratedAt", "migratedBy"
+      ]) &&
+      request.resource.data.keys().hasAll(["name"]) &&
+      request.resource.data.name is string &&
+      request.resource.data.name.size() > 0 &&
+      request.resource.data.name.size() <= 120 &&
+      (!("createdBy" in request.resource.data) || request.resource.data.createdBy == request.auth.uid || isOwner()) &&
+      (!("updatedBy" in request.resource.data) || request.resource.data.updatedBy == request.auth.uid || isOwner()) &&
+      (!("planFee" in request.resource.data) ||
+        (request.resource.data.planFee is number &&
+         (isOwner() || (isActiveStaff() && request.resource.data.planFee == expectedPlanFee(request.resource.data.plan)))) ) &&
+      (!("registrationFee" in request.resource.data) ||
+        (request.resource.data.registrationFee is number &&
+         request.resource.data.registrationFee >= 0 &&
+         request.resource.data.registrationFee <= 100000)) &&
+      ((!("migrationVersion" in request.resource.data) &&
+        !("migrationSourceData" in request.resource.data) &&
+        !("migratedAt" in request.resource.data) &&
+        !("migratedBy" in request.resource.data) &&
+        !("legacySource" in request.resource.data) &&
+        !("legacyIndex" in request.resource.data)) || isOwner());
     }
     match /members/{memberId} {
       allow read: if isOwner() || staffHas("members.read");
@@ -73,14 +65,12 @@ service cloud.firestore {
       allow update: if isOwner() ||
         (staffHas("members.update") &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-           "name", "phone", "address", "gender", "joinDate", "planStartDate",
-           "plan", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
-           "updatedAt", "updatedBy"
+          "name", "phone", "address", "gender", "joinDate", "planStartDate",
+          "plan", "registrationFee", "photoURL", "photoPath", "expiryDate", "status", "notes",
+          "updatedAt", "updatedBy"
          ]));
       allow delete: if isOwner() || staffHas("members.delete");
     }
-
-    // Staff transaction permissions but cannot alter or erase existing history.
     match /payments/{paymentId} {
       allow read: if isOwner() || staffHas("payments.read.all") ||
         (staffHas("payments.read.own") && resource.data.createdBy == request.auth.uid);
@@ -104,7 +94,6 @@ service cloud.firestore {
       allow update: if isOwner();
       allow delete: if isOwner() || staffHas("attendance.delete");
     }
-
     match /expenses/{expenseId} {
       allow read: if isOwner() || staffHas("expenses.read");
       allow create: if isOwner() || staffHas("expenses.create");
@@ -113,10 +102,7 @@ service cloud.firestore {
     }
     match /settings/{document=**} { allow read, write: if isOwner(); }
     match /financialReports/{document=**} { allow read, write: if isOwner(); }
-
-    // Legacy records remain owner-only until migration is complete.
     match /gymData/{document=**} { allow read, write: if isOwner(); }
-
     match /{document=**} { allow read, write: if false; }
   }
 }
