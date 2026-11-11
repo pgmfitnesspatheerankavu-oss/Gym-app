@@ -1,4 +1,4 @@
-// PGM FITNESS Firebase client foundation.
+// HYFIT Firebase client foundation.
 // Add the Firebase web-app configuration and fixed Owner UID before enabling.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
