@@ -96,10 +96,10 @@ jobs:
           PY
       - name: Configure persistent signing
         env:
-          KEY: ${{ secrets.PGM_KEYSTORE_BASE64 }}
-          STORE_PASS: ${{ secrets.PGM_KEYSTORE_PASSWORD }}
-          ALIAS: ${{ secrets.PGM_KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.PGM_KEY_PASSWORD }}
+          KEY: ${{ secrets.HYFIT_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.HYFIT_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.HYFIT_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.HYFIT_KEY_PASSWORD }}
         run: |
           test -n "$KEY" && test -n "$STORE_PASS" && test -n "$ALIAS" && test -n "$KEY_PASS"
           echo "$KEY" | base64 --decode > "$RUNNER_TEMP/hyfit.jks"
