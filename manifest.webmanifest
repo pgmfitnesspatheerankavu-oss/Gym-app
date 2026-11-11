@@ -1,12 +1,12 @@
 {
-  "name": "PGM FITNESS",
-  "short_name": "PGM FITNESS",
-  "description": "PGM Fitness Centre Management",
+  "name": "HYFIT",
+  "short_name": "HYFIT",
+  "description": "HYFIT Group Fitness Management",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f7fb",
-  "theme_color": "#101827",
+  "background_color": "#080808",
+  "theme_color": "#080808",
   "icons": [
     {
       "src": "./icons/icon.svg",
