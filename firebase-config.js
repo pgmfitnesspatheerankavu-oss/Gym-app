@@ -1,14 +1,5 @@
-// Public Firebase Web App configuration for PGM FITNESS.
-// This file contains client identifiers only; never put service-account keys here.
-window.PGM_FIREBASE_CONFIG = Object.freeze({
-  apiKey: "AIzaSyA4OCKFMQqoK7GH4t7lpSUcH0CBGEopi-Y",
-  authDomain: "pgmfitness-5e107.firebaseapp.com",
-  projectId: "pgmfitness-5e107",
-  storageBucket: "pgmfitness-5e107.firebasestorage.app",
-  messagingSenderId: "207204433978",
-  appId: "1:207204433978:web:4cf0e33871c8c07f3d7503",
-  measurementId: "G-NNYGQBBZ7G"
-});
-
-// Fixed Owner account UID (public identifier, not a password).
-window.PGM_OWNER_UID = "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
+// HYFIT Firebase configuration is injected only by the HYFIT Android build workflow
+// from the HYFIT_FIREBASE_* GitHub Actions secrets.
+// Never place PGM FITNESS credentials or a PGM Owner UID in this file.
+window.PGM_FIREBASE_CONFIG = null;
+window.PGM_OWNER_UID = null;
