@@ -94,7 +94,7 @@ jobs:
             canvas.save(folder/"ic_launcher.png")
             canvas.save(folder/"ic_launcher_round.png")
           PY
-      - name: Configure persistent signing
+      - name: Configure persistent release signing
         env:
           KEY: ${{ secrets.HYFIT_KEYSTORE_BASE64 }}
           STORE_PASS: ${{ secrets.HYFIT_KEYSTORE_PASSWORD }}
@@ -109,11 +109,17 @@ jobs:
           p.write_text(p.read_text()+'''
           android {
             signingConfigs {
-              debug {
+              release {
                 storeFile file(System.getenv("HYFIT_KEYSTORE_PATH"))
                 storePassword System.getenv("HYFIT_STORE_PASS")
                 keyAlias System.getenv("HYFIT_KEY_ALIAS")
                 keyPassword System.getenv("HYFIT_KEY_PASS")
+              }
+            }
+            buildTypes {
+              release {
+                signingConfig signingConfigs.release
+                minifyEnabled false
               }
             }
           }
@@ -127,9 +133,9 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: hyfit-android-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
