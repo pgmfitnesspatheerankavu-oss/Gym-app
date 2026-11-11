@@ -1,0 +1,135 @@
+name: Build HYFIT Android APK
+on:
+  push:
+    branches: [hyfit-app]
+    paths:
+      - 'manifest.webmanifest'
+      - 'icons/**'
+      - 'logo.png'
+      - 'new-app.html'
+      - 'new-app.js'
+      - 'new-app.css'
+      - 'firebase-config.js'
+      - 'firebase-client.js'
+      - 'auth-policy.js'
+      - 'cloud-data.js'
+      - 'access-policy.js'
+      - 'staff-management-policy.js'
+      - 'cloud-data-policy.js'
+      - 'balance-calculator.js'
+      - 'supabase-storage.js'
+      - 'migration-runner.js'
+      - 'migration-plan.js'
+      - 'migration-preview.js'
+      - 'migration-safety.js'
+      - 'migration-verification.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/hyfit-android.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hyfit-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Require separate HYFIT Firebase project
+        env:
+          API_KEY: ${{ secrets.HYFIT_FIREBASE_API_KEY }}
+          AUTH_DOMAIN: ${{ secrets.HYFIT_FIREBASE_AUTH_DOMAIN }}
+          PROJECT_ID: ${{ secrets.HYFIT_FIREBASE_PROJECT_ID }}
+          STORAGE_BUCKET: ${{ secrets.HYFIT_FIREBASE_STORAGE_BUCKET }}
+          SENDER_ID: ${{ secrets.HYFIT_FIREBASE_MESSAGING_SENDER_ID }}
+          APP_ID: ${{ secrets.HYFIT_FIREBASE_APP_ID }}
+          OWNER_UID: ${{ secrets.HYFIT_OWNER_UID }}
+        run: |
+          for value in "$API_KEY" "$AUTH_DOMAIN" "$PROJECT_ID" "$STORAGE_BUCKET" "$SENDER_ID" "$APP_ID" "$OWNER_UID"; do
+            test -n "$value" || { echo "Missing HYFIT Firebase secrets. Refusing to connect to PGM data."; exit 1; }
+          done
+          cat > firebase-config.js <<EOF
+          window.PGM_FIREBASE_CONFIG = Object.freeze({
+            apiKey: "$API_KEY",
+            authDomain: "$AUTH_DOMAIN",
+            projectId: "$PROJECT_ID",
+            storageBucket: "$STORAGE_BUCKET",
+            messagingSenderId: "$SENDER_ID",
+            appId: "$APP_ID"
+          });
+          window.PGM_OWNER_UID = "$OWNER_UID";
+          EOF
+      - name: Prepare app
+        run: |
+          mkdir -p www/icons
+          cp new-app.html www/index.html
+          cp logo.png www/logo.png
+          cp manifest.webmanifest service-worker.js www/
+          cp icons/icon.svg www/icons/
+          cp new-app.js new-app.css firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js www/
+      - run: npm install
+      - run: npx cap add android
+      - name: Apply HYFIT launcher label and icon
+        run: |
+          python3 -m pip install Pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageOps
+          from pathlib import Path
+          src=Image.open("logo.png").convert("RGBA")
+          sizes={"mdpi":48,"hdpi":72,"xhdpi":96,"xxhdpi":144,"xxxhdpi":192}
+          for density,size in sizes.items():
+            folder=Path(f"android/app/src/main/res/mipmap-{density}")
+            folder.mkdir(parents=True,exist_ok=True)
+            canvas=Image.new("RGBA",(size,size),(0,0,0,255))
+            mark=ImageOps.contain(src,(int(size*.82),int(size*.82)),Image.Resampling.LANCZOS)
+            canvas.alpha_composite(mark,((size-mark.width)//2,(size-mark.height)//2))
+            canvas.save(folder/"ic_launcher.png")
+            canvas.save(folder/"ic_launcher_round.png")
+          PY
+      - name: Configure persistent signing
+        env:
+          KEY: ${{ secrets.PGM_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.PGM_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.PGM_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.PGM_KEY_PASSWORD }}
+        run: |
+          test -n "$KEY" && test -n "$STORE_PASS" && test -n "$ALIAS" && test -n "$KEY_PASS"
+          echo "$KEY" | base64 --decode > "$RUNNER_TEMP/hyfit.jks"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/build.gradle")
+          p.write_text(p.read_text()+'''
+          android {
+            signingConfigs {
+              debug {
+                storeFile file(System.getenv("HYFIT_KEYSTORE_PATH"))
+                storePassword System.getenv("HYFIT_STORE_PASS")
+                keyAlias System.getenv("HYFIT_KEY_ALIAS")
+                keyPassword System.getenv("HYFIT_KEY_PASS")
+              }
+            }
+          }
+          ''')
+          PY
+          echo "HYFIT_KEYSTORE_PATH=$RUNNER_TEMP/hyfit.jks" >> "$GITHUB_ENV"
+          echo "HYFIT_STORE_PASS=$STORE_PASS" >> "$GITHUB_ENV"
+          echo "HYFIT_KEY_ALIAS=$ALIAS" >> "$GITHUB_ENV"
+          echo "HYFIT_KEY_PASS=$KEY_PASS" >> "$GITHUB_ENV"
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hyfit-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
