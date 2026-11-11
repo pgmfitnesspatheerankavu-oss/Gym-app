@@ -30,7 +30,21 @@ on:
 permissions:
   contents: read
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hyfit-app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install test dependencies
+        run: npm install
+      - name: Run HYFIT migration and access tests
+        run: npm run test:migration
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
