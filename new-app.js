@@ -264,7 +264,7 @@ $("exportLocalBackup").addEventListener("click",()=>{
   const envelope={app:"HYFIT",backupVersion:1,exportedAt:new Date().toISOString(),data};
   const blob=new Blob([JSON.stringify(envelope,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url;a.download="pgm-fitness-backup-"+today()+".json";a.click();
+  a.href=url;a.download="hyfit-backup-"+today()+".json";a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
   $("migrationStatus").textContent="Backup exported. Keep this file safely before migration.";
  }catch(err){$("migrationStatus").textContent="Backup export failed: "+err.message;}
