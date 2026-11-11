@@ -1,27 +1,23 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
     function isOwner() {
-      return request.auth != null &&
-        request.auth.uid == "uk9cEyJbLSP8eFTjFw7y3Hk5Jf22";
+      return signedIn() &&
+        request.auth.uid == "HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY";
     }
     function isActiveStaff() {
-      return request.auth != null &&
+      return signedIn() &&
         firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == "staff" &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.active == true;
     }
-    function canUseGym() { return isOwner() || isActiveStaff(); }
-
     match /member-photos/{memberId}/{fileName} {
-      allow read: if canUseGym();
-      allow create, update: if canUseGym() &&
+      allow read: if isOwner() || isActiveStaff();
+      allow write: if (isOwner() || isActiveStaff()) &&
+        request.resource != null &&
         request.resource.size < 5 * 1024 * 1024 &&
-        request.resource.contentType.matches('image/.*');
-      allow delete: if canUseGym();
-    }
-    match /{allPaths=**} {
-      allow read, write: if false;
+        request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
   }
 }
