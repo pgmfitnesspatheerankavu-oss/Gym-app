@@ -4,7 +4,7 @@ service firebase.storage {
     function signedIn() { return request.auth != null; }
     function isOwner() {
       return signedIn() &&
-        request.auth.uid == "HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY";
+        request.auth.uid == "PDTPALBaQtV8XRJQ8iTu3EhMb5J3";
     }
     function isActiveStaff() {
       return signedIn() &&
