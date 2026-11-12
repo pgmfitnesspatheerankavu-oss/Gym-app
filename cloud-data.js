@@ -261,14 +261,26 @@ export async function getGymSettings() {
 export async function saveGymSettings(changes) {
   const { user, role, permissions } = await currentRole();
   requireCapability(role, "settings.update", permissions);
-  const openingBalance = Number(changes?.openingBalance);
-  if (!Number.isFinite(openingBalance) || openingBalance < 0) {
-    throw new Error("Opening balance must be a valid non-negative amount");
+  const patch = {};
+  if (changes && Object.prototype.hasOwnProperty.call(changes, "openingBalance")) {
+    const openingBalance = Number(changes.openingBalance);
+    if (!Number.isFinite(openingBalance) || openingBalance < 0) throw new Error("Opening balance must be a valid non-negative amount");
+    patch.openingBalance = openingBalance;
   }
-  await setDoc(doc(db, "settings", "main"), {
-    openingBalance, updatedAt: serverTimestamp(), updatedBy: user.uid
-  }, { merge: true });
-  return { openingBalance };
+  if (changes && Object.prototype.hasOwnProperty.call(changes, "plans")) {
+    if (!Array.isArray(changes.plans) || !changes.plans.length || changes.plans.length > 50) throw new Error("At least one plan is required");
+    const seen = new Set();
+    patch.plans = changes.plans.map((p) => {
+      const name = String(p.name || "").trim();
+      const months = Number(p.months), fee = Number(p.fee), registrationFee = Number(p.registrationFee || 0);
+      if (!name || name.length > 80 || seen.has(name) || !Number.isInteger(months) || months < 1 || months > 60 || !Number.isFinite(fee) || fee < 0 || fee > 1000000 || !Number.isFinite(registrationFee) || registrationFee < 0 || registrationFee > 100000) throw new Error("Invalid or duplicate plan details");
+      seen.add(name);
+      return { name, months, fee, registrationFee };
+    });
+  }
+  if (!Object.keys(patch).length) throw new Error("No settings to save");
+  await setDoc(doc(db, "settings", "main"), { ...patch, updatedAt: serverTimestamp(), updatedBy: user.uid }, { merge: true });
+  return patch;
 }
 
 // Owner-only staff profile management. Auth accounts are created separately in Firebase Console.
