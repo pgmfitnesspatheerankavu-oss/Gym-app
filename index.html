@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PGM FITNESS</title>
+  <title>HYFIT – Fitness Management</title>
   <link rel="manifest" href="manifest.json">
   <script src="firebase-config.js"></script>
   <script src="backup-validation.js"></script>
@@ -138,7 +138,7 @@
 <body>
   <section id="pgmAuthGate" class="pgm-auth-gate" aria-label="Owner login">
     <div class="pgm-auth-card">
-      <h2>PGM FITNESS</h2>
+      <h2>HYFIT</h2>
       <p>Owner login ഉപയോഗിച്ച് തുടരുക.</p>
       <form id="pgmLoginForm">
         <label for="pgmLoginEmail">Email</label>
@@ -157,7 +157,7 @@
     <div class="top-bar">
       <div class="title">
         <i class="fa-solid fa-bars"></i>
-        <span>PGM FITNESS</span>
+        <span>HYFIT</span>
       </div>
       <div class="top-icons">
         <i class="fa-solid fa-download" onclick="exportBackup()" title="Download Backup"></i>
@@ -439,7 +439,7 @@
       const fileName = `pgm_fitness_backup_${dateStr}.json`;
       try {
         const backup = {
-          app: 'PGM FITNESS',
+          app: 'HYFIT',
           backupVersion: 1,
           exportedAt: new Date().toISOString(),
           data: state
