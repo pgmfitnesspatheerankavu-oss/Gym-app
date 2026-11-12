@@ -13,7 +13,7 @@
   function parseBackup(parsed) {
     let data;
     if (parsed && parsed.app !== undefined) {
-      if (parsed.app !== "PGM FITNESS" || parsed.backupVersion !== 1 ||
+      if (parsed.app !== "HYFIT" || parsed.backupVersion !== 1 ||
           typeof parsed.exportedAt !== "string" || !Number.isFinite(Date.parse(parsed.exportedAt))) {
         throw new Error("Unsupported or invalid backup format");
       }
