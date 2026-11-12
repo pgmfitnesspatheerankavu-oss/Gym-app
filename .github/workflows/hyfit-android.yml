@@ -23,6 +23,8 @@ on:
       - 'migration-preview.js'
       - 'migration-safety.js'
       - 'migration-verification.js'
+      - 'backup-validation.js'
+      - 'backup-validation.test.mjs'
       - 'capacitor.config.json'
       - 'package.json'
       - '.github/workflows/hyfit-android.yml'
