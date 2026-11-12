@@ -6,7 +6,7 @@ const { validateBackupData, parseBackup } = globalThis.PGMBackupValidation;
 const valid = { openingBalance: 120, members: [{ name: "Member" }], expenses: [{ title: "Rent", amount: 50 }] };
 
 test("accepts a valid version 1 backup", () => {
-  const parsed = { app: "PGM FITNESS", backupVersion: 1, exportedAt: "2026-10-31T00:00:00.000Z", data: valid };
+  const parsed = { app: "HYFIT", backupVersion: 1, exportedAt: "2026-10-31T00:00:00.000Z", data: valid };
   assert.deepEqual(parseBackup(parsed), valid);
 });
 
@@ -17,8 +17,8 @@ test("accepts legacy unwrapped backups", () => {
 test("rejects unknown app, unsupported version, and invalid timestamp", () => {
   for (const parsed of [
     { app: "Other", backupVersion: 1, exportedAt: "2026-10-31", data: valid },
-    { app: "PGM FITNESS", backupVersion: 2, exportedAt: "2026-10-31", data: valid },
-    { app: "PGM FITNESS", backupVersion: 1, exportedAt: "not-a-date", data: valid }
+    { app: "HYFIT", backupVersion: 2, exportedAt: "2026-10-31", data: valid },
+    { app: "HYFIT", backupVersion: 1, exportedAt: "not-a-date", data: valid }
   ]) assert.throws(() => parseBackup(parsed));
 });
 
