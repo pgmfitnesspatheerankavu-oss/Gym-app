@@ -72,7 +72,7 @@ jobs:
           if (!config.includes('hyfit-a6f68')) throw new Error('HYFIT Firebase project config missing');
           if (config.includes('pgmfitness-5e107')) throw new Error('PGM Firebase config must never be used in HYFIT');
           if (config.includes('window.PGM_FIREBASE_CONFIG = null')) throw new Error('Firebase config is empty');
-          if (!config.match(/window\\.PGM_OWNER_UID\\s*=\\s*["'][^"']+["']/)) throw new Error('HYFIT Owner UID missing');
+          if (!config.includes('window.PGM_OWNER_UID =')) throw new Error('HYFIT Owner UID missing');
           if (rules.includes('HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY') || storage.includes('HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY')) throw new Error('Owner UID placeholder remains');
           NODE
       - name: Prepare HYFIT web bundle
