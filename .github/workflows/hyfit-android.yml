@@ -91,7 +91,7 @@ jobs:
         run: npx cap add android
       - name: Apply HYFIT launcher label and supplied logo
         run: |
-          python3 -m pip install Pillow
+          python3 -m pip install Pillow cairosvg
           python3 - <<'PY'
           from PIL import Image, ImageOps
           from pathlib import Path

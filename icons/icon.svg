@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#101827"/><path d="M92 352V160h58l48 78 48-78h58v192h-58V250l-48 76-48-76v102z" fill="#fff"/><path d="M342 160h78v192h-78z" fill="#31c48d"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b0"/><stop offset=".28" stop-color="#c89b35"/><stop offset=".52" stop-color="#fff0b0"/><stop offset=".76" stop-color="#9b6b19"/><stop offset="1" stop-color="#f8dc83"/></linearGradient>
+ <radialGradient id="stone" cx=".42" cy=".34" r=".8"><stop stop-color="#d8d0c1"/><stop offset=".58" stop-color="#aaa397"/><stop offset="1" stop-color="#5c554b"/></radialGradient>
+ <linearGradient id="letter" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff1b6"/><stop offset=".48" stop-color="#d5a744"/><stop offset="1" stop-color="#795018"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+</defs>
+<rect width="512" height="512" rx="100" fill="#080706"/>
+<circle cx="256" cy="256" r="237" fill="#000" opacity=".75" filter="url(#shadow)"/>
+<circle cx="256" cy="256" r="232" fill="url(#gold)"/><circle cx="256" cy="256" r="222" fill="#28231d"/>
+<circle cx="256" cy="256" r="214" fill="url(#stone)" stroke="#f7dfa0" stroke-width="3"/>
+<circle cx="256" cy="256" r="198" fill="none" stroke="#725b37" stroke-width="2"/>
+<g fill="none" stroke="#806c4c" stroke-width="2" opacity=".65"><path d="M94 204 Q115 145 165 120"/><path d="M76 224 Q100 151 157 112"/><path d="M418 204 Q397 145 347 120"/><path d="M436 224 Q412 151 355 112"/><path d="M92 308 Q113 367 164 392"/><path d="M420 308 Q399 367 348 392"/></g>
+<text x="256" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="31" font-weight="800" letter-spacing="3" fill="#f8e7b5">FITNESS GROUP</text>
+<g fill="url(#gold)" stroke="#77551e" stroke-width="3" stroke-linejoin="round">
+ <path d="M207 139 Q186 126 177 146 Q165 167 181 190 L201 213 L213 242 L235 248 L246 221 L257 207 L268 220 L278 247 L301 240 L312 214 L332 190 Q347 169 334 147 Q325 130 307 139 L291 154 L277 150 L269 130 Q256 115 242 130 L236 151 L220 155 Z"/>
+ <path d="M202 163 Q181 151 180 171 L193 191 L211 198 L225 183 L220 166 Z"/>
+ <path d="M309 164 Q330 150 338 170 L326 191 L309 199 L295 184 L299 166 Z"/>
+ <path d="M229 196 L241 186 L256 194 L271 186 L286 197 L278 222 L256 235 L236 222 Z"/>
+</g>
+<g fill="none" stroke="#4d391c" stroke-width="4" stroke-linecap="round"><path d="M239 201 L252 208 L266 201 M241 216 L255 222 L271 215 M248 233 L256 237 L264 232"/></g>
+<text x="256" y="315" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="91" font-weight="900" letter-spacing="-3" fill="#4b3518" opacity=".7">HYFIT</text>
+<text x="256" y="307" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="91" font-weight="900" letter-spacing="-3" fill="url(#letter)" stroke="#f4d88e" stroke-width="1">HYFIT</text>
+<g fill="none" stroke="#806c4c" stroke-width="2" opacity=".7"><path d="M112 349 Q256 415 400 349"/><path d="M130 367 Q256 423 382 367"/></g>
+</svg>
