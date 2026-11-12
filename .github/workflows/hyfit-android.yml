@@ -27,8 +27,10 @@ on:
       - 'package.json'
       - '.github/workflows/hyfit-android.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,6 +45,9 @@ jobs:
         run: npm install
       - name: Run HYFIT migration and access tests
         run: npm run test:migration
+      - name: Run Firestore security rules tests
+        run: npm run test:rules
+
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -57,31 +62,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Require separate HYFIT Firebase project
-        env:
-          API_KEY: ${{ secrets.HYFIT_FIREBASE_API_KEY }}
-          AUTH_DOMAIN: ${{ secrets.HYFIT_FIREBASE_AUTH_DOMAIN }}
-          PROJECT_ID: ${{ secrets.HYFIT_FIREBASE_PROJECT_ID }}
-          STORAGE_BUCKET: ${{ secrets.HYFIT_FIREBASE_STORAGE_BUCKET }}
-          SENDER_ID: ${{ secrets.HYFIT_FIREBASE_MESSAGING_SENDER_ID }}
-          APP_ID: ${{ secrets.HYFIT_FIREBASE_APP_ID }}
-          OWNER_UID: ${{ secrets.HYFIT_OWNER_UID }}
+      - name: Verify HYFIT Firebase configuration
         run: |
-          for value in "$API_KEY" "$AUTH_DOMAIN" "$PROJECT_ID" "$STORAGE_BUCKET" "$SENDER_ID" "$APP_ID" "$OWNER_UID"; do
-            test -n "$value" || { echo "Missing HYFIT Firebase secrets. Refusing to connect to PGM data."; exit 1; }
-          done
-          cat > firebase-config.js <<EOF
-          window.PGM_FIREBASE_CONFIG = Object.freeze({
-            apiKey: "$API_KEY",
-            authDomain: "$AUTH_DOMAIN",
-            projectId: "$PROJECT_ID",
-            storageBucket: "$STORAGE_BUCKET",
-            messagingSenderId: "$SENDER_ID",
-            appId: "$APP_ID"
-          });
-          window.PGM_OWNER_UID = "$OWNER_UID";
-          EOF
-      - name: Prepare app
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const config = fs.readFileSync('firebase-config.js', 'utf8');
+          const rules = fs.readFileSync('firestore.rules', 'utf8');
+          const storage = fs.readFileSync('storage.rules', 'utf8');
+          if (!config.includes('hyfit-a6f68')) throw new Error('HYFIT Firebase project config missing');
+          if (config.includes('pgmfitness-5e107')) throw new Error('PGM Firebase config must never be used in HYFIT');
+          if (config.includes('window.PGM_FIREBASE_CONFIG = null')) throw new Error('Firebase config is empty');
+          if (!config.match(/window\\.PGM_OWNER_UID\\s*=\\s*["'][^"']+["']/)) throw new Error('HYFIT Owner UID missing');
+          if (rules.includes('HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY') || storage.includes('HYFIT_OWNER_UID_REPLACE_BEFORE_DEPLOY')) throw new Error('Owner UID placeholder remains');
+          NODE
+      - name: Prepare HYFIT web bundle
         run: |
           mkdir -p www/icons
           cp new-app.html www/index.html
@@ -89,9 +83,11 @@ jobs:
           cp manifest.webmanifest service-worker.js www/
           cp icons/icon.svg www/icons/
           cp new-app.js new-app.css firebase-config.js firebase-client.js auth-policy.js cloud-data.js access-policy.js staff-management-policy.js cloud-data-policy.js balance-calculator.js supabase-storage.js migration-runner.js migration-plan.js migration-preview.js migration-safety.js migration-verification.js www/
-      - run: npm install
-      - run: npx cap add android
-      - name: Apply HYFIT launcher label and icon
+      - name: Install app dependencies
+        run: npm install
+      - name: Generate Android project
+        run: npx cap add android
+      - name: Apply HYFIT launcher label and supplied logo
         run: |
           python3 -m pip install Pillow
           python3 - <<'PY'
@@ -108,48 +104,53 @@ jobs:
             canvas.save(folder/"ic_launcher.png")
             canvas.save(folder/"ic_launcher_round.png")
           PY
-      - name: Configure persistent release signing
-        env:
-          KEY: ${{ secrets.HYFIT_KEYSTORE_BASE64 }}
-          STORE_PASS: ${{ secrets.HYFIT_KEYSTORE_PASSWORD }}
-          ALIAS: ${{ secrets.HYFIT_KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.HYFIT_KEY_PASSWORD }}
-        run: |
-          test -n "$KEY" && test -n "$STORE_PASS" && test -n "$ALIAS" && test -n "$KEY_PASS"
-          echo "$KEY" | base64 --decode > "$RUNNER_TEMP/hyfit.jks"
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("android/app/build.gradle")
-          p.write_text(p.read_text()+'''
-          android {
-            signingConfigs {
-              release {
-                storeFile file(System.getenv("HYFIT_KEYSTORE_PATH"))
-                storePassword System.getenv("HYFIT_STORE_PASS")
-                keyAlias System.getenv("HYFIT_KEY_ALIAS")
-                keyPassword System.getenv("HYFIT_KEY_PASS")
-              }
-            }
-            buildTypes {
-              release {
-                signingConfig signingConfigs.release
-                minifyEnabled false
-              }
-            }
-          }
-          ''')
-          PY
-          echo "HYFIT_KEYSTORE_PATH=$RUNNER_TEMP/hyfit.jks" >> "$GITHUB_ENV"
-          echo "HYFIT_STORE_PASS=$STORE_PASS" >> "$GITHUB_ENV"
-          echo "HYFIT_KEY_ALIAS=$ALIAS" >> "$GITHUB_ENV"
-          echo "HYFIT_KEY_PASS=$KEY_PASS" >> "$GITHUB_ENV"
-      - name: Build APK
+      - name: Build Android debug APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
-      - uses: actions/upload-artifact@v4
+          ./gradlew assembleDebug
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
         with:
-          name: hyfit-android-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: HYFIT-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Build Android release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+      - name: Sign release APK with persistent key when configured
+        id: sign_release
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.HYFIT_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.HYFIT_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.HYFIT_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.HYFIT_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE_B64" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo "Persistent signing secrets are not configured; no final release APK will be published."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/hyfit-release.jks"
+          APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -f "$APK"
+          BUILD_TOOLS="$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" sign \
+            --ks "$RUNNER_TEMP/hyfit-release.jks" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --out android/app/build/outputs/apk/release/HYFIT-release.apk "$APK"
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" verify --verbose android/app/build/outputs/apk/release/HYFIT-release.apk
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+      - name: Upload signed final release APK
+        if: steps.sign_release.outputs.signed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: HYFIT-Final-APK
+          path: android/app/build/outputs/apk/release/HYFIT-release.apk
+          if-no-files-found: error
           retention-days: 30
