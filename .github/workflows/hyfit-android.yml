@@ -79,6 +79,8 @@ jobs:
           NODE
       - name: Prepare HYFIT web bundle
         run: |
+          python3 -m pip install Pillow cairosvg
+          cairosvg hyfit-logo.svg -o logo.png -s 1
           mkdir -p www/icons
           cp new-app.html www/index.html
           cp logo.png www/logo.png
