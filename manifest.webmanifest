@@ -2,7 +2,7 @@
   "name": "HYFIT",
   "short_name": "HYFIT",
   "description": "HYFIT Group Fitness Management",
-  "start_url": "./",
+  "start_url": "./new-app.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080706",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "id": "./new-app.html"
 }
