@@ -1,7 +1,7 @@
 // HYFIT Firebase client foundation.
 // Add the Firebase web-app configuration and fixed Owner UID before enabling.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, RecaptchaVerifier, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 import { decideAccess } from "./auth-policy.js";
@@ -25,6 +25,27 @@ export async function resolveRole(user) {
 export async function signIn(email, password) {
   const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
   return resolveRole(credential.user);
+}
+export async function sendPasswordReset(email) {
+  const address = String(email || "").trim();
+  if (!address) throw new Error("Enter your account email first.");
+  await sendPasswordResetEmail(auth, address);
+}
+
+let phoneRecaptcha = null;
+export async function sendPhoneLinkCode(phoneNumber, containerId = "phoneRecaptcha") {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Log in with your existing Owner/Staff email and password first.");
+  const phone = String(phoneNumber || "").trim();
+  if (!/^\\+[1-9]\\d{7,14}$/.test(phone)) throw new Error("Enter phone number with country code, for example +919876543210.");
+  if (!phoneRecaptcha) phoneRecaptcha = new RecaptchaVerifier(auth, containerId, { size: "normal" });
+  try {
+    return await linkWithPhoneNumber(user, phone, phoneRecaptcha);
+  } catch (error) {
+    phoneRecaptcha.clear();
+    phoneRecaptcha = null;
+    throw error;
+  }
 }
 export async function signOutUser() { await signOut(auth); }
 export function watchAuth(callback) {
