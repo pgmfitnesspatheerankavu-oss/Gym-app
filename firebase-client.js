@@ -37,7 +37,7 @@ export async function sendPhoneLinkCode(phoneNumber, containerId = "phoneRecaptc
   const user = auth.currentUser;
   if (!user) throw new Error("Log in with your existing Owner/Staff email and password first.");
   const phone = String(phoneNumber || "").trim();
-  if (!/^\\+[1-9]\\d{7,14}$/.test(phone)) throw new Error("Enter phone number with country code, for example +919876543210.");
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error("Enter phone number with country code, for example +919876543210.");
   if (!phoneRecaptcha) phoneRecaptcha = new RecaptchaVerifier(auth, containerId, { size: "normal" });
   try {
     return await linkWithPhoneNumber(user, phone, phoneRecaptcha);
