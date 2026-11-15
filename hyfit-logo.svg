@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#080808"/>
+<path d="M256 0 512 256 256 512 0 256Z" fill="#ffdf00"/>
+<g fill="#050505">
+<!-- flexing athlete -->
+<circle cx="238" cy="99" r="25"/><path d="M216 122q-24 5-34 29l-18 26-27 7q-18-3-14-21l20-31q7-13 24-14l26-18 22 3 19 18-3 21-17 8-14-12-17 16 20 12 18 25 12 43-8 38-30 9-10-25 5-31-24-20-18-30 12-16 20 12 22 7 14-20-18-15-2-34Z"/>
+<path d="M232 164q28-17 53 1l17 31-5 42-17 27-33-3-22-31-4-42Z"/>
+<!-- second athlete -->
+<circle cx="335" cy="123" r="23"/><path d="M316 145q-24 8-27 35l-10 49 16 41 25 11 16-17-9-30 22-20 19 22 24-4 26-28q9-13-4-24l-28-14-24 3-14-24-32 0Z"/>
+<path d="M297 193q22-18 48-6l18 28-12 45-33 18-26-15-7-34Z"/>
+<!-- torso detail -->
+<path d="M224 177l25 13 25-12 12 21-15 52-24 15-23-16-13-50Z" fill="#ffdf00"/>
+<path d="M241 195l13 10 14-10m-29 21 15 9 16-9m-25 21 10 6 11-6" fill="none" stroke="#050505" stroke-width="5" stroke-linecap="round"/>
+</g>
+<text x="256" y="350" text-anchor="middle" font-family="Arial,sans-serif" font-size="83" font-weight="900" font-style="italic" fill="#050505">HYFIT</text>
+<text x="256" y="390" text-anchor="middle" font-family="Arial,sans-serif" font-size="33" font-weight="800" font-style="italic" fill="#050505">Fitness centre</text>
+</svg>
