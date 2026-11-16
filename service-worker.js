@@ -1,4 +1,4 @@
-const CACHE_NAME = "hyfit-pwa-v5";
+const CACHE_NAME = "hyfit-pwa-v6";
 const APP_SHELL = ["./", "./new-app.html", "./index.html", "./manifest.webmanifest", "./icons/icon.svg", "./logo.png", "./new-app.css", "./new-app.js", "./firebase-config.js", "./firebase-client.js", "./auth-policy.js", "./cloud-data.js", "./access-policy.js", "./staff-management-policy.js", "./cloud-data-policy.js", "./balance-calculator.js", "./supabase-storage.js", "./migration-runner.js", "./migration-plan.js", "./migration-preview.js", "./migration-safety.js", "./migration-verification.js"];
 self.addEventListener("install", event => { event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim())); });
